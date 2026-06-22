@@ -7,7 +7,7 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap');
 
-    /* --- Semantically Saturated Color Architecture --- */
+    /* --- Semantically Saturated Theme Constants --- */
     :root {
       --bg: #08080a;
       --surface: #101012;
@@ -43,9 +43,8 @@
       background-color: var(--bg);
       color: var(--text);
       font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
-      line-height: 1.5;
       padding: 24px 16px;
+      min-height: 100vh;
     }
 
     .container {
@@ -53,7 +52,16 @@
       margin: 0 auto;
     }
 
-    /* --- Utilities & Typography --- */
+    /* --- UI Panels & Elements --- */
+    .header-panel {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
     .eyebrow {
       color: var(--mute);
       font-size: 9px;
@@ -66,80 +74,6 @@
       font-size: 20px;
       font-weight: 700;
       letter-spacing: 0.05em;
-    }
-
-    .field-label {
-      display: block;
-      font-size: 10px;
-      color: var(--mute);
-      margin-bottom: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    input, select, textarea {
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 6px 10px;
-      border-radius: 4px;
-      width: 100%;
-      font-family: inherit;
-      font-size: 11px;
-      outline: none;
-      transition: border-color 0.2s ease;
-    }
-
-    input:focus, select:focus, textarea:focus {
-      border-color: var(--mute);
-    }
-
-    /* --- Interactive Button Components --- */
-    .btn-group {
-      display: flex;
-      gap: 8px;
-    }
-
-    .btn-choice {
-      flex: 1;
-      padding: 6px;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-      background: var(--card);
-      color: var(--mute);
-      font-family: inherit;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .chip-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .chip {
-      padding: 5px 10px;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-      background: var(--card);
-      color: var(--mute);
-      font-size: 10px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    /* --- Section Shells --- */
-    .header-panel {
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 16px;
-      margin-bottom: 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
     }
 
     .mantra-panel {
@@ -163,39 +97,73 @@
       margin-bottom: 24px;
     }
 
-    /* --- Action Controls --- */
-    .top-controls {
-      display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-      margin-bottom: 16px;
+    .field-label {
+      display: block;
+      font-size: 10px;
+      color: var(--mute);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
-    .action-btn {
-      background: var(--surface);
+    input, textarea {
+      background: var(--card);
       border: 1px solid var(--border);
       color: var(--text);
-      padding: 6px 12px;
+      padding: 6px 10px;
       border-radius: 4px;
+      width: 100%;
       font-family: inherit;
-      font-size: 10px;
-      font-weight: 600;
+      font-size: 11px;
+      outline: none;
+    }
+
+    /* --- Button Configurations & Chips --- */
+    .btn-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-choice {
+      flex: 1;
+      padding: 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--mute);
+      font-family: inherit;
+      font-size: 11px;
       cursor: pointer;
+      font-weight: 600;
       transition: all 0.2s ease;
     }
 
-    .action-btn:hover {
-      border-color: var(--text);
+    .chip-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
     }
 
-    /* --- Tactical Trade Log --- */
+    .chip {
+      padding: 6px 12px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--mute);
+      font-size: 10px;
+      font-family: inherit;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    /* --- Tactical Log --- */
     .trade-card {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 6px;
       padding: 16px;
       margin-bottom: 16px;
-      position: relative;
     }
 
     .trade-header {
@@ -203,11 +171,6 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 12px;
-    }
-
-    .trade-title {
-      font-size: 12px;
-      font-weight: 700;
     }
 
     .grid-4 {
@@ -230,7 +193,7 @@
       border: 1px solid var(--red-main);
       background: #1a0f11;
       border-radius: 4px;
-      display: none;
+      display: none; /* Controlled dynamically */
     }
 
     .append-btn {
@@ -244,7 +207,6 @@
       font-size: 11px;
       cursor: pointer;
       margin-bottom: 24px;
-      transition: all 0.2s ease;
     }
 
     .append-btn:hover {
@@ -252,50 +214,14 @@
       color: var(--text);
     }
 
-    .remove-trade-btn {
-      background: transparent;
-      border: none;
-      color: var(--mute);
-      cursor: pointer;
-      font-size: 10px;
-      text-decoration: underline;
-    }
-
-    .remove-trade-btn:hover {
-      color: var(--red-main);
-    }
-
-    /* --- Scoreboard & Analytics Table --- */
     .scoreboard-grandslam {
       background: #060608;
       border: 1px solid var(--purple-main);
       border-radius: 6px;
       padding: 16px;
-      margin-bottom: 24px;
     }
 
-    .metrics-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 12px;
-      font-size: 11px;
-    }
-
-    .metrics-table th {
-      color: var(--mute);
-      text-align: left;
-      padding: 6px 8px;
-      font-size: 9px;
-      letter-spacing: 0.05em;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .metrics-table td {
-      padding: 8px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    /* --- Dynamic State Color Injectors --- */
+    /* --- Interactive Classes Matrix --- */
     .active-yes { border-color: var(--green-main) !important; background: var(--green-bg) !important; color: var(--green-text) !important; }
     .active-no { border-color: var(--red-main) !important; background: var(--red-bg) !important; color: var(--red-text) !important; }
     .active-env { border-color: var(--purple-main) !important; background: var(--purple-bg) !important; color: var(--purple-text) !important; }
@@ -306,27 +232,12 @@
     .grade-B.active { border-color: var(--purple-main) !important; background: var(--purple-bg) !important; color: var(--purple-text) !important; }
     .grade-C.active { border-color: var(--yellow-main) !important; background: var(--yellow-bg) !important; color: var(--yellow-text) !important; }
     .grade-F.active { border-color: var(--red-main) !important; background: var(--red-bg) !important; color: var(--red-text) !important; }
-
-    /* --- Print Adjustments --- */
-    @media print {
-      body { background: white; color: black; padding: 0; }
-      .top-controls, .append-btn, .remove-trade-btn { display: none !important; }
-      .panel, .trade-card, .scoreboard-grandslam { border: 1px solid #ccc !important; background: white !important; }
-      input, select, textarea { background: white !important; color: black !important; border: 1px solid #ccc !important; }
-    }
   </style>
 </head>
 <body>
 
   <div class="container">
-
-    <!-- Top Screen Controls -->
-    <div class="top-controls">
-      <button class="action-btn" onclick="window.print()">SAVE AS PDF / PRINT</button>
-      <button class="action-btn" onclick="resetForm()">RESET CURRENT SESSION</button>
-    </div>
     
-    <!-- --- HEADER --- -->
     <div class="header-panel">
       <div>
         <div class="eyebrow">Kaizen Trade Autopsy</div>
@@ -337,12 +248,10 @@
       </div>
     </div>
 
-    <!-- --- THE MANTRA --- -->
     <div class="mantra-panel">
       <p>"I protect the account. I stack clean days. I become impossible to kill. Has the market earned my participation?"</p>
     </div>
 
-    <!-- --- PRE-SESSION PILOT CONTEXT --- -->
     <div class="panel">
       <div class="eyebrow" style="margin-bottom: 12px;">Pre-Session Classification</div>
       <div class="grid-2">
@@ -353,90 +262,60 @@
         <div>
           <label class="field-label">First Trade Followed Setup?</label>
           <div class="btn-group">
-            <button type="button" class="btn-choice" id="first-setup-yes" onclick="setFirstTradeSetup(true)">YES</button>
-            <button type="button" class="btn-choice" id="first-setup-no" onclick="setFirstTradeSetup(false)">NO</button>
+            <button type="button" class="btn-choice" id="first-setup-yes" onclick="toggleFirstSetup(true)">YES</button>
+            <button type="button" class="btn-choice" id="first-setup-no" onclick="toggleFirstSetup(false)">NO</button>
           </div>
         </div>
       </div>
 
       <div style="margin-top: 14px;">
         <label class="field-label">Market Environment (Classify Before Engaging)</label>
-        <div class="chip-container" id="env-options-container"></div>
+        <div class="chip-container" id="env-container"></div>
         <div style="color: #52525b; font-size: 9px; margin-top: 6px; font-style: italic;">
           ROTATIONAL = Levels respected · CHOP = Whipsaws, sit out · EXPANSION = Violent, kills discretion
         </div>
       </div>
     </div>
 
-    <!-- --- TACTICAL TRADE LOG --- -->
     <div class="eyebrow" style="margin-bottom: 8px;">Tactical Trade Log</div>
-    <div id="trade-log-container"></div>
+    <div id="trade-log-root"></div>
 
-    <button type="button" class="append-btn" onclick="addNewTradeItem()">
+    <button type="button" class="append-btn" onclick="addTradeCard()">
       + APPEND NEXT TRADE CONQUEST
     </button>
 
-    <!-- --- ANTI-FOMO DRILL PANEL --- -->
     <div class="panel">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <div>
-          <div style="font-size: 10px; color: var(--green-text); font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em;">Chops / Garbage Setups Avoided</div>
+          <div style="font-size: 10px; color: var(--green-text); font-weight: bold;">CHOPS / GARBAGE SETUPS AVOIDED</div>
           <div style="font-size: 9px; color: var(--mute); font-style: italic;">Every deliberate pass on an unearned market scenario adds +1 skill point.</div>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
-          <button type="button" onclick="adjustAvoidedCount(-1)" style="background: var(--card); border: 1px solid var(--border); color: var(--text); width: 24px; height: 24px; border-radius: 4px; cursor: pointer;">-</button>
-          <span id="avoided-count-display" style="font-size: 16px; font-weight: bold; min-width: 24px; text-align: center; color: var(--green-main)">0</span>
-          <button type="button" onclick="adjustAvoidedCount(1)" style="background: var(--card); border: 1px solid var(--border); color: var(--text); width: 24px; height: 24px; border-radius: 4px; cursor: pointer;">+</button>
+          <button type="button" onclick="changeAvoidedCount(-1)" style="background: var(--card); border: 1px solid var(--border); color: var(--text); width: 24px; height: 24px; border-radius: 4px; cursor: pointer;">-</button>
+          <span id="avoided-count" style="font-size: 16px; font-weight: bold; min-width: 24px; text-align: center; color: var(--green-main)">0</span>
+          <button type="button" onclick="changeAvoidedCount(1)" style="background: var(--card); border: 1px solid var(--border); color: var(--text); width: 24px; height: 24px; border-radius: 4px; cursor: pointer;">+</button>
         </div>
       </div>
     </div>
 
-    <!-- --- REAL-TIME PERFORMANCE SUMMARY TALLY --- -->
-    <div class="panel">
-      <div class="eyebrow">Real-Time Metrics Engine</div>
-      <table class="metrics-table">
-        <thead>
-          <tr>
-            <th>NET P&amp;L</th>
-            <th>TOTAL TRADES</th>
-            <th>WIN RATE</th>
-            <th>AVG WINNER</th>
-            <th>AVG LOSSER</th>
-            <th>IMMEDIATE FOLLOW THROUGH</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td id="tally-net-pnl" style="font-weight: bold;">$0.00</td>
-            <td id="tally-total-trades">0</td>
-            <td id="tally-win-rate">0%</td>
-            <td id="tally-avg-winner" style="color: var(--green-text);">$0.00</td>
-            <td id="tally-avg-loser" style="color: var(--red-text);">$0.00</td>
-            <td id="tally-follow-through">0 / 0</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- --- THE GRAND SLAMS SCOREBOARD --- -->
     <div class="scoreboard-grandslam">
-      <div class="eyebrow" style="color: var(--purple-text); margin-bottom: 12px; font-weight: bold;">🏆 Permanent Records — The 14 Grand Slams Board</div>
+      <div class="eyebrow" style="color: var(--purple-text); margin-bottom: 12px; font-weight: bold;">🏆 PERMANENT RECORDS — THE 14 GRAND SLAMS BOARD</div>
       <div class="grid-2">
         <div>
-          <label class="field-label">Days Account Alive</label>
-          <input type="number" id="gs-days-alive" value="0" onchange="saveGrandSlams()">
+          <label class="field-label">DAYS ACCOUNT ALIVE</label>
+          <input type="number" value="0">
         </div>
         <div>
-          <label class="field-label" style="color: var(--purple-text);">Consecutive Rule-Following Sessions</label>
-          <input type="number" id="gs-consecutive-plan" value="0" style="color: var(--purple-text); font-weight: bold;" onchange="saveGrandSlams()">
+          <label class="field-label">CONSECUTIVE RULE-FOLLOWING SESSIONS</label>
+          <input type="number" value="0" style="color: var(--purple-text); font-weight: bold;">
         </div>
         <div>
-          <label class="field-label">Streak: No Revenge Trading (Days)</label>
-          <input type="number" id="gs-no-revenge" value="0" onchange="saveGrandSlams()">
+          <label class="field-label">STREAK: NO REVENGE TRADING (DAYS)</label>
+          <input type="number" value="0" style="color: var(--green-text);">
         </div>
         <div>
-          <label class="field-label">Max Loss Contained Without Reset ($)</label>
-          <input type="number" id="gs-max-drawdown" value="0" onchange="saveGrandSlams()">
+          <label class="field-label">MAX LOSS CONTAINED WITHOUT RESET ($)</label>
+          <input type="number" value="0" style="color: var(--yellow-text);">
         </div>
       </div>
       <div style="color: var(--mute); font-size: 9px; margin-top: 10px; font-style: italic; text-align: center;">
@@ -446,393 +325,222 @@
 
   </div>
 
-  <!-- --- SCRIPT LOGIC ENGINE --- -->
   <script>
     const ENV_OPTIONS = ["ROTATIONAL", "TRENDING", "CHOP", "EXPANSION", "UNKNOWN"];
     const GRADE_OPTIONS = ["A", "B", "C", "F"];
     const SETUP_TAGS = ["BREAKOUT", "PULLBACK", "REVERSAL", "CONTINUATION", "OPENING RANGE", "FAILED AUCTION", "ANTICIPATION", "FOMO", "CHASE", "OTHER"];
     const LOSS_TAGS = ["EARLY", "CHOP", "REVERSAL", "CHASE", "OVERSIZED", "FOMO", "LOW VOLUME", "COUNTERTREND", "OPENING RANGE NOISE", "EXPANSION"];
 
-    // App State
-    let sessionState = {
-      date: new Date().toISOString().slice(0, 10),
-      environment: "",
-      firstTradeSetup: null,
-      avoidedCount: 0,
-      trades: []
-    };
+    let tradeCounter = 0;
+    let avoidedCount = 0;
 
-    // Initialize application components
-    document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("session-date").value = sessionState.date;
-      document.getElementById("session-date").addEventListener("input", (e) => {
-        sessionState.date = e.target.value;
-      });
+    // Set default date picker
+    document.getElementById('session-date').value = new Date().toISOString().slice(0, 10);
 
-      renderEnvironmentChips();
-      loadGrandSlams();
-      
-      // Seed with initial trade item entry
-      addNewTradeItem();
+    // Render Market Environment Buttons
+    const envContainer = document.getElementById('env-container');
+    ENV_OPTIONS.forEach(env => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'chip';
+      btn.innerText = env;
+      btn.onclick = () => {
+        Array.from(envContainer.children).forEach(c => c.classList.remove('active-env'));
+        btn.classList.add('active-env');
+      };
+      envContainer.appendChild(btn);
     });
 
-    function renderEnvironmentChips() {
-      const container = document.getElementById("env-options-container");
-      container.innerHTML = "";
-      ENV_OPTIONS.forEach(env => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "chip";
-        button.innerText = env;
-        button.onclick = () => selectEnvironment(env, button);
-        container.appendChild(button);
-      });
+    function toggleFirstSetup(isFollowed) {
+      const yesBtn = document.getElementById('first-setup-yes');
+      const noBtn = document.getElementById('first-setup-no');
+      if(isFollowed) {
+        yesBtn.classList.add('active-yes');
+        noBtn.classList.remove('active-no');
+      } else {
+        noBtn.classList.add('active-no');
+        yesBtn.classList.remove('active-yes');
+      }
     }
 
-    function selectEnvironment(env, element) {
-      sessionState.environment = env;
-      document.querySelectorAll("#env-options-container .chip").forEach(el => el.classList.remove("active-env"));
-      element.classList.add("active-env");
+    function changeAvoidedCount(val) {
+      avoidedCount = Math.max(0, avoidedCount + val);
+      document.getElementById('avoided-count').innerText = avoidedCount;
     }
 
-    function setFirstTradeSetup(val) {
-      sessionState.firstTradeSetup = val;
-      const yesBtn = document.getElementById("first-setup-yes");
-      const noBtn = document.getElementById("first-setup-no");
-      
-      yesBtn.classList.remove("active-yes");
-      noBtn.classList.remove("active-no");
+    function addTradeCard() {
+      tradeCounter++;
+      const id = tradeCounter;
+      const root = document.getElementById('trade-log-root');
 
-      if (val === true) yesBtn.classList.add("active-yes");
-      if (val === false) noBtn.classList.add("active-no");
-    }
+      const card = document.createElement('div');
+      card.className = 'trade-card';
+      card.id = `trade-card-${id}`;
 
-    function adjustAvoidedCount(amount) {
-      sessionState.avoidedCount = Math.max(0, sessionState.avoidedCount + amount);
-      document.getElementById("avoided-count-display").innerText = sessionState.avoidedCount;
-    }
-
-    function generateTradeObject() {
-      return {
-        id: Date.now() + Math.random().toString(36).substr(2, 5),
-        direction: "",
-        time: "",
-        result: "",
-        grade: "",
-        immediateFollowThrough: null,
-        negotiable: null,
-        mae: "",
-        mfe: "",
-        why: "",
-        setupTag: "",
-        lossTag: "",
-        doNothingOutcome: ""
-      };
-    }
-
-    function addNewTradeItem() {
-      const trade = generateTradeObject();
-      sessionState.trades.push(trade);
-      renderTradeCard(trade, sessionState.trades.length - 1);
-      calculateMetrics();
-    }
-
-    function renderTradeCard(trade, currentIndex) {
-      const container = document.getElementById("trade-log-container");
-
-      const card = document.createElement("div");
-      card.className = "trade-card";
-      card.id = `card-${trade.id}`;
       card.innerHTML = `
         <div class="trade-header">
-          <span class="trade-title" id="title-index-${trade.id}">TRADE #${currentIndex + 1}</span>
-          <div style="display: flex; gap: 12px; align-items: center;">
-            <button type="button" class="remove-trade-btn" onclick="removeTradeItem('${trade.id}')">Remove</button>
-            <input type="text" placeholder="Result ($)" class="trade-result-input" id="result-${trade.id}" style="width: 110px; text-align: right; font-weight: bold;">
-          </div>
+          <span style="font-size: 12px; font-weight: 700;">TRADE #${id}</span>
+          <input type="text" placeholder="Result ($)" id="result-${id}" style="width: 100px; text-align: right; background: var(--surface); border: 1px solid var(--border); font-weight: bold; color: var(--green-main);">
         </div>
 
-        <!-- Matrix Elements -->
         <div class="grid-4">
           <div>
-            <span class="field-label">Time</span>
-            <input type="text" placeholder="09:45" id="time-${trade.id}">
+            <span class="field-label">TIME</span>
+            <input type="text" placeholder="09:45">
           </div>
           <div>
-            <span class="field-label">Dir</span>
+            <span class="field-label">DIR</span>
             <div class="btn-group">
-              <button type="button" class="btn-choice" id="dir-long-${trade.id}" style="font-size:9px; padding:4px;">LONG</button>
-              <button type="button" class="btn-choice" id="dir-short-${trade.id}" style="font-size:9px; padding:4px;">SHORT</button>
+              <button type="button" class="btn-choice" id="dir-long-${id}" onclick="setDirection(${id}, 'LONG')">LONG</button>
+              <button type="button" class="btn-choice" id="dir-short-${id}" onclick="setDirection(${id}, 'SHORT')">SHORT</button>
             </div>
           </div>
           <div>
             <span class="field-label">MAE (PTS)</span>
-            <input type="text" placeholder="Adverse" id="mae-${trade.id}" style="color: var(--red-text);">
+            <input type="text" placeholder="Adverse" style="color: var(--red-text);">
           </div>
           <div>
             <span class="field-label">MFE (PTS)</span>
-            <input type="text" placeholder="Favor" id="mfe-${trade.id}" style="color: var(--green-text);">
+            <input type="text" placeholder="Favor" style="color: var(--green-text);">
           </div>
         </div>
 
-        <!-- Behavior Interrogatives -->
         <div class="grid-2">
           <div>
-            <span class="field-label">Immediate Follow Through?</span>
+            <span class="field-label">IMMEDIATE FOLLOW THROUGH?</span>
             <div class="btn-group">
-              <button type="button" class="btn-choice" id="ift-yes-${trade.id}">YES</button>
-              <button type="button" class="btn-choice" id="ift-no-${trade.id}">NO</button>
+              <button type="button" class="btn-choice" id="ift-yes-${id}" onclick="setFollowThrough(${id}, true)">YES</button>
+              <button type="button" class="btn-choice" id="ift-no-${id}" onclick="setFollowThrough(${id}, false)">NO</button>
             </div>
           </div>
           <div>
-            <span class="field-label">Market Negotiable? (Had Time?)</span>
+            <span class="field-label">MARKET NEGOTIABLE? (HAD TIME?)</span>
             <div class="btn-group">
-              <button type="button" class="btn-choice" id="neg-yes-${trade.id}">YES</button>
-              <button type="button" class="btn-choice" id="neg-no-${trade.id}">NO (TOO FAST)</button>
+              <button type="button" class="btn-choice" id="neg-yes-${id}" onclick="setNegotiable(${id}, true)">YES</button>
+              <button type="button" class="btn-choice" id="neg-no-${id}" onclick="setNegotiable(${id}, false)">NO (TOO FAST)</button>
             </div>
           </div>
         </div>
 
-        <!-- Analytical Strings -->
         <div style="margin-bottom: 12px;">
-          <span class="field-label">Why Did I Take It? (One sentence maximum)</span>
-          <input type="text" placeholder="e.g., 'Failed auction at prior high open range'" id="why-${trade.id}">
+          <span class="field-label">WHY DID I TAKE IT? (One sentence maximum)</span>
+          <input type="text" placeholder="e.g., 'Failed auction at prior high open range'">
         </div>
 
-        <!-- Hierarchy Identifiers -->
         <div style="margin-bottom: 12px;">
-          <span class="field-label">Setup Seen</span>
-          <div class="chip-container" id="setup-container-${trade.id}"></div>
+          <span class="field-label">SETUP SEEN</span>
+          <div class="chip-container" id="setup-tags-${id}"></div>
         </div>
 
-        <!-- Contextualized Loss Panel -->
-        <div class="loss-detection-zone" id="loss-zone-${trade.id}">
-          <span class="field-label" style="color: var(--red-text); font-weight: bold; margin-bottom: 6px;">Loss Category Detected</span>
-          <div class="chip-container" id="loss-tags-container-${trade.id}"></div>
+        <div class="loss-detection-zone" id="loss-zone-${id}">
+          <span class="field-label" style="color: var(--red-text); font-weight: bold; margin-bottom: 4px;">LOSS CATEGORY DETECTED</span>
+          <div class="chip-container" id="loss-tags-${id}"></div>
         </div>
 
-        <!-- What If Drill Context Indicator -->
-        <div style="margin-bottom: 12px;">
-          <span class="field-label">What would have happened if I did nothing?</span>
-          <input type="text" placeholder="e.g., 'Saved myself $100', 'Market never confirmed setup'" id="nothing-${trade.id}">
-        </div>
-
-        <!-- Grading Interface Matrix -->
         <div>
-          <span class="field-label">Trade Grade (Grade the execution, never the outcome)</span>
-          <div class="btn-group">
-            ${GRADE_OPTIONS.map(g => `<button type="button" class="btn-choice grade-${g}" id="grade-${g}-${trade.id}">${g}</button>`).join('')}
-          </div>
+          <span class="field-label">TRADE GRADE (Grade the execution, never the outcome)</span>
+          <div class="btn-group" id="grade-group-${id}"></div>
         </div>
       `;
 
-      container.appendChild(card);
+      root.appendChild(card);
 
-      // Map Setup options
-      const setupContainer = document.getElementById(`setup-container-${trade.id}`);
+      // Populate Setup Tags Chips
+      const sContainer = document.getElementById(`setup-tags-${id}`);
       SETUP_TAGS.forEach(tag => {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "chip";
-        btn.innerText = tag;
-        btn.onclick = () => {
-          trade.setupTag = tag;
-          setupContainer.querySelectorAll(".chip").forEach(c => c.classList.remove("active-setup"));
-          btn.classList.add("active-setup");
+        const tBtn = document.createElement('button');
+        tBtn.type = 'button';
+        tBtn.className = 'chip';
+        tBtn.innerText = tag;
+        tBtn.onclick = () => {
+          Array.from(sContainer.children).forEach(c => c.classList.remove('active-setup'));
+          tBtn.classList.add('active-setup');
         };
-        setupContainer.appendChild(btn);
+        sContainer.appendChild(tBtn);
       });
 
-      // Map Loss options
-      const lossContainer = document.getElementById(`loss-tags-container-${trade.id}`);
+      // Populate Loss Tags Chips
+      const lContainer = document.getElementById(`loss-tags-${id}`);
       LOSS_TAGS.forEach(tag => {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "chip";
-        btn.innerText = tag;
-        btn.onclick = () => {
-          trade.lossTag = tag;
-          lossContainer.querySelectorAll(".chip").forEach(c => c.classList.remove("active-loss"));
-          btn.classList.add("active-loss");
+        const lBtn = document.createElement('button');
+        lBtn.type = 'button';
+        lBtn.className = 'chip';
+        lBtn.innerText = tag;
+        lBtn.onclick = () => {
+          Array.from(lContainer.children).forEach(c => c.classList.remove('active-loss'));
+          lBtn.classList.add('active-loss');
         };
-        lossContainer.appendChild(btn);
+        lContainer.appendChild(lBtn);
       });
 
-      // Direction Configuration Events
-      document.getElementById(`dir-long-${trade.id}`).onclick = () => {
-        trade.direction = "LONG";
-        document.getElementById(`dir-long-${trade.id}`).classList.add("active-yes");
-        document.getElementById(`dir-short-${trade.id}`).classList.remove("active-no");
-      };
-      document.getElementById(`dir-short-${trade.id}`).onclick = () => {
-        trade.direction = "SHORT";
-        document.getElementById(`dir-short-${trade.id}`).classList.add("active-no");
-        document.getElementById(`dir-long-${trade.id}`).classList.remove("active-yes");
-      };
+      // Populate Grading Buttons
+      const gGroup = document.getElementById(`grade-group-${id}`);
+      GRADE_OPTIONS.forEach(g => {
+        const gBtn = document.createElement('button');
+        gBtn.type = 'button';
+        gBtn.className = `btn-choice grade-${g}`;
+        gBtn.innerText = g;
+        gBtn.onclick = () => {
+          Array.from(gGroup.children).forEach(c => c.classList.remove('active'));
+          gBtn.classList.add('active');
+        };
+        gGroup.appendChild(gBtn);
+      });
 
-      // Follow Through Configuration Events
-      document.getElementById(`ift-yes-${trade.id}`).onclick = () => {
-        trade.immediateFollowThrough = true;
-        document.getElementById(`ift-yes-${trade.id}`).classList.add("active-yes");
-        document.getElementById(`ift-no-${trade.id}`).classList.remove("active-no");
-        calculateMetrics();
-      };
-      document.getElementById(`ift-no-${trade.id}`).onclick = () => {
-        trade.immediateFollowThrough = false;
-        document.getElementById(`ift-no-${trade.id}`).classList.add("active-no");
-        document.getElementById(`ift-yes-${trade.id}`).classList.remove("active-yes");
-        calculateMetrics();
-      };
-
-      // Negotiable Elements
-      document.getElementById(`neg-yes-${trade.id}`).onclick = () => {
-        trade.negotiable = true;
-        document.getElementById(`neg-yes-${trade.id}`).classList.add("active-env");
-        document.getElementById(`neg-no-${trade.id}`).classList.remove("active-no");
-      };
-      document.getElementById(`neg-no-${trade.id}`).onclick = () => {
-        trade.negotiable = false;
-        document.getElementById(`neg-no-${trade.id}`).classList.add("active-no");
-        document.getElementById(`neg-yes-${trade.id}`).classList.remove("active-env");
-      };
-
-      // Realtime input updates mapping
-      const resultField = document.getElementById(`result-${trade.id}`);
-      resultField.addEventListener("input", (e) => {
-        trade.result = e.target.value;
-        const valueNum = parseFloat(trade.result);
-        const lossZone = document.getElementById(`loss-zone-${trade.id}`);
-        
-        if (!isNaN(valueNum) && valueNum < 0) {
-          resultField.style.color = "var(--red-main)";
+      // Handle Dynamic Loss Detection based on input value
+      const resInput = document.getElementById(`result-${id}`);
+      resInput.oninput = function() {
+        const val = parseFloat(resInput.value);
+        const lossZone = document.getElementById(`loss-zone-${id}`);
+        if (!isNaN(val) && val < 0) {
+          resInput.style.color = "var(--red-main)";
           lossZone.style.display = "block";
         } else {
-          resultField.style.color = "var(--green-main)";
+          resInput.style.color = "var(--green-main)";
           lossZone.style.display = "none";
         }
-        calculateMetrics();
-      });
-
-      // Grade mappings
-      GRADE_OPTIONS.forEach(g => {
-        const currentBtn = document.getElementById(`grade-${g}-${trade.id}`);
-        currentBtn.onclick = () => {
-          trade.grade = g;
-          GRADE_OPTIONS.forEach(opt => document.getElementById(`grade-${opt}-${trade.id}`).classList.remove("active"));
-          currentBtn.classList.add("active");
-        };
-      });
-
-      // Text input state assignments
-      document.getElementById(`time-${trade.id}`).addEventListener("input", (e) => trade.time = e.target.value);
-      document.getElementById(`mae-${trade.id}`).addEventListener("input", (e) => trade.mae = e.target.value);
-      document.getElementById(`mfe-${trade.id}`).addEventListener("input", (e) => trade.mfe = e.target.value);
-      document.getElementById(`why-${trade.id}`).addEventListener("input", (e) => trade.why = e.target.value);
-      document.getElementById(`nothing-${trade.id}`).addEventListener("input", (e) => trade.doNothingOutcome = e.target.value);
-    }
-
-    function removeTradeItem(id) {
-      sessionState.trades = sessionState.trades.filter(t => t.id !== id);
-      const targetElement = document.getElementById(`card-${id}`);
-      if (targetElement) targetElement.remove();
-      
-      // Realignment numbers index
-      sessionState.trades.forEach((trade, idx) => {
-        const titleText = document.getElementById(`title-index-${trade.id}`);
-        if (titleText) titleText.innerText = `TRADE #${idx + 1}`;
-      });
-      calculateMetrics();
-    }
-
-    function calculateMetrics() {
-      let netPnL = 0;
-      let totalTrades = 0;
-      let winningTradesCount = 0;
-      let positiveValuesSum = 0;
-      let negativeValuesSum = 0;
-      let positiveCount = 0;
-      let negativeCount = 0;
-      let followThroughTrueCount = 0;
-      let followThroughTotalCount = 0;
-
-      sessionState.trades.forEach(t => {
-        const val = parseFloat(t.result);
-        if (!isNaN(val)) {
-          netPnL += val;
-          totalTrades++;
-          if (val > 0) {
-            winningTradesCount++;
-            positiveValuesSum += val;
-            positiveCount++;
-          } else if (val < 0) {
-            negativeValuesSum += val;
-            negativeCount++;
-          }
-        }
-        if (t.immediateFollowThrough === true) followThroughTrueCount++;
-        if (t.immediateFollowThrough !== null) followThroughTotalCount++;
-      });
-
-      const winRate = totalTrades > 0 ? Math.round((winningTradesCount / totalTrades) * 100) : 0;
-      const avgWinner = positiveCount > 0 ? (positiveValuesSum / positiveCount).toFixed(2) : "0.00";
-      const avgLoser = negativeCount > 0 ? (negativeValuesSum / negativeCount).toFixed(2) : "0.00";
-
-      // Inject to viewport engine
-      const netDisplay = document.getElementById("tally-net-pnl");
-      netDisplay.innerText = `${netPnL >= 0 ? '$' : '-$'}${Math.abs(netPnL).toFixed(2)}`;
-      netDisplay.style.color = netPnL >= 0 ? "var(--green-text)" : "var(--red-main)";
-
-      document.getElementById("tally-total-trades").innerText = totalTrades;
-      document.getElementById("tally-win-rate").innerText = `${winRate}%`;
-      document.getElementById("tally-avg-winner").innerText = `$${avgWinner}`;
-      document.getElementById("tally-avg-loser").innerText = `$${Math.abs(avgLoser)}`;
-      document.getElementById("tally-follow-through").innerText = `${followThroughTrueCount} / ${followThroughTotalCount}`;
-    }
-
-    function saveGrandSlams() {
-      const grandSlamsObj = {
-        daysAlive: document.getElementById("gs-days-alive").value,
-        consecutiveFollowingPlan: document.getElementById("gs-consecutive-plan").value,
-        noRevengeStreak: document.getElementById("gs-no-revenge").value,
-        maxDrawdownRecovered: document.getElementById("gs-max-drawdown").value
       };
-      localStorage.setItem("kaizen_grandslams_board", JSON.stringify(grandSlamsObj));
     }
 
-    function loadGrandSlams() {
-      const raw = localStorage.getItem("kaizen_grandslams_board");
-      if (raw) {
-        try {
-          const parsed = JSON.parse(raw);
-          document.getElementById("gs-days-alive").value = parsed.daysAlive || 0;
-          document.getElementById("gs-consecutive-plan").value = parsed.consecutiveFollowingPlan || 0;
-          document.getElementById("gs-no-revenge").value = parsed.noRevengeStreak || 0;
-          document.getElementById("gs-max-drawdown").value = parsed.maxDrawdownRecovered || 0;
-        } catch (e) {
-          console.error("Local storage allocation structure parse error recovery fallback.", e);
-        }
+    // Dynamic State Click Intermediaries
+    function setDirection(id, dir) {
+      const longB = document.getElementById(`dir-long-${id}`);
+      const shortB = document.getElementById(`dir-short-${id}`);
+      if(dir === 'LONG') {
+        longB.classList.add('active-yes');
+        shortB.classList.remove('active-no');
+      } else {
+        shortB.classList.add('active-no');
+        longB.classList.remove('active-yes');
       }
     }
 
-    function resetForm() {
-      if (confirm("Are you sure you want to clean current session logs? Records inside the Permanent Scoreboard will be retained.")) {
-        sessionState.trades = [];
-        sessionState.avoidedCount = 0;
-        sessionState.environment = "";
-        sessionState.firstTradeSetup = null;
-
-        document.getElementById("trade-log-container").innerHTML = "";
-        document.getElementById("avoided-count-display").innerText = "0";
-        
-        const yesBtn = document.getElementById("first-setup-yes");
-        const noBtn = document.getElementById("first-setup-no");
-        yesBtn.classList.remove("active-yes");
-        noBtn.classList.remove("active-no");
-
-        renderEnvironmentChips();
-        addNewTradeItem();
+    function setFollowThrough(id, outcome) {
+      const yesB = document.getElementById(`ift-yes-${id}`);
+      const noB = document.getElementById(`ift-no-${id}`);
+      if(outcome) {
+        yesB.classList.add('active-yes');
+        noB.classList.remove('active-no');
+      } else {
+        noB.classList.add('active-no');
+        yesB.classList.remove('active-yes');
       }
     }
+
+    function setNegotiable(id, outcome) {
+      const yesB = document.getElementById(`neg-yes-${id}`);
+      const noB = document.getElementById(`neg-no-${id}`);
+      if(outcome) {
+        yesB.classList.add('active-env');
+        noB.classList.remove('active-no');
+      } else {
+        noB.classList.add('active-no');
+        yesB.classList.remove('active-env');
+      }
+    }
+
+    // Initialize with first clear trade block item
+    addTradeCard();
   </script>
 </body>
 </html>
