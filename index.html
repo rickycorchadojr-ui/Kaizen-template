@@ -1,837 +1,838 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kaizen Core Operating Suite — Professional Terminal</title>
-    
-    <!-- Production React Engine Scripts -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    
-    <!-- Babel Browser Transpiler for live JSX parsing -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- Recharts Dependencies -->
-    <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
-    <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
-    
-    <!-- Tailwind CSS Engine -->
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kaizen Trade Autopsy — Session Log & Metrics</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap');
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
-        
-        body {
-            font-family: 'JetBrains Mono', monospace;
-            background-color: #08080a;
-            color: #e4e4e7;
-        }
+    /* --- Semantically Saturated Color Architecture --- */
+    :root {
+      --bg: #08080a;
+      --surface: #101012;
+      --card: #141417;
+      --border: #27272a;
+      --text: #e4e4e7;
+      --mute: #717171;
+      
+      --green-main: #10b981;
+      --green-bg: #064e3b;
+      --green-text: #6ee7b7;
 
-        /* Prevent system scrollbars from clipping canvas tracking views */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #0f0f12; }
-        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+      --red-main: #ef4444;
+      --red-bg: #450a0a;
+      --red-text: #fca5a5;
 
-        @media print {
-            .no-print { display: none !important; }
-            body { background: white !important; color: black !important; padding: 0 !important; }
-            .print-page {
-                width: 8.5in;
-                min-height: 11in;
-                margin: 0 auto !important;
-                padding: 0.5in 0.5in !important;
-                background: white !important;
-                color: #000000 !important;
-                page-break-after: always;
-            }
-            .print-box { border: 0.5pt solid #c8c8c8 !important; background-color: #fafafa !important; }
-            .print-rule { border-bottom: 0.5pt solid #c8c8c8 !important; }
-        }
-    </style>
+      --yellow-main: #eab308;
+      --yellow-bg: #422006;
+      --yellow-text: #fde047;
+
+      --purple-main: #a855f7;
+      --purple-bg: #1e1b4b;
+      --purple-text: #a5b4fc;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      padding: 24px 16px;
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    /* --- Utilities & Typography --- */
+    .eyebrow {
+      color: var(--mute);
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 10px;
+      color: var(--mute);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    input, select, textarea {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 4px;
+      width: 100%;
+      font-family: inherit;
+      font-size: 11px;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--mute);
+    }
+
+    /* --- Interactive Button Components --- */
+    .btn-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-choice {
+      flex: 1;
+      padding: 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--mute);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .chip-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .chip {
+      padding: 5px 10px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--mute);
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    /* --- Section Shells --- */
+    .header-panel {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .mantra-panel {
+      border-left: 2px solid var(--border);
+      padding-left: 16px;
+      margin-bottom: 24px;
+    }
+
+    .mantra-panel p {
+      color: var(--mute);
+      font-size: 11px;
+      font-style: italic;
+      line-height: 1.6;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+
+    /* --- Action Controls --- */
+    .top-controls {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .action-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .action-btn:hover {
+      border-color: var(--text);
+    }
+
+    /* --- Tactical Trade Log --- */
+    .trade-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .trade-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .trade-title {
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .loss-detection-zone {
+      margin-bottom: 12px;
+      padding: 10px;
+      border: 1px solid var(--red-main);
+      background: #1a0f11;
+      border-radius: 4px;
+      display: none;
+    }
+
+    .append-btn {
+      width: 100%;
+      background: none;
+      border: 1px dashed var(--border);
+      color: var(--mute);
+      padding: 12px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      margin-bottom: 24px;
+      transition: all 0.2s ease;
+    }
+
+    .append-btn:hover {
+      border-color: var(--mute);
+      color: var(--text);
+    }
+
+    .remove-trade-btn {
+      background: transparent;
+      border: none;
+      color: var(--mute);
+      cursor: pointer;
+      font-size: 10px;
+      text-decoration: underline;
+    }
+
+    .remove-trade-btn:hover {
+      color: var(--red-main);
+    }
+
+    /* --- Scoreboard & Analytics Table --- */
+    .scoreboard-grandslam {
+      background: #060608;
+      border: 1px solid var(--purple-main);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+
+    .metrics-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 11px;
+    }
+
+    .metrics-table th {
+      color: var(--mute);
+      text-align: left;
+      padding: 6px 8px;
+      font-size: 9px;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .metrics-table td {
+      padding: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* --- Dynamic State Color Injectors --- */
+    .active-yes { border-color: var(--green-main) !important; background: var(--green-bg) !important; color: var(--green-text) !important; }
+    .active-no { border-color: var(--red-main) !important; background: var(--red-bg) !important; color: var(--red-text) !important; }
+    .active-env { border-color: var(--purple-main) !important; background: var(--purple-bg) !important; color: var(--purple-text) !important; }
+    .active-setup { border-color: var(--purple-main) !important; background: var(--purple-bg) !important; color: var(--purple-text) !important; }
+    .active-loss { border-color: var(--red-main) !important; background: var(--red-bg) !important; color: var(--red-text) !important; }
+    
+    .grade-A.active { border-color: var(--green-main) !important; background: var(--green-bg) !important; color: var(--green-text) !important; }
+    .grade-B.active { border-color: var(--purple-main) !important; background: var(--purple-bg) !important; color: var(--purple-text) !important; }
+    .grade-C.active { border-color: var(--yellow-main) !important; background: var(--yellow-bg) !important; color: var(--yellow-text) !important; }
+    .grade-F.active { border-color: var(--red-main) !important; background: var(--red-bg) !important; color: var(--red-text) !important; }
+
+    /* --- Print Adjustments --- */
+    @media print {
+      body { background: white; color: black; padding: 0; }
+      .top-controls, .append-btn, .remove-trade-btn { display: none !important; }
+      .panel, .trade-card, .scoreboard-grandslam { border: 1px solid #ccc !important; background: white !important; }
+      input, select, textarea { background: white !important; color: black !important; border: 1px solid #ccc !important; }
+    }
+  </style>
 </head>
-<body class="antialiased">
+<body>
 
-    <div id="root"></div>
+  <div class="container">
 
-    <script type="text/babel">
-        // Safe global execution destructuring from unpkg script injections
-        const { useState, useEffect } = React;
-        const { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ReferenceLine, Cell } = Recharts;
+    <!-- Top Screen Controls -->
+    <div class="top-controls">
+      <button class="action-btn" onclick="window.print()">SAVE AS PDF / PRINT</button>
+      <button class="action-btn" onclick="resetForm()">RESET CURRENT SESSION</button>
+    </div>
+    
+    <!-- --- HEADER --- -->
+    <div class="header-panel">
+      <div>
+        <div class="eyebrow">Kaizen Trade Autopsy</div>
+        <h1>SESSION LOG &amp; METRICS</h1>
+      </div>
+      <div style="color: var(--green-text); font-size: 11px; font-weight: 600;">
+        ⚡ SURVIVAL IS THE WIN CONDITION
+      </div>
+    </div>
 
-        const SESSIONS_KEY = "kaizen:sessions";
+    <!-- --- THE MANTRA --- -->
+    <div class="mantra-panel">
+      <p>"I protect the account. I stack clean days. I become impossible to kill. Has the market earned my participation?"</p>
+    </div>
 
-        // Global Structural Array Constants
-        const ENV_OPTIONS = ["ROTATIONAL", "TRENDING", "CHOP", "EXPANSION", "UNKNOWN"];
-        const GRADE_OPTIONS = ["A", "B", "C", "F"];
-        const SETUP_TAGS = ["BREAKOUT", "PULLBACK", "REVERSAL", "CONTINUATION", "OPENING RANGE", "FAILED AUCTION", "ANTICIPATION", "FOMO", "CHASE", "OTHER"];
-        const LOSS_TAGS = ["EARLY", "CHOP", "REVERSAL", "CHASE", "OVERSIZED", "FOMO", "LOW VOLUME", "COUNTERTREND", "OPENING RANGE NOISE", "EXPANSION"];
-        const DIRECTION_OPTIONS = ["LONG", "SHORT"];
+    <!-- --- PRE-SESSION PILOT CONTEXT --- -->
+    <div class="panel">
+      <div class="eyebrow" style="margin-bottom: 12px;">Pre-Session Classification</div>
+      <div class="grid-2">
+        <div>
+          <label class="field-label">Session Date</label>
+          <input type="date" id="session-date">
+        </div>
+        <div>
+          <label class="field-label">First Trade Followed Setup?</label>
+          <div class="btn-group">
+            <button type="button" class="btn-choice" id="first-setup-yes" onclick="setFirstTradeSetup(true)">YES</button>
+            <button type="button" class="btn-choice" id="first-setup-no" onclick="setFirstTradeSetup(false)">NO</button>
+          </div>
+        </div>
+      </div>
 
-        // High-Fidelity Object Initializers
-        const emptyTrade = () => ({
-            id: Date.now() + Math.random(),
-            direction: "", 
-            time: "", 
-            entry: "", 
-            exit: "", 
-            result: "", 
-            grade: "",
-            immediateFollowThrough: null, 
-            negotiable: null, 
-            mae: "", 
-            mfe: "", 
-            why: "",
-            wouldTakeAgain: null, 
-            marketDid: null, 
-            lossTag: "", 
-            setupTag: "", 
-            contracts: "", 
-            doNothingOutcome: "",
-            notes: ""
-        });
+      <div style="margin-top: 14px;">
+        <label class="field-label">Market Environment (Classify Before Engaging)</label>
+        <div class="chip-container" id="env-options-container"></div>
+        <div style="color: #52525b; font-size: 9px; margin-top: 6px; font-style: italic;">
+          ROTATIONAL = Levels respected · CHOP = Whipsaws, sit out · EXPANSION = Violent, kills discretion
+        </div>
+      </div>
+    </div>
 
-        const emptyAvoided = () => ({
-            id: Date.now() + Math.random(),
-            time: "",
-            setupTag: "",
-            whyAvoided: "",
-            passed: null, // true = passed (good save), false = failed (missed move)
-            pointsSavedOrMissed: ""
-        });
+    <!-- --- TACTICAL TRADE LOG --- -->
+    <div class="eyebrow" style="margin-bottom: 8px;">Tactical Trade Log</div>
+    <div id="trade-log-container"></div>
 
-        const emptySession = () => ({
-            id: Date.now(),
-            date: new Date().toISOString().slice(0, 10),
-            sessionNum: "", 
-            environment: "", 
-            environmentCorrect: null, 
-            firstTradeSetup: null,
-            cheatScore: "", 
-            patienceScore: "", 
-            walkAways: "", 
-            reentryCount: "", 
-            sessionNotes: "",
-            trades: [emptyTrade()], 
-            avoided: [emptyAvoided()], 
-            survived: true
-        });
+    <button type="button" class="append-btn" onclick="addNewTradeItem()">
+      + APPEND NEXT TRADE CONQUEST
+    </button>
 
-        // Atomic UI Framework Components
-        function Chip({ label, active, onClick, color = "blue" }) {
-            const colors = {
-                blue: active ? "bg-indigo-900 text-indigo-100 border-indigo-500" : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-600",
-                red: active ? "bg-red-900 text-red-100 border-red-500" : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-600",
-                green: active ? "bg-emerald-900 text-emerald-100 border-emerald-500" : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-600",
-                yellow: active ? "bg-yellow-900 text-yellow-100 border-yellow-500" : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-600"
-            };
-            return (
-                <button type="button" onClick={onClick} className={`px-2.5 py-1 text-[11px] font-mono border rounded transition-all ${colors[color]}`}>
-                    {label}
-                </button>
-            );
+    <!-- --- ANTI-FOMO DRILL PANEL --- -->
+    <div class="panel">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <div style="font-size: 10px; color: var(--green-text); font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em;">Chops / Garbage Setups Avoided</div>
+          <div style="font-size: 9px; color: var(--mute); font-style: italic;">Every deliberate pass on an unearned market scenario adds +1 skill point.</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button type="button" onclick="adjustAvoidedCount(-1)" style="background: var(--card); border: 1px solid var(--border); color: var(--text); width: 24px; height: 24px; border-radius: 4px; cursor: pointer;">-</button>
+          <span id="avoided-count-display" style="font-size: 16px; font-weight: bold; min-width: 24px; text-align: center; color: var(--green-main)">0</span>
+          <button type="button" onclick="adjustAvoidedCount(1)" style="background: var(--card); border: 1px solid var(--border); color: var(--text); width: 24px; height: 24px; border-radius: 4px; cursor: pointer;">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- --- REAL-TIME PERFORMANCE SUMMARY TALLY --- -->
+    <div class="panel">
+      <div class="eyebrow">Real-Time Metrics Engine</div>
+      <table class="metrics-table">
+        <thead>
+          <tr>
+            <th>NET P&amp;L</th>
+            <th>TOTAL TRADES</th>
+            <th>WIN RATE</th>
+            <th>AVG WINNER</th>
+            <th>AVG LOSSER</th>
+            <th>IMMEDIATE FOLLOW THROUGH</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td id="tally-net-pnl" style="font-weight: bold;">$0.00</td>
+            <td id="tally-total-trades">0</td>
+            <td id="tally-win-rate">0%</td>
+            <td id="tally-avg-winner" style="color: var(--green-text);">$0.00</td>
+            <td id="tally-avg-loser" style="color: var(--red-text);">$0.00</td>
+            <td id="tally-follow-through">0 / 0</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- --- THE GRAND SLAMS SCOREBOARD --- -->
+    <div class="scoreboard-grandslam">
+      <div class="eyebrow" style="color: var(--purple-text); margin-bottom: 12px; font-weight: bold;">🏆 Permanent Records — The 14 Grand Slams Board</div>
+      <div class="grid-2">
+        <div>
+          <label class="field-label">Days Account Alive</label>
+          <input type="number" id="gs-days-alive" value="0" onchange="saveGrandSlams()">
+        </div>
+        <div>
+          <label class="field-label" style="color: var(--purple-text);">Consecutive Rule-Following Sessions</label>
+          <input type="number" id="gs-consecutive-plan" value="0" style="color: var(--purple-text); font-weight: bold;" onchange="saveGrandSlams()">
+        </div>
+        <div>
+          <label class="field-label">Streak: No Revenge Trading (Days)</label>
+          <input type="number" id="gs-no-revenge" value="0" onchange="saveGrandSlams()">
+        </div>
+        <div>
+          <label class="field-label">Max Loss Contained Without Reset ($)</label>
+          <input type="number" id="gs-max-drawdown" value="0" onchange="saveGrandSlams()">
+        </div>
+      </div>
+      <div style="color: var(--mute); font-size: 9px; margin-top: 10px; font-style: italic; text-align: center;">
+        "Professionals accumulate reps. Dead accounts cannot compound."
+      </div>
+    </div>
+
+  </div>
+
+  <!-- --- SCRIPT LOGIC ENGINE --- -->
+  <script>
+    const ENV_OPTIONS = ["ROTATIONAL", "TRENDING", "CHOP", "EXPANSION", "UNKNOWN"];
+    const GRADE_OPTIONS = ["A", "B", "C", "F"];
+    const SETUP_TAGS = ["BREAKOUT", "PULLBACK", "REVERSAL", "CONTINUATION", "OPENING RANGE", "FAILED AUCTION", "ANTICIPATION", "FOMO", "CHASE", "OTHER"];
+    const LOSS_TAGS = ["EARLY", "CHOP", "REVERSAL", "CHASE", "OVERSIZED", "FOMO", "LOW VOLUME", "COUNTERTREND", "OPENING RANGE NOISE", "EXPANSION"];
+
+    // App State
+    let sessionState = {
+      date: new Date().toISOString().slice(0, 10),
+      environment: "",
+      firstTradeSetup: null,
+      avoidedCount: 0,
+      trades: []
+    };
+
+    // Initialize application components
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("session-date").value = sessionState.date;
+      document.getElementById("session-date").addEventListener("input", (e) => {
+        sessionState.date = e.target.value;
+      });
+
+      renderEnvironmentChips();
+      loadGrandSlams();
+      
+      // Seed with initial trade item entry
+      addNewTradeItem();
+    });
+
+    function renderEnvironmentChips() {
+      const container = document.getElementById("env-options-container");
+      container.innerHTML = "";
+      ENV_OPTIONS.forEach(env => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "chip";
+        button.innerText = env;
+        button.onclick = () => selectEnvironment(env, button);
+        container.appendChild(button);
+      });
+    }
+
+    function selectEnvironment(env, element) {
+      sessionState.environment = env;
+      document.querySelectorAll("#env-options-container .chip").forEach(el => el.classList.remove("active-env"));
+      element.classList.add("active-env");
+    }
+
+    function setFirstTradeSetup(val) {
+      sessionState.firstTradeSetup = val;
+      const yesBtn = document.getElementById("first-setup-yes");
+      const noBtn = document.getElementById("first-setup-no");
+      
+      yesBtn.classList.remove("active-yes");
+      noBtn.classList.remove("active-no");
+
+      if (val === true) yesBtn.classList.add("active-yes");
+      if (val === false) noBtn.classList.add("active-no");
+    }
+
+    function adjustAvoidedCount(amount) {
+      sessionState.avoidedCount = Math.max(0, sessionState.avoidedCount + amount);
+      document.getElementById("avoided-count-display").innerText = sessionState.avoidedCount;
+    }
+
+    function generateTradeObject() {
+      return {
+        id: Date.now() + Math.random().toString(36).substr(2, 5),
+        direction: "",
+        time: "",
+        result: "",
+        grade: "",
+        immediateFollowThrough: null,
+        negotiable: null,
+        mae: "",
+        mfe: "",
+        why: "",
+        setupTag: "",
+        lossTag: "",
+        doNothingOutcome: ""
+      };
+    }
+
+    function addNewTradeItem() {
+      const trade = generateTradeObject();
+      sessionState.trades.push(trade);
+      renderTradeCard(trade, sessionState.trades.length - 1);
+      calculateMetrics();
+    }
+
+    function renderTradeCard(trade, currentIndex) {
+      const container = document.getElementById("trade-log-container");
+
+      const card = document.createElement("div");
+      card.className = "trade-card";
+      card.id = `card-${trade.id}`;
+      card.innerHTML = `
+        <div class="trade-header">
+          <span class="trade-title" id="title-index-${trade.id}">TRADE #${currentIndex + 1}</span>
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <button type="button" class="remove-trade-btn" onclick="removeTradeItem('${trade.id}')">Remove</button>
+            <input type="text" placeholder="Result ($)" class="trade-result-input" id="result-${trade.id}" style="width: 110px; text-align: right; font-weight: bold;">
+          </div>
+        </div>
+
+        <!-- Matrix Elements -->
+        <div class="grid-4">
+          <div>
+            <span class="field-label">Time</span>
+            <input type="text" placeholder="09:45" id="time-${trade.id}">
+          </div>
+          <div>
+            <span class="field-label">Dir</span>
+            <div class="btn-group">
+              <button type="button" class="btn-choice" id="dir-long-${trade.id}" style="font-size:9px; padding:4px;">LONG</button>
+              <button type="button" class="btn-choice" id="dir-short-${trade.id}" style="font-size:9px; padding:4px;">SHORT</button>
+            </div>
+          </div>
+          <div>
+            <span class="field-label">MAE (PTS)</span>
+            <input type="text" placeholder="Adverse" id="mae-${trade.id}" style="color: var(--red-text);">
+          </div>
+          <div>
+            <span class="field-label">MFE (PTS)</span>
+            <input type="text" placeholder="Favor" id="mfe-${trade.id}" style="color: var(--green-text);">
+          </div>
+        </div>
+
+        <!-- Behavior Interrogatives -->
+        <div class="grid-2">
+          <div>
+            <span class="field-label">Immediate Follow Through?</span>
+            <div class="btn-group">
+              <button type="button" class="btn-choice" id="ift-yes-${trade.id}">YES</button>
+              <button type="button" class="btn-choice" id="ift-no-${trade.id}">NO</button>
+            </div>
+          </div>
+          <div>
+            <span class="field-label">Market Negotiable? (Had Time?)</span>
+            <div class="btn-group">
+              <button type="button" class="btn-choice" id="neg-yes-${trade.id}">YES</button>
+              <button type="button" class="btn-choice" id="neg-no-${trade.id}">NO (TOO FAST)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Analytical Strings -->
+        <div style="margin-bottom: 12px;">
+          <span class="field-label">Why Did I Take It? (One sentence maximum)</span>
+          <input type="text" placeholder="e.g., 'Failed auction at prior high open range'" id="why-${trade.id}">
+        </div>
+
+        <!-- Hierarchy Identifiers -->
+        <div style="margin-bottom: 12px;">
+          <span class="field-label">Setup Seen</span>
+          <div class="chip-container" id="setup-container-${trade.id}"></div>
+        </div>
+
+        <!-- Contextualized Loss Panel -->
+        <div class="loss-detection-zone" id="loss-zone-${trade.id}">
+          <span class="field-label" style="color: var(--red-text); font-weight: bold; margin-bottom: 6px;">Loss Category Detected</span>
+          <div class="chip-container" id="loss-tags-container-${trade.id}"></div>
+        </div>
+
+        <!-- What If Drill Context Indicator -->
+        <div style="margin-bottom: 12px;">
+          <span class="field-label">What would have happened if I did nothing?</span>
+          <input type="text" placeholder="e.g., 'Saved myself $100', 'Market never confirmed setup'" id="nothing-${trade.id}">
+        </div>
+
+        <!-- Grading Interface Matrix -->
+        <div>
+          <span class="field-label">Trade Grade (Grade the execution, never the outcome)</span>
+          <div class="btn-group">
+            ${GRADE_OPTIONS.map(g => `<button type="button" class="btn-choice grade-${g}" id="grade-${g}-${trade.id}">${g}</button>`).join('')}
+          </div>
+        </div>
+      `;
+
+      container.appendChild(card);
+
+      // Map Setup options
+      const setupContainer = document.getElementById(`setup-container-${trade.id}`);
+      SETUP_TAGS.forEach(tag => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "chip";
+        btn.innerText = tag;
+        btn.onclick = () => {
+          trade.setupTag = tag;
+          setupContainer.querySelectorAll(".chip").forEach(c => c.classList.remove("active-setup"));
+          btn.classList.add("active-setup");
+        };
+        setupContainer.appendChild(btn);
+      });
+
+      // Map Loss options
+      const lossContainer = document.getElementById(`loss-tags-container-${trade.id}`);
+      LOSS_TAGS.forEach(tag => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "chip";
+        btn.innerText = tag;
+        btn.onclick = () => {
+          trade.lossTag = tag;
+          lossContainer.querySelectorAll(".chip").forEach(c => c.classList.remove("active-loss"));
+          btn.classList.add("active-loss");
+        };
+        lossContainer.appendChild(btn);
+      });
+
+      // Direction Configuration Events
+      document.getElementById(`dir-long-${trade.id}`).onclick = () => {
+        trade.direction = "LONG";
+        document.getElementById(`dir-long-${trade.id}`).classList.add("active-yes");
+        document.getElementById(`dir-short-${trade.id}`).classList.remove("active-no");
+      };
+      document.getElementById(`dir-short-${trade.id}`).onclick = () => {
+        trade.direction = "SHORT";
+        document.getElementById(`dir-short-${trade.id}`).classList.add("active-no");
+        document.getElementById(`dir-long-${trade.id}`).classList.remove("active-yes");
+      };
+
+      // Follow Through Configuration Events
+      document.getElementById(`ift-yes-${trade.id}`).onclick = () => {
+        trade.immediateFollowThrough = true;
+        document.getElementById(`ift-yes-${trade.id}`).classList.add("active-yes");
+        document.getElementById(`ift-no-${trade.id}`).classList.remove("active-no");
+        calculateMetrics();
+      };
+      document.getElementById(`ift-no-${trade.id}`).onclick = () => {
+        trade.immediateFollowThrough = false;
+        document.getElementById(`ift-no-${trade.id}`).classList.add("active-no");
+        document.getElementById(`ift-yes-${trade.id}`).classList.remove("active-yes");
+        calculateMetrics();
+      };
+
+      // Negotiable Elements
+      document.getElementById(`neg-yes-${trade.id}`).onclick = () => {
+        trade.negotiable = true;
+        document.getElementById(`neg-yes-${trade.id}`).classList.add("active-env");
+        document.getElementById(`neg-no-${trade.id}`).classList.remove("active-no");
+      };
+      document.getElementById(`neg-no-${trade.id}`).onclick = () => {
+        trade.negotiable = false;
+        document.getElementById(`neg-no-${trade.id}`).classList.add("active-no");
+        document.getElementById(`neg-yes-${trade.id}`).classList.remove("active-env");
+      };
+
+      // Realtime input updates mapping
+      const resultField = document.getElementById(`result-${trade.id}`);
+      resultField.addEventListener("input", (e) => {
+        trade.result = e.target.value;
+        const valueNum = parseFloat(trade.result);
+        const lossZone = document.getElementById(`loss-zone-${trade.id}`);
+        
+        if (!isNaN(valueNum) && valueNum < 0) {
+          resultField.style.color = "var(--red-main)";
+          lossZone.style.display = "block";
+        } else {
+          resultField.style.color = "var(--green-main)";
+          lossZone.style.display = "none";
         }
+        calculateMetrics();
+      });
 
-        function YesNo({ value, onChange }) {
-            return (
-                <div className="flex gap-2">
-                    <Chip label="YES" active={value === true} onClick={() => onChange(value === true ? null : true)} color="green" />
-                    <Chip label="NO" active={value === false} onClick={() => onChange(value === false ? null : false)} color="red" />
-                </div>
-            );
+      // Grade mappings
+      GRADE_OPTIONS.forEach(g => {
+        const currentBtn = document.getElementById(`grade-${g}-${trade.id}`);
+        currentBtn.onclick = () => {
+          trade.grade = g;
+          GRADE_OPTIONS.forEach(opt => document.getElementById(`grade-${opt}-${trade.id}`).classList.remove("active"));
+          currentBtn.classList.add("active");
+        };
+      });
+
+      // Text input state assignments
+      document.getElementById(`time-${trade.id}`).addEventListener("input", (e) => trade.time = e.target.value);
+      document.getElementById(`mae-${trade.id}`).addEventListener("input", (e) => trade.mae = e.target.value);
+      document.getElementById(`mfe-${trade.id}`).addEventListener("input", (e) => trade.mfe = e.target.value);
+      document.getElementById(`why-${trade.id}`).addEventListener("input", (e) => trade.why = e.target.value);
+      document.getElementById(`nothing-${trade.id}`).addEventListener("input", (e) => trade.doNothingOutcome = e.target.value);
+    }
+
+    function removeTradeItem(id) {
+      sessionState.trades = sessionState.trades.filter(t => t.id !== id);
+      const targetElement = document.getElementById(`card-${id}`);
+      if (targetElement) targetElement.remove();
+      
+      // Realignment numbers index
+      sessionState.trades.forEach((trade, idx) => {
+        const titleText = document.getElementById(`title-index-${trade.id}`);
+        if (titleText) titleText.innerText = `TRADE #${idx + 1}`;
+      });
+      calculateMetrics();
+    }
+
+    function calculateMetrics() {
+      let netPnL = 0;
+      let totalTrades = 0;
+      let winningTradesCount = 0;
+      let positiveValuesSum = 0;
+      let negativeValuesSum = 0;
+      let positiveCount = 0;
+      let negativeCount = 0;
+      let followThroughTrueCount = 0;
+      let followThroughTotalCount = 0;
+
+      sessionState.trades.forEach(t => {
+        const val = parseFloat(t.result);
+        if (!isNaN(val)) {
+          netPnL += val;
+          totalTrades++;
+          if (val > 0) {
+            winningTradesCount++;
+            positiveValuesSum += val;
+            positiveCount++;
+          } else if (val < 0) {
+            negativeValuesSum += val;
+            negativeCount++;
+          }
         }
+        if (t.immediateFollowThrough === true) followThroughTrueCount++;
+        if (t.immediateFollowThrough !== null) followThroughTotalCount++;
+      });
 
-        function Field({ label, hint, children }) {
-            return (
-                <div className="mb-4">
-                    <div className="text-[11px] font-mono font-bold text-zinc-400 uppercase tracking-wider mb-1">{label}</div>
-                    {hint && <div className="text-[10px] text-zinc-500 mb-1 italic">{hint}</div>}
-                    {children}
-                </div>
-            );
+      const winRate = totalTrades > 0 ? Math.round((winningTradesCount / totalTrades) * 100) : 0;
+      const avgWinner = positiveCount > 0 ? (positiveValuesSum / positiveCount).toFixed(2) : "0.00";
+      const avgLoser = negativeCount > 0 ? (negativeValuesSum / negativeCount).toFixed(2) : "0.00";
+
+      // Inject to viewport engine
+      const netDisplay = document.getElementById("tally-net-pnl");
+      netDisplay.innerText = `${netPnL >= 0 ? '$' : '-$'}${Math.abs(netPnL).toFixed(2)}`;
+      netDisplay.style.color = netPnL >= 0 ? "var(--green-text)" : "var(--red-main)";
+
+      document.getElementById("tally-total-trades").innerText = totalTrades;
+      document.getElementById("tally-win-rate").innerText = `${winRate}%`;
+      document.getElementById("tally-avg-winner").innerText = `$${avgWinner}`;
+      document.getElementById("tally-avg-loser").innerText = `$${Math.abs(avgLoser)}`;
+      document.getElementById("tally-follow-through").innerText = `${followThroughTrueCount} / ${followThroughTotalCount}`;
+    }
+
+    function saveGrandSlams() {
+      const grandSlamsObj = {
+        daysAlive: document.getElementById("gs-days-alive").value,
+        consecutiveFollowingPlan: document.getElementById("gs-consecutive-plan").value,
+        noRevengeStreak: document.getElementById("gs-no-revenge").value,
+        maxDrawdownRecovered: document.getElementById("gs-max-drawdown").value
+      };
+      localStorage.setItem("kaizen_grandslams_board", JSON.stringify(grandSlamsObj));
+    }
+
+    function loadGrandSlams() {
+      const raw = localStorage.getItem("kaizen_grandslams_board");
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          document.getElementById("gs-days-alive").value = parsed.daysAlive || 0;
+          document.getElementById("gs-consecutive-plan").value = parsed.consecutiveFollowingPlan || 0;
+          document.getElementById("gs-no-revenge").value = parsed.noRevengeStreak || 0;
+          document.getElementById("gs-max-drawdown").value = parsed.maxDrawdownRecovered || 0;
+        } catch (e) {
+          console.error("Local storage allocation structure parse error recovery fallback.", e);
         }
+      }
+    }
 
-        // Custom Safe Recharts Tooltip Component to guard window compilation errors
-        function CustomTooltip({ active, payload }) {
-            if (active && payload && payload.length) {
-                return (
-                    <div className="bg-zinc-950 border border-zinc-800 p-3 rounded font-mono text-xs shadow-xl">
-                        <p className="text-zinc-500 mb-1">Index Point Tracker</p>
-                        <p className="text-white font-bold">Valuation: ${parseFloat(payload[0].value).toFixed(2)}</p>
-                    </div>
-                );
-            }
-            return null;
-        }
+    function resetForm() {
+      if (confirm("Are you sure you want to clean current session logs? Records inside the Permanent Scoreboard will be retained.")) {
+        sessionState.trades = [];
+        sessionState.avoidedCount = 0;
+        sessionState.environment = "";
+        sessionState.firstTradeSetup = null;
 
-        // --- MASTER APPLICATION CONTROLLER ---
-        function App() {
-            const [activeTab, setActiveTab] = useState("logger");
-            const [sessions, setSessions] = useState([]);
-            const [currentSession, setCurrentSession] = useState(emptySession());
+        document.getElementById("trade-log-container").innerHTML = "";
+        document.getElementById("avoided-count-display").innerText = "0";
+        
+        const yesBtn = document.getElementById("first-setup-yes");
+        const noBtn = document.getElementById("first-setup-no");
+        yesBtn.classList.remove("active-yes");
+        noBtn.classList.remove("active-no");
 
-            const loadDataFromStorage = () => {
-                try {
-                    const data = localStorage.getItem(SESSIONS_KEY);
-                    if (data) setSessions(JSON.parse(data));
-                } catch (e) {
-                    console.error("Local Storage matrix access error", e);
-                }
-            };
-
-            useEffect(() => {
-                loadDataFromStorage();
-            }, [activeTab]);
-
-            const handleSaveSession = (sessionToSave) => {
-                const updated = [...sessions.filter(s => s.id !== sessionToSave.id), sessionToSave];
-                localStorage.setItem(SESSIONS_KEY, JSON.stringify(updated));
-                setSessions(updated);
-                alert("Session metadata parameters pinned successfully to memory banks!");
-            };
-
-            const handleLoadFromHistory = (session) => {
-                setCurrentSession(session);
-                setActiveTab("logger");
-            };
-
-            return (
-                <div className="min-h-screen flex flex-col bg-[#08080a]">
-                    {/* Navigation Bar Header Control Structure */}
-                    <header className="no-print bg-[#0f0f12] border-b border-zinc-800 sticky top-0 z-50 px-6 py-4 flex flex-wrap justify-between items-center gap-4">
-                        <div className="flex items-center gap-2.5">
-                            <div className="h-2 w-2 rounded-full bg-indigo-500"></div>
-                            <span className="font-bold tracking-widest text-xs font-mono text-white">KAIZEN TRADING OPERATING SUITE v3.0</span>
-                        </div>
-                        <nav className="flex flex-wrap gap-2">
-                            <button onClick={() => setActiveTab("logger")} className={`px-4 py-2 font-mono text-xs border rounded transition ${activeTab === 'logger' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-zinc-900 text-zinc-400 border-zinc-800'}`}>
-                                📝 LOGGER TERMINAL
-                            </button>
-                            <button onClick={() => setActiveTab("dashboard")} className={`px-4 py-2 font-mono text-xs border rounded transition ${activeTab === 'dashboard' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-zinc-900 text-zinc-400 border-zinc-800'}`}>
-                                📊 ANALYTICS & DASHBOARD
-                            </button>
-                            <button onClick={() => setActiveTab("autopsy")} className={`px-4 py-2 font-mono text-xs border rounded transition ${activeTab === 'autopsy' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-zinc-900 text-zinc-400 border-zinc-800'}`}>
-                                🖨️ PRINT SHEET AUTOPSY
-                            </button>
-                        </nav>
-                    </header>
-
-                    {/* View Switch Execution Routing Portals */}
-                    <main className={`flex-grow ${activeTab === 'autopsy' ? 'p-0 bg-white' : 'p-6'}`}>
-                        {activeTab === "logger" && (
-                            <LoggerView session={currentSession} setSession={setCurrentSession} onSave={handleSaveSession} />
-                        )}
-                        {activeTab === "dashboard" && (
-                            <DashboardView sessions={sessions} onLoadSession={handleLoadFromHistory} />
-                        )}
-                        {activeTab === "autopsy" && (
-                            <AutopsyPrintView session={currentSession} />
-                        )}
-                    </main>
-                </div>
-            );
-        }
-
-        // --- TAB SUBMODULE 1: LOGGING TERMINAL INTERFACE ---
-        function LoggerView({ session, setSession, onSave }) {
-            const updateSession = (k, v) => setSession({ ...session, [k]: v });
-            
-            const updateTrade = (id, k, v) => {
-                setSession({
-                    ...session,
-                    trades: session.trades.map(t => t.id === id ? { ...t, [k]: v } : t)
-                });
-            };
-
-            const updateAvoided = (id, k, v) => {
-                setSession({
-                    ...session,
-                    avoided: session.avoided.map(a => a.id === id ? { ...a, [k]: v } : a)
-                });
-            };
-
-            return (
-                <div className="max-w-4xl mx-auto space-y-6">
-                    
-                    {/* Pre Session Configuration Panel Wrapper */}
-                    <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
-                        <div className="text-xs font-bold tracking-widest text-indigo-400 mb-4 uppercase">PRE-SESSION DISCIPLINE PARAMS</div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <Field label="Calendar Core Date">
-                                <input type="date" value={session.date} onChange={e => updateSession("date", e.target.value)} className="bg-zinc-900 border border-zinc-800 text-white font-mono text-xs rounded p-2 w-full outline-none focus:border-zinc-600" />
-                            </Field>
-                            <Field label="Session Index #">
-                                <input type="text" value={session.sessionNum || ""} onChange={e => updateSession("sessionNum", e.target.value)} placeholder="e.g. 154" className="bg-zinc-900 border border-zinc-800 text-white font-mono text-xs rounded p-2 w-full outline-none focus:border-zinc-600" />
-                            </Field>
-                            <Field label="First Entry Rules Compliant?">
-                                <YesNo value={session.firstTradeSetup} onChange={v => updateSession("firstTradeSetup", v)} />
-                            </Field>
-                        </div>
-                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Field label="Market State Environmental Variant">
-                                <div className="flex flex-wrap gap-1.5 mt-1">
-                                    {ENV_OPTIONS.map(env => (
-                                        <Chip key={env} label={env} active={session.environment === env} onClick={() => updateSession("environment", env)} color="blue" />
-                                    ))}
-                                </div>
-                            </Field>
-                            <Field label="Pre-Classified Context Formulation Accurate?">
-                                <YesNo value={session.environmentCorrect} onChange={v => updateSession("environmentCorrect", v)} />
-                            </Field>
-                        </div>
-                    </div>
-
-                    {/* Trades Logging Block Element Rows */}
-                    <div className="space-y-4">
-                        <div className="text-xs font-bold tracking-widest text-indigo-400 uppercase px-1">ACTIVE MARKET ACTION LOG RECORDS</div>
-                        {session.trades.map((trade, idx) => {
-                            const numericPnL = parseFloat(trade.result);
-                            return (
-                                <div key={trade.id} className="bg-zinc-950 border border-zinc-800 rounded-lg p-5 space-y-4 relative">
-                                    <div className="flex justify-between items-center border-b border-zinc-900 pb-2.5">
-                                        <div className="flex items-center gap-3">
-                                            <span className="font-bold text-xs uppercase text-zinc-500 font-mono">POSITION ENTRY TRACK:</span>
-                                            <span className="text-sm font-bold bg-zinc-900 border border-zinc-800 px-2.5 py-0.5 rounded text-indigo-400">#{idx + 1}</span>
-                                            {!isNaN(numericPnL) && (
-                                                <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded ${numericPnL >= 0 ? 'bg-emerald-950 text-emerald-400' : 'bg-red-950 text-red-400'}`}>
-                                                    {numericPnL >= 0 ? "+" : ""}${numericPnL.toFixed(2)}
-                                                </span>
-                                            )}
-                                        </div>
-                                        {session.trades.length > 1 && (
-                                            <button type="button" onClick={() => setSession({ ...session, trades: session.trades.filter(t => t.id !== trade.id) })} className="text-[10px] text-red-400 font-mono border border-red-900/40 hover:bg-red-950/20 px-2 py-0.5 rounded transition">
-                                                ELIMINATE LAYER
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    {/* Financial Numerical Attributes Inputs Grid Matrix */}
-                                    <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
-                                        <Field label="Direction">
-                                            <div className="flex gap-1">
-                                                {DIRECTION_OPTIONS.map(d => <Chip key={d} label={d} active={trade.direction === d} onClick={() => updateTrade(trade.id, "direction", d)} color={d === 'LONG' ? 'green' : 'red'} />)}
-                                            </div>
-                                        </Field>
-                                        <Field label="Execution Time"><input type="text" value={trade.time} onChange={e => updateTrade(trade.id, "time", e.target.value)} placeholder="09:35" className="bg-zinc-900 border border-zinc-800 text-white font-mono text-xs rounded p-2 w-full outline-none" /></Field>
-                                        <Field label="Entry Size"><input type="text" value={trade.contracts} onChange={e => updateTrade(trade.id, "contracts", e.target.value)} placeholder="2" className="bg-zinc-900 border border-zinc-800 text-white font-mono text-xs rounded p-2 w-full outline-none" /></Field>
-                                        <Field label="Entry Level"><input type="text" value={trade.entry} onChange={e => updateTrade(trade.id, "entry", e.target.value)} placeholder="5142.25" className="bg-zinc-900 border border-zinc-800 text-white font-mono text-xs rounded p-2 w-full outline-none" /></Field>
-                                        <Field label="Target Exit"><input type="text" value={trade.exit} onChange={e => updateTrade(trade.id, "exit", e.target.value)} placeholder="5150.00" className="bg-zinc-900 border border-zinc-800 text-white font-mono text-xs rounded p-2 w-full outline-none" /></Field>
-                                        <Field label="Net Return ($)"><input type="text" value={trade.result} onChange={e => updateTrade(trade.id, "result", e.target.value)} placeholder="350.00" className="bg-zinc-900 border border-zinc-800 text-white font-mono text-xs rounded p-2 w-full outline-none" /></Field>
-                                    </div>
-
-                                    {/* Adverse Excursion Parameters */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-zinc-900/30 p-3 rounded border border-zinc-900">
-                                        <Field label="MAE Excursion (pts)" hint="Max Adverse path trace against you"><input type="text" value={trade.mae} onChange={e => updateTrade(trade.id, "mae", e.target.value)} placeholder="2.5" className="bg-zinc-900 border border-zinc-800 text-white font-mono text-xs rounded p-2 w-full outline-none" /></Field>
-                                        <Field label="MFE Excursion (pts)" hint="Peak available favorable profit path"><input type="text" value={trade.mfe} onChange={e => updateTrade(trade.id, "mfe", e.target.value)} placeholder="12.0" className="bg-zinc-900 border border-zinc-800 text-white font-mono text-xs rounded p-2 w-full outline-none" /></Field>
-                                        <Field label="Immediate Follow Through?"><YesNo value={trade.immediateFollowThrough} onChange={v => updateTrade(trade.id, "immediateFollowThrough", v)} /></Field>
-                                        <Field label="Discretion Negotiable?"><YesNo value={trade.negotiable} onChange={v => updateTrade(trade.id, "negotiable", v)} /></Field>
-                                    </div>
-
-                                    {/* Advanced Analytical Qualitative Field Modules */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <Field label="Core Technical Thesis Entry Argument">
-                                            <input type="text" value={trade.why} onChange={e => updateTrade(trade.id, "why", e.target.value)} placeholder="Describe setup mechanics context parameter markers..." className="bg-zinc-900 border border-zinc-800 text-white font-mono text-xs rounded p-2 w-full outline-none focus:border-zinc-600" />
-                                        </Field>
-                                        <Field label="Do Nothing Option Alternative Scenario Path" hint="What happens exactly if hands remain sitting unplayed under keyboard?">
-                                            <input type="text" value={trade.doNothingOutcome} onChange={e => updateTrade(trade.id, "doNothingOutcome", e.target.value)} placeholder="e.g. Saved 4 pts loss / Missed 15 pts profit run clean" className="bg-zinc-900 border border-zinc-800 text-white font-mono text-xs rounded p-2 w-full outline-none focus:border-zinc-600" />
-                                        </Field>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <Field label="Did Market Structure Realize Intended Predictive Path?">
-                                            <YesNo value={trade.marketDid} onChange={v => updateTrade(trade.id, "marketDid", v)} />
-                                        </Field>
-                                        <Field label="Would You Repeat This Exact Action Parameter Matrix Again?">
-                                            <div className="flex gap-1.5">
-                                                {["yes", "maybe", "no"].map(opt => <Chip key={opt} label={opt.toUpperCase()} active={trade.wouldTakeAgain === opt} onClick={() => updateTrade(trade.id, "wouldTakeAgain", opt)} color={opt === 'yes' ? 'green' : opt === 'maybe' ? 'yellow' : 'red'} />)}
-                                            </div>
-                                        </Field>
-                                    </div>
-
-                                    {/* Strategy Attribution Tag Vectors Selection Boxes */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <Field label="Strategic Framework Configuration Setup Tag">
-                                            <div className="flex flex-wrap gap-1 mt-1">
-                                                {SETUP_TAGS.map(t => <Chip key={t} label={t} active={trade.setupTag === t} onClick={() => updateTrade(trade.id, "setupTag", trade.setupTag === t ? "" : t)} color="blue" />)}
-                                            </div>
-                                        </Field>
-                                        {!isNaN(numericPnL) && numericPnL < 0 && (
-                                            <Field label="Red Operations Stop Cause Loss Attribution Tag">
-                                                <div className="flex flex-wrap gap-1 mt-1">
-                                                    {LOSS_TAGS.map(t => <Chip key={t} label={t} active={trade.lossTag === t} onClick={() => updateTrade(trade.id, "lossTag", trade.lossTag === t ? "" : t)} color="red" />)}
-                                                </div>
-                                            </Field>
-                                        )}
-                                    </div>
-
-                                    {/* Micro Note Pad Integration Module */}
-                                    <Field label="Position Notes / Tail Additions">
-                                        <input type="text" value={trade.notes || ""} onChange={e => updateTrade(trade.id, "notes", e.target.value)} placeholder="Specific adjustments execution nuances..." className="bg-zinc-900 border border-zinc-800 text-white font-mono text-xs rounded p-2 w-full outline-none focus:border-zinc-600" />
-                                    </Field>
-
-                                    {/* Strict Rigorous Rules Execution Evaluation Row Block */}
-                                    <div className="pt-3 border-t border-zinc-900">
-                                        <Field label="System Execution Rule Compliance Grade Evaluation" hint="Base assessment strictly on execution consistency mechanics, never on money returns!">
-                                            <div className="flex gap-2 mt-1">
-                                                {GRADE_OPTIONS.map(g => {
-                                                    const active = trade.grade === g;
-                                                    const themes = {
-                                                        A: active ? "bg-emerald-950 text-emerald-400 border-emerald-500" : "bg-zinc-900 text-zinc-500 border-zinc-800",
-                                                        B: active ? "bg-indigo-950 text-indigo-400 border-indigo-500" : "bg-zinc-900 text-zinc-500 border-zinc-800",
-                                                        C: active ? "bg-yellow-950 text-yellow-400 border-yellow-500" : "bg-zinc-900 text-zinc-500 border-zinc-800",
-                                                        F: active ? "bg-red-950 text-red-400 border-red-500" : "bg-zinc-900 text-zinc-500 border-zinc-800"
-                                                    };
-                                                    return (
-                                                        <button key={g} type="button" onClick={() => updateTrade(trade.id, "grade", active ? "" : g)} className={`px-4 py-1.5 font-mono text-xs font-bold border rounded transition-all ${themes[g]}`}>
-                                                            GRADE {g}
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                        </Field>
-                                    </div>
-
-                                </div>
-                            );
-                        })}
-                    </div>
-
-                    {/* Avoided Positions Layout Submodule Array */}
-                    <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-5 space-y-4">
-                        <div className="text-xs font-bold tracking-widest text-indigo-400 uppercase">AVOIDED SETUP OR FOMO TRADES WATCH LOGS</div>
-                        {session.avoided.map((av, avIdx) => (
-                            <div key={av.id} className="border border-zinc-900 bg-zinc-900/20 p-4 rounded space-y-3 relative">
-                                <div className="flex justify-between items-center text-xs font-mono">
-                                    <span className="text-zinc-500 font-bold">AVOIDED THESIS POSITION LAYER #{avIdx + 1}</span>
-                                    {session.avoided.length > 1 && (
-                                        <button type="button" onClick={() => setSession({ ...session, avoided: session.avoided.filter(a => a.id !== av.id) })} className="text-[10px] text-red-400">REMOVE ROW</button>
-                                    )}
-                                </div>
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                    <Field label="Incident Time"><input type="text" value={av.time} onChange={e => updateAvoided(av.id, "time", e.target.value)} placeholder="10:14" className="bg-zinc-900 border border-zinc-800 text-white text-xs font-mono rounded p-2 w-full outline-none" /></Field>
-                                    <Field label="Setup Configuration Tag"><input type="text" value={av.setupTag} onChange={e => updateAvoided(av.id, "setupTag", e.target.value)} placeholder="CHASE / REVERSAL" className="bg-zinc-900 border border-zinc-800 text-white text-xs font-mono rounded p-2 w-full outline-none" /></Field>
-                                    <Field label="Metrics Saved/Missed (pts)"><input type="text" value={av.pointsSavedOrMissed} onChange={e => updateAvoided(av.id, "pointsSavedOrMissed", e.target.value)} placeholder="+8.25" className="bg-zinc-900 border border-zinc-800 text-white text-xs font-mono rounded p-2 w-full outline-none" /></Field>
-                                    <Field label="Was Leaving Setup Correct Decision?">
-                                        <div className="flex gap-2">
-                                            <Chip label="PASSED (GOOD SAVE)" active={av.passed === true} onClick={() => updateAvoided(av.id, "passed", av.passed === true ? null : true)} color="green" />
-                                            <Chip label="FAILED (MISSED MOVE)" active={av.passed === false} onClick={() => updateAvoided(av.id, "passed", av.passed === false ? null : false)} color="red" />
-                                        </div>
-                                    </Field>
-                                </div>
-                                <Field label="Core Psychological Variable / Trigger Reason for Stepping Aside">
-                                    <input type="text" value={av.whyAvoided} onChange={e => updateAvoided(av.id, "whyAvoided", e.target.value)} placeholder="Order flow showing strong institutional selling blocks against my long bias idea..." className="bg-zinc-900 border border-zinc-800 text-white text-xs font-mono rounded p-2 w-full outline-none" />
-                                </Field>
-                            </div>
-                        ))}
-                        <button type="button" onClick={() => setSession({ ...session, avoided: [...session.avoided, emptyAvoided()] })} className="w-full py-2 border border-dashed border-zinc-800 text-xs text-zinc-500 hover:text-zinc-300 font-mono transition rounded">
-                            + ADD SEPARATE PSYCHOLOGICAL STEP ASIDE EVENT TRACK
-                        </button>
-                    </div>
-
-                    {/* Post Session Core Matrix Summary Blocks Wrapper */}
-                    <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-5 space-y-4">
-                        <div className="text-xs font-bold tracking-widest text-indigo-400 uppercase">POST-SESSION CORE RATINGS & CONTEXT EVALUATION</div>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                            <Field label="Patience Index Score (1-10)"><input type="text" value={session.patienceScore || ""} onChange={e => updateSession("patienceScore", e.target.value)} placeholder="9" className="bg-zinc-900 border border-zinc-800 text-white font-mono text-xs rounded p-2 w-full outline-none" /></Field>
-                            <Field label="Rule Deviations Cheat Score (1-10)"><input type="text" value={session.cheatScore || ""} onChange={e => updateSession("cheatScore", e.target.value)} placeholder="10" className="bg-zinc-900 border border-zinc-800 text-white font-mono text-xs rounded p-2 w-full outline-none" /></Field>
-                            <Field label="Walk Aways Trigger Executed"><input type="text" value={session.walkAways || ""} onChange={e => updateSession("walkAways", e.target.value)} placeholder="1" className="bg-zinc-900 border border-zinc-800 text-white font-mono text-xs rounded p-2 w-full outline-none" /></Field>
-                            <Field label="Re-entry Chain Double Triggers"><input type="text" value={session.reentryCount || ""} onChange={e => updateSession("reentryCount", e.target.value)} placeholder="0" className="bg-zinc-900 border border-zinc-800 text-white font-mono text-xs rounded p-2 w-full outline-none" /></Field>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-zinc-900">
-                            <Field label="Session Final Qualitative Notes / Lessons Learnt">
-                                <textarea value={session.sessionNotes || ""} onChange={e => updateSession("sessionNotes", e.target.value)} rows="3" placeholder="Append deep technical overview data points discovered during terminal session lifecycle reviews..." className="bg-zinc-900 border border-zinc-800 text-white font-mono text-xs rounded p-2 w-full outline-none resize-none focus:border-zinc-600" />
-                            </Field>
-                            <Field label="Operational Risk Preservation Bounds Checks">
-                                <div className="bg-zinc-900/40 border border-zinc-800 rounded p-4 space-y-3 font-mono text-xs">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-zinc-400">Did You Survive Account Loss Plan Guidelines?</span>
-                                        <button type="button" onClick={() => updateSession("survived", !session.survived)} className={`px-3 py-1 font-mono text-[11px] rounded font-bold border transition ${session.survived ? 'bg-emerald-950 border-emerald-600 text-emerald-400' : 'bg-red-950 border-red-600 text-red-400'}`}>
-                                            {session.survived ? "SURVIVED" : "PLAN VIOLATED"}
-                                        </button>
-                                    </div>
-                                </div>
-                            </Field>
-                        </div>
-                    </div>
-
-                    {/* Master Action Core Interface Execution Button Elements Row Row */}
-                    <div className="flex flex-wrap sm:flex-nowrap gap-4 pb-12">
-                        <button type="button" onClick={() => setSession({ ...session, trades: [...session.trades, emptyTrade()] })} className="w-full sm:flex-1 py-3 text-xs font-mono font-bold border-2 border-dashed border-zinc-800 hover:border-zinc-600 rounded-lg text-zinc-300 transition">
-                            + ADD NEW BLANK EXPANDABLE POSITION LAYER
-                        </button>
-                        <button type="button" onClick={() => onSave(session)} className="w-full sm:flex-1 py-3 text-xs font-mono font-bold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition tracking-widest shadow-xl shadow-indigo-950/30">
-                            💾 SECURE LOG SESSION INTO SYSTEM MEMORY
-                        </button>
-                    </div>
-
-                </div>
-            );
-        }
-
-        // --- TAB SUBMODULE 2: ANALYTICS VISUALIZATION DASHBOARD ---
-        function DashboardView({ sessions, onLoadSession }) {
-            const [viewMode, setViewMode] = useState("overview");
-
-            if (!sessions || sessions.length === 0) {
-                return (
-                    <div className="h-96 flex flex-col items-center justify-center border border-zinc-800 bg-zinc-950 rounded-xl font-mono max-w-4xl mx-auto p-6 text-center">
-                        <div className="text-xs uppercase tracking-widest font-bold text-zinc-500 mb-2">No Tracking Data Exists In Storage System</div>
-                        <div className="text-[11px] text-zinc-700 max-w-sm">Please log performance parameters into the central terminal logger to initialize database metrics graphics arrays.</div>
-                    </div>
-                );
-            }
-
-            // Calculation Core Computations Engines
-            const allTrades = sessions.flatMap(s => (s.trades || []).map(t => ({ ...t, dateString: s.date })));
-            const validResultTrades = allTrades.filter(t => t.result !== "" && !isNaN(parseFloat(t.result)));
-            
-            const totalPnL = validResultTrades.reduce((sum, t) => sum + parseFloat(t.result), 0);
-            const winners = validResultTrades.filter(t => parseFloat(t.result) >= 0);
-            const losers = validResultTrades.filter(t => parseFloat(t.result) < 0);
-            const winRate = validResultTrades.length > 0 ? ((winners.length / validResultTrades.length) * 100).toFixed(1) : "0.0";
-
-            const averageWin = winners.length > 0 ? winners.reduce((sum, t) => sum + parseFloat(t.result), 0) / winners.length : 0;
-            const averageLoss = losers.length > 0 ? losers.reduce((sum, t) => sum + parseFloat(t.result), 0) / losers.length : 0;
-
-            // Generate Equity Cumulative Metrics Vectors
-            const curveData = validResultTrades.map((t, index) => ({
-                tradeIndex: index + 1,
-                equity: validResultTrades.slice(0, index + 1).reduce((sum, x) => sum + parseFloat(x.result), 0),
-                date: t.dateString
-            }));
-
-            // Generate Strategy Attr Vectors Maps
-            const strategyCounts = {};
-            validResultTrades.forEach(t => {
-                if(!t.setupTag) return;
-                if(!strategyCounts[t.setupTag]) strategyCounts[t.setupTag] = { win: 0, total: 0 };
-                strategyCounts[t.setupTag].total++;
-                if(parseFloat(t.result) >= 0) strategyCounts[t.setupTag].win++;
-            });
-
-            const lossTagAllocationCounts = {};
-            losers.forEach(t => { if(t.lossTag) lossTagAllocationCounts[t.lossTag] = (lossTagAllocationCounts[t.lossTag] || 0) + 1; });
-            const sortedLossTags = Object.entries(lossTagAllocationCounts).sort((a,b) => b[1] - a[1]);
-            const peakLossTagCount = sortedLossTags.length > 0 ? sortedLossTags[0][1] : 1;
-
-            const gradeCounts = { A: 0, B: 0, C: 0, F: 0 };
-            allTrades.forEach(t => { if (t.grade && gradeCounts[t.grade] !== undefined) gradeCounts[t.grade]++; });
-
-            // Grand Slams Milestones Streak Track Vectors Arithmetic
-            let runningFStreak = 0;
-            for (let i = allTrades.length - 1; i >= 0; i--) {
-                if(allTrades[i].grade === "F") break;
-                if(allTrades[i].grade) runningFStreak++;
-            }
-
-            const statsCollector = {
-                totalTrades: allTrades.length,
-                totalSessions: sessions.length,
-                totalAvoided: sessions.reduce((s, curr) => s + (curr.avoided ? curr.avoided.filter(a => a.passed === true).length : 0), 0),
-                correctEnvCalls: sessions.filter(s => s.environmentCorrect === true).length,
-                aGrades: gradeCounts.A,
-                fFreeStreak: runningFStreak
-            };
-
-            const milestonesDataConfig = [
-                { title: "Global Trades Audited", current: statsCollector.totalTrades, thresholds: [100, 500, 1000] },
-                { title: "Completed Sessions Logged", current: statsCollector.totalSessions, thresholds: [30, 100, 250] },
-                { title: "Good Save Avoided Setup Triggers", current: statsCollector.totalAvoided, thresholds: [10, 50, 100] },
-                { title: "Accurate Environmental State Reads", current: statsCollector.correctEnvCalls, thresholds: [15, 50, 120] },
-                { title: "A-Grade Premium Execution Counts", current: statsCollector.aGrades, thresholds: [25, 100, 250] },
-                { title: "F-Grade Free Compliance Streak", current: statsCollector.fFreeStreak, thresholds: [10, 25, 50] }
-            ];
-
-            return (
-                <div className="max-w-5xl mx-auto space-y-6 font-mono">
-                    
-                    {/* Interior Tab Selection Matrix Switches Header */}
-                    <div className="flex gap-2 border-b border-zinc-800 pb-2">
-                        {["overview", "attributions", "milestones", "history"].map(tab => (
-                            <button key={tab} onClick={() => setViewMode(tab)} className={`px-4 py-1.5 uppercase font-bold text-xs tracking-wider rounded transition ${viewMode === tab ? 'bg-zinc-900 text-white border border-zinc-700' : 'text-zinc-500 hover:text-zinc-300'}`}>
-                                {tab}
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* VIEW SUBELEMENT MODULE 1: GLOBAL DATA GRID PLOTS OVERVIEW */}
-                    {viewMode === "overview" && (
-                        <div className="space-y-6">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
-                                    <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">CUMULATIVE RETURN NET</div>
-                                    <div className={`text-2xl font-bold ${totalPnL >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>${totalPnL.toFixed(2)}</div>
-                                </div>
-                                <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
-                                    <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">EXECUTION WIN RATIO</div>
-                                    <div className="text-2xl font-bold text-indigo-400">{winRate}%</div>
-                                    <div className="text-[10px] text-zinc-600 mt-1">{winners.length}W — {losers.length}L Tracks</div>
-                                </div>
-                                <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
-                                    <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">AVERAGE WIN VALUE MATH</div>
-                                    <div className="text-xs font-bold text-emerald-400">Avg W: +${averageWin.toFixed(2)}</div>
-                                </div>
-                                <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
-                                    <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">AVERAGE LOSS VALUE MATH</div>
-                                    <div className="text-xs font-bold text-red-400">Avg L: -${Math.abs(averageLoss).toFixed(2)}</div>
-                                </div>
-                            </div>
-
-                            {/* Cumulative Performance Vector Area Canvas Plot Frame */}
-                            <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
-                                <div className="text-xs text-zinc-400 uppercase font-bold tracking-wider mb-4">CUMULATIVE PERFORMANCE FINANCES LOG RUN CURVE</div>
-                                <div className="h-64 w-full">
-                                    {/* Direct standard layout structure array rendering avoiding Recharts wrapper height initialization errors */}
-                                    <LineChart width={860} height={240} data={curveData} margin={{ top: 10, right: 30, left: 10, bottom: 5 }}>
-                                        <XAxis dataKey="tradeIndex" stroke="#3f3f46" style={{ fontSize: 10 }} tickLine={false} />
-                                        <YAxis stroke="#3f3f46" style={{ fontSize: 10 }} tickLine={false} />
-                                        <Tooltip content={<CustomTooltip />} />
-                                        <ReferenceLine y={0} stroke="#27272a" strokeDasharray="3 3" />
-                                        <Line type="monotone" dataKey="equity" stroke={totalPnL >= 0 ? "#10b981" : "#ef4444"} strokeWidth={2.5} dot={{ r: 2 }} />
-                                    </LineChart>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* VIEW SUBELEMENT MODULE 2: ATTRIBUTION TAG DISTRIBUTION ANALYSIS */}
-                    {viewMode === "attributions" && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5 space-y-4">
-                                <div className="text-xs text-zinc-400 font-bold uppercase border-b border-zinc-900 pb-2">STRATEGY SETUP EFFICIENCY RECORDS</div>
-                                <div className="space-y-3">
-                                    {Object.entries(strategyCounts).map(([tag, metrics]) => {
-                                        const calculationRatio = ((metrics.win / metrics.total) * 100).toFixed(1);
-                                        return (
-                                            <div key={tag} className="space-y-1">
-                                                <div className="flex justify-between text-xs font-mono">
-                                                    <span className="text-zinc-300 font-bold">{tag}</span>
-                                                    <span className="text-zinc-500">{calculationRatio}% ({metrics.win}/${metrics.total})</span>
-                                                </div>
-                                                <div className="w-full bg-zinc-900 h-2 rounded-sm overflow-hidden border border-zinc-800">
-                                                    <div style={{ width: `${calculationRatio}%` }} className="h-full bg-indigo-600"></div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                    {Object.keys(strategyCounts).length === 0 && <div className="text-xs text-zinc-600 italic">No historical strategy metrics captured yet in current register caches.</div>}
-                                </div>
-                            </div>
-
-                            <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5 space-y-4">
-                                <div className="text-xs text-zinc-400 font-bold uppercase border-b border-zinc-900 pb-2">RED ROOT INJURY LOSS ATTRIBUTION ASSIGNMENT COUNTS</div>
-                                <div className="space-y-3">
-                                    {sortedLossTags.map(([tag, inc]) => {
-                                        const scalePercentage = ((inc / peakLossTagCount) * 100).toFixed(0);
-                                        return (
-                                            <div key={tag} className="space-y-1">
-                                                <div className="flex justify-between text-xs font-mono">
-                                                    <span className="text-red-400 font-bold">{tag}</span>
-                                                    <span className="text-zinc-400">{inc} explicit events</span>
-                                                </div>
-                                                <div className="w-full bg-zinc-900 h-2 rounded-sm overflow-hidden border border-zinc-800">
-                                                    <div style={{ width: `${scalePercentage}%` }} className="h-full bg-red-800"></div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                    {sortedLossTags.length === 0 && <div className="text-xs text-zinc-600 italic">Zero losing tracking tag references inside system memory. Clear slate.</div>}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* VIEW SUBELEMENT MODULE 3: GRAND SLAMS ADVANCED MILESTONES PROGRESS FORMS */}
-                    {viewMode === "milestones" && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {milestonesDataConfig.map(m => {
-                                const theoreticalTarget = m.thresholds.find(t => t > m.current) || m.thresholds[m.thresholds.length - 1];
-                                const floorTarget = m.thresholds[m.thresholds.indexOf(theoreticalTarget) - 1] || 0;
-                                const metricFillRatio = theoreticalTarget > floorTarget ? Math.min(100, ((m.current - floorTarget) / (theoreticalTarget - floorTarget)) * 100) : 100;
-                                const unlocked = m.current >= theoreticalTarget;
-
-                                return (
-                                    <div key={m.title} className={`bg-zinc-950 border rounded-xl p-5 space-y-3 flex flex-col justify-between ${unlocked ? 'border-emerald-600 bg-emerald-950/10' : 'border-zinc-800'}`}>
-                                        <div className="flex justify-between items-start">
-                                            <span className={`text-xs font-bold uppercase tracking-wider ${unlocked ? 'text-emerald-400' : 'text-zinc-500'}`}>{m.title}</span>
-                                        </div>
-                                        <div className="flex items-baseline gap-1.5">
-                                            <span className="text-2xl font-bold font-mono text-zinc-100">{m.current}</span>
-                                            <span className="text-xs text-zinc-600 font-bold">/ path milestone objective target {theoreticalTarget}</span>
-                                        </div>
-                                        <div className="w-full bg-zinc-900 border border-zinc-800 h-2 rounded-full overflow-hidden">
-                                            <div style={{ width: `${metricFillRatio}%` }} className={`h-full transition-all duration-500 ${unlocked ? 'bg-emerald-500' : 'bg-indigo-600'}`}></div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
-
-                    {/* VIEW SUBELEMENT MODULE 4: ARCHIVE HISTORICAL CACHE DATABASE TABLE RECORD LISTS */}
-                    {viewMode === "history" && (
-                        <div className="bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden">
-                            <div className="text-xs font-bold text-zinc-400 tracking-wider bg-zinc-900/50 p-4 border-b border-zinc-800 uppercase">ARCHIVED REGISTER TRACK RECORDS SLATES</div>
-                            <div className="divide-y divide-zinc-900">
-                                {[...sessions].reverse().map(s => {
-                                    const interiorTrades = s.trades || [];
-                                    const calculatedSessionPnL = interiorTrades.filter(t => t.result !== "" && !isNaN(parseFloat(t.result))).reduce((acc, t) => acc + parseFloat(t.result), 0);
-                                    return (
-                                        <div key={s.id} className="p-4 flex items-center justify-between hover:bg-zinc-900/10 transition gap-4 text-xs font-mono">
-                                            <div className="space-y-1">
-                                                <div className="flex items-center gap-3">
-                                                    <span className="text-sm font-bold text-zinc-200">{s.date}</span>
-                                                    <span className="text-[11px] bg-zinc-900 px-2 py-0.5 border border-zinc-800 text-zinc-400 rounded">Index Layer Key: #{s.sessionNum || "U"}</span>
-                                                    <span className="text-[11px] text-zinc-500 font-bold uppercase tracking-wider">{s.environment || "ENV NOT IDENTIFIED"}</span>
-                                                </div>
-                                                {s.sessionNotes && <div className="text-zinc-500 italic max-w-xl truncate text-[11px]">{s.sessionNotes}</div>}
-                                            </div>
-                                            <div className="flex items-center gap-4">
-                                                <span className={`text-sm font-bold ${calculatedSessionPnL >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                                    {calculatedSessionPnL >= 0 ? "+" : ""}${calculatedSessionPnL.toFixed(2)}
-                                                </span>
-                                                <button type="button" onClick={() => onLoadSession(s)} className="px-3 py-1 text-[11px] border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded transition font-mono">
-                                                    MOUNT CONFIG
-                                                </button>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
-
-                </div>
-            );
-        }
-
-        // --- TAB SUBMODULE 3: HIGH-FIDELITY PHYSICALLY PRINTABLE FORENSICS REPORT AUTOPSY SHEET ---
-        function AutopsyPrintView({ session }) {
-            return (
-                <div className="bg-white min-h-screen p-0 sm:p-6 text-black">
-                    {/* Interior Non-Printing Screen Indicator Context Layer */}
-                    <div className="no-print max-w-3xl mx-auto mb-6 p-4 bg-zinc-100 border border-zinc-200 text-zinc-800 text-xs text-center rounded-lg font-mono">
-                        💡 <strong>SYSTEM PRINTOUT APPARATUS DETECTED:</strong> Use your standard browser print command <strong>Ctrl + P</strong> / <strong>Cmd + P</strong> to route this formatted autopsy document layout map instantly to physical letter paper format profiles or clear standalone vector digital PDF media configurations cleanly!
-                    </div>
-
-                    {/* Letter Physical Structural Canvas Matrix Box Container Block */}
-                    <div className="print-page mx-auto font-mono text-black">
-                        
-                        <div className="print-rule pb-2 flex justify-between items-end mb-4 border-b-2 border-black">
-                            <div>
-                                <div className="text-[10px] tracking-widest font-bold text-zinc-500 uppercase">SYSTEM DIAGNOSTIC CAPTURES TRACK RECORD</div>
-                                <div className="text-xl font-bold uppercase text-black tracking-tighter">SESSION FORENSIC AUTOPSY SHEET</div>
-                            </div>
-                            <div className="text-[10px] text-zinc-600 italic text-right max-w-xs leading-tight">
-                                Protect capital asset parameters first. Stack clean execution sequences. Become impossible to terminate.
-                            </div>
-                        </div>
-
-                        {/* Configuration Metadata Matrix Layout Grid Row Block */}
-                        <div className="text-xs font-bold tracking-widest uppercase text-zinc-500 border-b pb-1 mb-2">Pre Session Context Structs</div>
-                        <div className="grid grid-cols-4 gap-4 text-xs mb-5 text-black">
-                            <div><strong>Target Log Slate Date:</strong> <div className="print-rule border-b h-5 pt-0.5 font-bold">{session.date}</div></div>
-                            <div><strong>Session ID Reference Index:</strong> <div className="print-rule border-b h-5 pt-0.5 font-bold">#{session.sessionNum || "—"}</div></div>
-                            <div><strong>First Move Compliant:</strong> <div className="print-rule border-b h-5 pt-0.5 font-bold">{session.firstTradeSetup === true ? "YES [VALID]" : session.firstTradeSetup === false ? "NO [DEVIATION INCIDENT]" : "—"}</div></div>
-                            <div><strong>Environmental Mapping:</strong> <div className="print-rule border-b h-5 pt-0.5 font-bold">{session.environment || "UNCLASSIFIED"}</div></div>
-                        </div>
-
-                        {/* Trade Position Records Forensics Block Loops Array Map Iterators */}
-                        <div className="text-xs font-bold tracking-widest uppercase text-zinc-500 border-b pb-1 mb-3">Position Analytics Forensic Action Track Records</div>
-                        <div className="space-y-4">
-                            {session.trades.map((trade, i) => {
-                                const netVal = parseFloat(trade.result);
-                                return (
-                                    <div key={trade.id} className="print-box border border-zinc-300 rounded p-3 text-xs bg-zinc-50/50 space-y-2.5 break-inside-avoid">
-                                        <div className="flex justify-between items-center border-b border-zinc-200 pb-1 font-bold">
-                                            <span>MATCH ID CONFIGURATION MARKER: SEQUENCE #{i + 1}</span>
-                                            <span className="bg-white border border-zinc-300 px-2 py-0.5 rounded text-[11px]">RULE QUALITY GRADE: {trade.grade || "U"}</span>
-                                        </div>
-
-                                        <div className="grid grid-cols-6 gap-2 text-[11px]">
-                                            <div><span className="text-zinc-500 text-[9px] block font-bold uppercase">TIME</span><div className="border-b h-4 font-bold">{trade.time || "—"}</div></div>
-                                            <div><span className="text-zinc-500 text-[9px] block font-bold uppercase">BIAS</span><div className="border-b h-4 font-bold">{trade.direction || "—"}</div></div>
-                                            <div><span className="text-zinc-500 text-[9px] block font-bold uppercase">SIZE / UNITS</span><div className="border-b h-4 font-bold">{trade.contracts || "—"}</div></div>
-                                            <div><span className="text-zinc-500 text-[9px] block font-bold uppercase">ENTRY PRICE</span><div className="border-b h-4 font-bold">{trade.entry || "—"}</div></div>
-                                            <div><span className="text-zinc-500 text-[9px] block font-bold uppercase">EXIT VALUE</span><div className="border-b h-4 font-bold">{trade.exit || "—"}</div></div>
-                                            <div><span className="text-zinc-500 text-[9px] block font-bold uppercase">RESULT RETURN</span><div className={`border-b h-4 font-bold ${netVal >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>{trade.result ? `${netVal >= 0 ? '+' : ''}$${netVal.toFixed(2)}` : '—'}</div></div>
-                                        </div>
-
-                                        <div className="grid grid-cols-4 gap-2 text-[10px] bg-white border border-zinc-200 p-2 rounded">
-                                            <div><strong>MAE Excursion:</strong> {trade.mae || "—"} pts</div>
-                                            <div><strong>MFE Excursion:</strong> {trade.mfe || "—"} pts</div>
-                                            <div><strong>Follow Through:</strong> {trade.immediateFollowThrough === true ? "YES" : trade.immediateFollowThrough === false ? "NO" : "—"}</div>
-                                            <div><strong>Negotiable Discretion:</strong> {trade.negotiable === true ? "YES" : trade.negotiable === false ? "NO" : "—"}</div>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] pt-0.5">
-                                            <div className="sm:col-span-2"><strong>Core System Setup Pattern Tag:</strong> <span className="underline font-bold ml-1">{trade.setupTag || "—"}</span></div>
-                                            {netVal < 0 && <div><strong>Loss Cause Core Attribution root:</strong> <span className="underline font-bold ml-1 text-red-700">{trade.lossTag || "—"}</span></div>}
-                                        </div>
-
-                                        <div className="text-[11px]">
-                                            <span className="text-[9px] block uppercase font-bold text-zinc-500">Core Entry Strategy Thesis Rationale Argument Context:</span>
-                                            <div className="italic text-zinc-800 bg-white border border-dashed border-zinc-200 p-1.5 rounded mt-0.5 min-h-[22px]">{trade.why || "No data nodes attached to point mapping target indexes."}</div>
-                                        </div>
-
-                                        {trade.doNothingOutcome && (
-                                            <div className="text-[11px]">
-                                                <span className="text-[9px] block uppercase font-bold text-zinc-500">Do Nothing Alternative Scenario Outcome Observation:</span>
-                                                <div className="text-zinc-700 bg-zinc-100/50 p-1 rounded border mt-0.5">{trade.doNothingOutcome}</div>
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        {/* Avoided Logs Sheet Renditions inside Print Frames */}
-                        {session.avoided && session.avoided.filter(a => a.time || a.whyAvoided).length > 0 && (
-                            <div className="mt-4 space-y-2 break-inside-avoid">
-                                <div className="text-xs font-bold tracking-widest uppercase text-zinc-500 border-b pb-1">Stepped Aside / Avoided Market Setup Forensics Log</div>
-                                {session.avoided.filter(a => a.time || a.whyAvoided).map((av, avI) => (
-                                    <div key={av.id} className="print-box border border-zinc-300 p-2.5 rounded text-[11px] bg-zinc-50/50 space-y-1">
-                                        <div className="flex justify-between font-bold text-zinc-600 border-b border-zinc-200 pb-0.5">
-                                            <span>AVOIDED CASE SPECIFIC INDICATION #{avI + 1}</span>
-                                            <span>TIME: {av.time || "—"}</span>
-                                            <span>DECISION ASSESSMENT: {av.passed === true ? "PASSED (VALID SAVE)" : av.passed === false ? "FAILED (MISSED PLAY)" : "—"}</span>
-                                        </div>
-                                        <div><strong>Tag Parameter Focus:</strong> {av.setupTag || "—"} | <strong>Points Saved/Missed Bound:</strong> {av.pointsSavedOrMissed || "—"}</div>
-                                        <div className="italic text-zinc-700 font-serif text-[11px] pt-0.5">" {av.whyAvoided || "No psychological overview noted."} "</div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Post Session Assessment Accountability Scores Print Row Boxes Section */}
-                        <div className="text-xs font-bold tracking-widest uppercase text-zinc-500 border-b pb-1 mb-2 mt-4 break-inside-avoid">Post Session Compliance Scores Summary</div>
-                        <div className="grid grid-cols-4 gap-2 text-center text-xs text-black font-mono mb-3 break-inside-avoid">
-                            <div className="print-box border border-zinc-300 p-1.5 rounded"><strong>Patience Score</strong><div className="text-sm font-bold mt-0.5">{session.patienceScore || "—"} / 10</div></div>
-                            <div className="print-box border border-zinc-300 p-1.5 rounded"><strong>Deviation Cheat</strong><div className="text-sm font-bold mt-0.5">{session.cheatScore || "—"} / 10</div></div>
-                            <div className="print-box border border-zinc-300 p-1.5 rounded"><strong>Walk Aways</strong><div className="text-sm font-bold mt-0.5">{session.walkAways || "—"} events</div></div>
-                            <div className="print-box border border-zinc-300 p-1.5 rounded"><strong>Risk Preservation</strong><div className="text-sm font-bold mt-0.5 text-indigo-900">{session.survived ? "PLAN SURVIVED" : "RISK BREACH"}</div></div>
-                        </div>
-
-                        <div className="print-box border border-zinc-300 rounded p-2.5 text-xs text-black bg-zinc-50/50 break-inside-avoid">
-                            <strong>Global Post-Mortem Operational Summary Note Observations:</strong>
-                            <div className="italic text-zinc-700 bg-white border border-zinc-200 p-2 rounded mt-1 min-h-[44px]">{session.sessionNotes || "No technical post analysis metadata summaries saved to current cache runtime pointers."}</div>
-                        </div>
-
-                        <div className="mt-6 text-center text-[9px] text-zinc-400 italic border-t pt-1 font-mono">
-                            The systematic machine remains patient. Protect execution parameters always. Live to win tomorrow.
-                        </div>
-
-                    </div>
-                </div>
-            );
-        }
-
-        // Standard mount logic execution block targeting static div elements safely
-        const targetContainer = document.getElementById('root');
-        const applicationRoot = ReactDOM.createRoot(targetContainer);
-        applicationRoot.render(<App />);
-    </script>
+        renderEnvironmentChips();
+        addNewTradeItem();
+      }
+    }
+  </script>
 </body>
 </html>
