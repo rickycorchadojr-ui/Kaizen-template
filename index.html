@@ -1,414 +1,682 @@
-import { useState, useEffect } from "react";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Cell } from "recharts";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Kaizen Trade Autopsy — Session Template</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap');
 
-const SESSIONS_KEY = "kaizen:sessions";
-
-async function loadSessions() {
-  try {
-    const r = await window.storage.get(SESSIONS_KEY);
-    return r ? JSON.parse(r.value) : [];
-  } catch { return []; }
-}
-
-const mono = { fontFamily:"'JetBrains Mono','Courier New',monospace" };
-
-const C = {
-  bg:"#08080a", surface:"#0f0f12", card:"#141417",
-  border:"#27272a", border2:"#3f3f46",
-  text:"#e4e4e7", muted:"#71717a", faint:"#3f3f46",
-  green:"#10b981", greenBg:"#064e3b", greenText:"#6ee7b7",
-  red:"#ef4444",   redBg:"#450a0a",   redText:"#fca5a5",
-  blue:"#6366f1",  blueBg:"#1e1b4b",  blueText:"#a5b4fc",
-  yellow:"#eab308",yellowBg:"#422006",yellowText:"#fde047",
-  purple:"#a855f7",
-};
-
-function Stat({ label, value, sub, color }) {
-  return (
-    <div style={{ background: C.card, border:`1px solid ${C.border2}`, borderRadius: 8, padding:"14px 16px" }}>
-      <div style={{ ...mono, color: C.muted, fontSize: 9, letterSpacing:"0.15em", marginBottom: 6 }}>{label}</div>
-      <div style={{ ...mono, color: color||C.text, fontSize: 22, fontWeight: 700 }}>{value}</div>
-      {sub && <div style={{ ...mono, color: C.faint, fontSize: 10, marginTop: 4 }}>{sub}</div>}
-    </div>
-  );
-}
-
-function SectionHead({ children }) {
-  return <div style={{ ...mono, color: C.muted, fontSize: 9, letterSpacing:"0.2em", marginBottom: 12, marginTop: 24 }}>{children}</div>;
-}
-
-function Bar2({ label, val, max, color }) {
-  const pct = max > 0 ? Math.min(100, (val/max)*100) : 0;
-  return (
-    <div style={{ marginBottom: 8 }}>
-      <div style={{ display:"flex", justifyContent:"space-between", marginBottom: 3 }}>
-        <span style={{ ...mono, color: C.muted, fontSize: 10 }}>{label}</span>
-        <span style={{ ...mono, color: C.text, fontSize: 10, fontWeight: 700 }}>{val}</span>
-      </div>
-      <div style={{ background: C.surface, borderRadius: 2, height: 4, width:"100%" }}>
-        <div style={{ background: color||C.blue, borderRadius: 2, height: 4, width:`${pct}%`, transition:"width .4s" }} />
-      </div>
-    </div>
-  );
-}
-
-const TT = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div style={{ ...mono, background: C.card, border:`1px solid ${C.border2}`, borderRadius: 6, padding:"8px 12px", fontSize: 11 }}>
-      <div style={{ color: C.muted, marginBottom: 4 }}>{label}</div>
-      {payload.map((p,i)=>(
-        <div key={i} style={{ color: p.value >= 0 ? C.green : C.red }}>{p.name}: {p.value >= 0 ? "+" : ""}{typeof p.value === "number" ? p.value.toFixed(0) : p.value}</div>
-      ))}
-    </div>
-  );
-};
-
-// ── Grand Slam milestones ────────────────────────────────────────────────────
-function GrandSlams({ stats }) {
-  const slams = [
-    { label:"Trades Reviewed",         val: stats.totalTrades,          targets:[100,500,1000] },
-    { label:"Sessions Logged",          val: stats.totalSessions,        targets:[30,100,250]  },
-    { label:"Consecutive Logged",       val: stats.currentStreak,        targets:[5,10,20,50]  },
-    { label:"Chop Avoided",             val: stats.totalAvoided,         targets:[20,50,100]   },
-    { label:"Correct Env Calls",        val: stats.correctEnvCalls,      targets:[10,30,75]    },
-    { label:"A-Grade Trades",           val: stats.aGrades,              targets:[25,100,250]  },
-    { label:"F-Grade Free Streak",      val: stats.freeStreak,           targets:[10,25,50]    },
-    { label:"Non-Expansion Sessions",   val: stats.nonExpansionSessions, targets:[10,30,60]    },
-  ];
-
-  return (
-    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap: 10 }}>
-      {slams.map(s=>{
-        const next = s.targets.find(t=>t>s.val) || s.targets[s.targets.length-1];
-        const prev = s.targets[s.targets.indexOf(next)-1] || 0;
-        const pct  = next > prev ? Math.min(100, ((s.val-prev)/(next-prev))*100) : 100;
-        const done = s.val >= next;
-        return (
-          <div key={s.label} style={{ background: C.card, border:`1px solid ${done ? C.green : C.border2}`, borderRadius: 8, padding:"12px 14px" }}>
-            <div style={{ ...mono, color: done ? C.greenText : C.muted, fontSize: 9, letterSpacing:"0.1em", marginBottom: 4 }}>{s.label}</div>
-            <div style={{ display:"flex", alignItems:"baseline", gap: 6, marginBottom: 8 }}>
-              <span style={{ ...mono, color: done ? C.green : C.text, fontSize: 18, fontWeight: 700 }}>{s.val}</span>
-              <span style={{ ...mono, color: C.faint, fontSize: 10 }}>/ {next}</span>
-            </div>
-            <div style={{ background: C.surface, borderRadius: 2, height: 3 }}>
-              <div style={{ background: done ? C.green : C.blue, height: 3, borderRadius: 2, width:`${pct}%`, transition:"width .5s" }} />
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-// ── Main ─────────────────────────────────────────────────────────────────────
-export default function KaizenDashboard() {
-  const [sessions, setSessions] = useState(null);
-  const [view, setView]         = useState("overview"); // overview | trades | sessions
-
-  useEffect(() => { loadSessions().then(setSessions); }, []);
-
-  if (sessions === null) {
-    return (
-      <div style={{ ...mono, background: C.bg, minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", color: C.muted, fontSize: 12 }}>
-        Loading sessions…
-      </div>
-    );
+  :root {
+    --ink:      #0a0a0a;
+    --ink2:     #2a2a2a;
+    --ink3:     #555;
+    --rule:     #c8c8c8;
+    --rule2:    #e0e0e0;
+    --bg:       #ffffff;
+    --accent:   #0a0a0a;
   }
 
-  if (sessions.length === 0) {
-    return (
-      <div style={{ ...mono, background: C.bg, minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", flexDirection:"column", gap: 12 }}>
-        <div style={{ color: C.muted, fontSize: 12 }}>No sessions saved yet.</div>
-        <div style={{ color:"#3f3f46", fontSize: 10 }}>Complete a session in the Logger and hit Save.</div>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 9pt;
+    line-height: 1.5;
+  }
+
+  /* ── PAGE LAYOUT ── */
+  .page {
+    width: 8.5in;
+    min-height: 11in;
+    margin: 0 auto;
+    padding: 0.55in 0.6in;
+    page-break-after: always;
+  }
+  .page:last-child { page-break-after: avoid; }
+
+  @media print {
+    body { background: white; }
+    .page { margin: 0; padding: 0.55in 0.6in; }
+    .no-print { display: none !important; }
+    @page { size: letter; margin: 0; }
+  }
+
+  /* ── TYPOGRAPHY ── */
+  .eyebrow {
+    font-size: 6.5pt;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink3);
+  }
+  .heading {
+    font-size: 15pt;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .section-head {
+    font-size: 6.5pt;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    border-bottom: 0.5pt solid var(--rule);
+    padding-bottom: 4pt;
+    margin-bottom: 10pt;
+    margin-top: 14pt;
+  }
+  .field-label {
+    font-size: 6pt;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    margin-bottom: 2pt;
+  }
+  .hint {
+    font-size: 6pt;
+    color: #888;
+    font-style: italic;
+    margin-bottom: 3pt;
+  }
+
+  /* ── RULES / BOXES ── */
+  .rule-line {
+    border: none;
+    border-bottom: 0.5pt solid var(--rule);
+    width: 100%;
+    height: 14pt;
+    display: block;
+  }
+  .box {
+    border: 0.5pt solid var(--rule);
+    border-radius: 2pt;
+    padding: 5pt 7pt;
+    min-height: 18pt;
+  }
+  .check-box {
+    display: inline-block;
+    width: 9pt;
+    height: 9pt;
+    border: 1pt solid var(--ink2);
+    vertical-align: middle;
+    margin-right: 4pt;
+    border-radius: 1pt;
+    flex-shrink: 0;
+  }
+
+  /* ── GRID HELPERS ── */
+  .grid-2  { display: grid; grid-template-columns: 1fr 1fr;       gap: 12pt; }
+  .grid-3  { display: grid; grid-template-columns: 1fr 1fr 1fr;   gap: 10pt; }
+  .grid-4  { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8pt; }
+  .grid-5  { display: grid; grid-template-columns: repeat(5,1fr); gap: 6pt; }
+
+  /* ── HEADER ── */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1.5pt solid var(--ink);
+    padding-bottom: 8pt;
+    margin-bottom: 14pt;
+  }
+  .mantra {
+    font-size: 6pt;
+    color: var(--ink3);
+    font-style: italic;
+    line-height: 1.8;
+    text-align: right;
+    max-width: 3.2in;
+  }
+
+  /* ── TRADE BLOCK ── */
+  .trade-block {
+    border: 0.5pt solid var(--rule);
+    border-radius: 3pt;
+    padding: 9pt 10pt;
+    margin-bottom: 8pt;
+    page-break-inside: avoid;
+  }
+  .trade-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 0.5pt solid var(--rule2);
+    padding-bottom: 5pt;
+    margin-bottom: 8pt;
+  }
+  .trade-num {
+    font-size: 11pt;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+
+  /* ── CHECKBOX ROW ── */
+  .check-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6pt;
+    font-size: 8pt;
+  }
+  .yn-pair {
+    display: flex;
+    gap: 10pt;
+    align-items: center;
+  }
+  .yn-label {
+    font-size: 7.5pt;
+    color: var(--ink2);
+    margin-right: 6pt;
+    white-space: nowrap;
+  }
+
+  /* ── ENV CHIPS ── */
+  .env-chips { display: flex; gap: 6pt; flex-wrap: wrap; margin-top: 4pt; }
+  .env-chip {
+    border: 0.5pt solid var(--ink2);
+    border-radius: 2pt;
+    padding: 2pt 7pt;
+    font-size: 7pt;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* ── TAG CHIPS ── */
+  .tag-row { display: flex; flex-wrap: wrap; gap: 4pt; margin-top: 3pt; }
+  .tag-chip {
+    border: 0.5pt solid var(--rule);
+    border-radius: 2pt;
+    padding: 1.5pt 5pt;
+    font-size: 6.5pt;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink3);
+  }
+
+  /* ── SUMMARY BOX ── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 8pt;
+    margin-bottom: 10pt;
+  }
+  .summary-cell {
+    border: 0.5pt solid var(--rule);
+    border-radius: 2pt;
+    padding: 6pt 8pt;
+    text-align: center;
+  }
+  .summary-val {
+    font-size: 14pt;
+    font-weight: 700;
+  }
+
+  /* ── PRINT BUTTON ── */
+  .no-print {
+    display: flex;
+    justify-content: center;
+    padding: 16pt;
+    gap: 10pt;
+  }
+  .btn {
+    font-family: 'JetBrains Mono', monospace;
+    background: #0a0a0a;
+    color: white;
+    border: none;
+    padding: 8pt 20pt;
+    font-size: 9pt;
+    border-radius: 3pt;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+  }
+  .btn-outline {
+    background: white;
+    color: #0a0a0a;
+    border: 1pt solid #0a0a0a;
+  }
+
+  .divider { border: none; border-top: 0.5pt solid var(--rule2); margin: 10pt 0; }
+  .small { font-size: 6.5pt; color: var(--ink3); }
+  .italic { font-style: italic; }
+</style>
+</head>
+<body>
+
+<!-- Print Controls -->
+<div class="no-print">
+  <button class="btn" onclick="window.print()">PRINT / SAVE AS PDF</button>
+  <button class="btn btn-outline" onclick="addTrade()">+ ADD TRADE BLOCK</button>
+  <button class="btn btn-outline" onclick="addPage()">+ ADD SESSION PAGE</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ PAGE 1: SESSION -->
+<div class="page" id="session-page-1">
+
+  <!-- Header -->
+  <div class="header">
+    <div>
+      <div class="eyebrow">Kaizen Trade Autopsy</div>
+      <div class="heading">Session Log</div>
+    </div>
+    <div class="mantra">
+      I protect the account. I stack clean days.<br>
+      I become impossible to kill.<br>
+      <strong>Has the market earned my participation?</strong>
+    </div>
+  </div>
+
+  <!-- PRE-SESSION -->
+  <div class="section-head">Pre-Session</div>
+  <div class="grid-3" style="margin-bottom:10pt">
+    <div>
+      <div class="field-label">Date</div>
+      <div class="rule-line"></div>
+    </div>
+    <div>
+      <div class="field-label">Session #</div>
+      <div class="rule-line"></div>
+    </div>
+    <div>
+      <div class="field-label">First Trade Followed Setup?</div>
+      <div class="yn-pair" style="margin-top:4pt">
+        <span class="check-box"></span><span style="font-size:7.5pt; margin-right:12pt">YES</span>
+        <span class="check-box"></span><span style="font-size:7.5pt">NO</span>
       </div>
-    );
-  }
+    </div>
+  </div>
 
-  // ── Compute stats ──────────────────────────────────────────────────────────
-  const allTrades = sessions.flatMap(s => (s.trades||[]).map(t=>({...t, sessionDate:s.date, env:s.environment})));
-  const withRes   = allTrades.filter(t=>t.result!==""&&!isNaN(parseFloat(t.result)));
-  const winners   = withRes.filter(t=>parseFloat(t.result)>=0);
-  const losers    = withRes.filter(t=>parseFloat(t.result)<0);
-  const totalPnL  = withRes.reduce((s,t)=>s+parseFloat(t.result),0);
-  const winRate   = withRes.length>0 ? (winners.length/withRes.length*100).toFixed(1) : "—";
-  const avgWin    = winners.length>0 ? (winners.reduce((s,t)=>s+parseFloat(t.result),0)/winners.length).toFixed(0) : 0;
-  const avgLoss   = losers.length>0  ? (losers.reduce((s,t)=>s+parseFloat(t.result),0)/losers.length).toFixed(0)  : 0;
-  const winMAE    = winners.filter(t=>t.mae!=="").length>0
-    ? (winners.filter(t=>t.mae!=="").reduce((s,t)=>s+parseFloat(t.mae),0)/winners.filter(t=>t.mae!=="").length).toFixed(1) : "—";
-  const lossMAE   = losers.filter(t=>t.mae!=="").length>0
-    ? (losers.filter(t=>t.mae!=="").reduce((s,t)=>s+parseFloat(t.mae),0)/losers.filter(t=>t.mae!=="").length).toFixed(1) : "—";
+  <div style="margin-bottom:10pt">
+    <div class="field-label">Market Environment — Classify BEFORE first trade</div>
+    <div class="hint">ROTATIONAL = levels respected, discretion works · TRENDING = clean direction · CHOP = whipsaws, consider sitting out · EXPANSION = violent, kills discretion · UNKNOWN = observe longer</div>
+    <div class="env-chips">
+      <div class="env-chip"><span class="check-box"></span> Rotational</div>
+      <div class="env-chip"><span class="check-box"></span> Trending</div>
+      <div class="env-chip"><span class="check-box"></span> Chop</div>
+      <div class="env-chip"><span class="check-box"></span> Expansion</div>
+      <div class="env-chip"><span class="check-box"></span> Unknown</div>
+    </div>
+  </div>
 
-  // Cumulative PnL curve
-  const pnlCurve = withRes.map((t,i)=>({ i:i+1, pnl: withRes.slice(0,i+1).reduce((s,x)=>s+parseFloat(x.result),0), date:t.sessionDate }));
+  <!-- TRADE BLOCKS -->
+  <div class="section-head">Trade Log</div>
+  <div id="trade-container-1">
 
-  // Daily PnL bar
-  const byDate = {};
-  withRes.forEach(t=>{ byDate[t.sessionDate]=(byDate[t.sessionDate]||0)+parseFloat(t.result); });
-  const dailyBars = Object.entries(byDate).sort().map(([date,pnl])=>({date:date.slice(5),pnl}));
+    <!-- TRADE 1 -->
+    <div class="trade-block">
+      <div class="trade-header">
+        <span class="trade-num">TRADE #1</span>
+        <div class="yn-pair">
+          <span class="yn-label">Direction:</span>
+          <span class="check-box"></span><span style="font-size:7.5pt; margin-right:10pt">LONG</span>
+          <span class="check-box"></span><span style="font-size:7.5pt">SHORT</span>
+        </div>
+      </div>
 
-  // Loss breakdown
-  const lossTags = {};
-  losers.forEach(t=>{ if(t.lossTag) lossTags[t.lossTag]=(lossTags[t.lossTag]||0)+1; });
-  const topLoss = Object.entries(lossTags).sort((a,b)=>b[1]-a[1]);
+      <div class="grid-5" style="margin-bottom:8pt">
+        <div><div class="field-label">Time</div><div class="rule-line"></div></div>
+        <div><div class="field-label">Entry</div><div class="rule-line"></div></div>
+        <div><div class="field-label">Exit</div><div class="rule-line"></div></div>
+        <div><div class="field-label">Result ($)</div><div class="rule-line"></div></div>
+        <div><div class="field-label">Contracts</div><div class="rule-line"></div></div>
+      </div>
 
-  // Setup win rate
-  const setupWR = {};
-  withRes.forEach(t=>{
-    if(!t.setupTag) return;
-    if(!setupWR[t.setupTag]) setupWR[t.setupTag]={w:0,l:0};
-    parseFloat(t.result)>=0 ? setupWR[t.setupTag].w++ : setupWR[t.setupTag].l++;
-  });
-
-  // Grade counts
-  const grades = {A:0,B:0,C:0,F:0};
-  allTrades.forEach(t=>{ if(t.grade) grades[t.grade]++; });
-
-  // IFT + Negotiable rates
-  const iftYes = allTrades.filter(t=>t.immediateFollowThrough===true).length;
-  const iftNo  = allTrades.filter(t=>t.immediateFollowThrough===false).length;
-  const negYes = allTrades.filter(t=>t.negotiable===true).length;
-  const negNo  = allTrades.filter(t=>t.negotiable===false).length;
-
-  // Env profitability
-  const envPnL = {};
-  sessions.forEach(s=>{
-    if(!s.environment) return;
-    const spnl=(s.trades||[]).filter(t=>t.result!==""&&!isNaN(parseFloat(t.result))).reduce((x,t)=>x+parseFloat(t.result),0);
-    if(!envPnL[s.environment]) envPnL[s.environment]={pnl:0,count:0};
-    envPnL[s.environment].pnl+=spnl;
-    envPnL[s.environment].count++;
-  });
-
-  // Avoided count
-  const totalAvoided = sessions.reduce((s,x)=>(x.avoided||[]).filter(a=>a.passed===true).length+s,0);
-
-  // Correct env calls
-  const correctEnvCalls = sessions.filter(s=>s.environmentCorrect===true).length;
-
-  // F-free streak (from end)
-  let freeStreak = 0;
-  for (let i = allTrades.length-1; i>=0; i--) {
-    if(allTrades[i].grade==="F") break;
-    if(allTrades[i].grade) freeStreak++;
-  }
-
-  // Session streak (consecutive sessions saved)
-  const currentStreak = sessions.length; // simplification — all saved = streak
-
-  // Non-expansion sessions
-  const nonExpansionSessions = sessions.filter(s=>s.environment && s.environment!=="EXPANSION" && s.environment!=="CHOP").length;
-
-  const aGrades = grades.A;
-
-  const gStats = { totalTrades:allTrades.length, totalSessions:sessions.length, currentStreak, totalAvoided, correctEnvCalls, aGrades, freeStreak, nonExpansionSessions };
-
-  // ── Render ──────────────────────────────────────────────────────────────────
-  const TAB = (id,label) => (
-    <button onClick={()=>setView(id)} style={{ ...mono, background:"none", border:"none", borderBottom:`2px solid ${view===id?C.blue:"transparent"}`, color:view===id?C.blueText:C.muted, padding:"8px 16px", fontSize:11, cursor:"pointer", transition:"all .15s" }}>{label}</button>
-  );
-
-  return (
-    <div style={{ ...mono, background:C.bg, minHeight:"100vh", color:C.text }}>
-
-      {/* Header */}
-      <div style={{ borderBottom:`1px solid ${C.border}`, padding:"14px 20px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+      <div class="grid-2" style="margin-bottom:8pt">
         <div>
-          <div style={{ color:C.muted, fontSize:9, letterSpacing:"0.2em", marginBottom:2 }}>KAIZEN TRADE AUTOPSY</div>
-          <div style={{ color:C.text, fontSize:16, fontWeight:700, letterSpacing:"0.05em" }}>PERFORMANCE DASHBOARD</div>
+          <div class="field-label">MAE (pts) — TIER 1 — How far against me before exit</div>
+          <div class="rule-line"></div>
         </div>
-        <div style={{ display:"flex", gap:6, alignItems:"center" }}>
-          <span style={{ color:totalPnL>=0?C.green:C.red, fontSize:18, fontWeight:700 }}>{totalPnL>=0?"+":""}{totalPnL.toFixed(0)}</span>
-          <span style={{ color:C.muted, fontSize:10 }}>total</span>
+        <div>
+          <div class="field-label">MFE (pts) — How far in my favor before exit</div>
+          <div class="rule-line"></div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div style={{ borderBottom:`1px solid ${C.border}`, padding:"0 20px", display:"flex" }}>
-        {TAB("overview","OVERVIEW")}
-        {TAB("slams","GRAND SLAMS")}
-        {TAB("trades","TRADE BREAKDOWN")}
-        {TAB("sessions","SESSION LOG")}
+      <div class="grid-2" style="margin-bottom:8pt">
+        <div>
+          <div class="field-label">Immediate Follow Through?</div>
+          <div class="hint">Did price move my direction almost immediately?</div>
+          <div class="yn-pair">
+            <span class="check-box"></span><span style="font-size:7.5pt; margin-right:12pt">YES</span>
+            <span class="check-box"></span><span style="font-size:7.5pt">NO</span>
+          </div>
+        </div>
+        <div>
+          <div class="field-label">Market Negotiable?</div>
+          <div class="hint">Did I have time to exercise discretion, or moved too fast?</div>
+          <div class="yn-pair">
+            <span class="check-box"></span><span style="font-size:7.5pt; margin-right:12pt">YES</span>
+            <span class="check-box"></span><span style="font-size:7.5pt">NO</span>
+          </div>
+        </div>
       </div>
 
-      <div style={{ maxWidth:900, margin:"0 auto", padding:"20px 16px" }}>
+      <div style="margin-bottom:7pt">
+        <div class="field-label">Why Did I Take It? — One sentence only</div>
+        <div class="hint">e.g. "Failed auction at prior high" · "Breakout above opening range"</div>
+        <div class="rule-line"></div>
+      </div>
 
-        {/* ── OVERVIEW ── */}
-        {view==="overview" && <>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:20 }}>
-            <Stat label="NET P&L ($)"      value={`${totalPnL>=0?"+":""}${totalPnL.toFixed(0)}`} color={totalPnL>=0?C.green:C.red} sub={`${sessions.length} sessions`} />
-            <Stat label="WIN RATE"         value={`${winRate}%`} sub={`${winners.length}W / ${losers.length}L`} color={parseFloat(winRate)>=55?C.green:parseFloat(winRate)>=45?C.yellow:C.red} />
-            <Stat label="AVG WIN / LOSS"   value={`+${avgWin}`} sub={`avg loss ${avgLoss}`} color={C.green} />
-            <Stat label="TRADES REVIEWED"  value={allTrades.length} sub={`${totalAvoided} avoided`} color={C.blue} />
+      <div style="margin-bottom:7pt">
+        <div class="field-label">Setup Tag</div>
+        <div class="tag-row">
+          <div class="tag-chip"><span class="check-box"></span> BREAKOUT</div>
+          <div class="tag-chip"><span class="check-box"></span> PULLBACK</div>
+          <div class="tag-chip"><span class="check-box"></span> REVERSAL</div>
+          <div class="tag-chip"><span class="check-box"></span> CONTINUATION</div>
+          <div class="tag-chip"><span class="check-box"></span> OPENING RANGE</div>
+          <div class="tag-chip"><span class="check-box"></span> FAILED AUCTION</div>
+          <div class="tag-chip"><span class="check-box"></span> ANTICIPATION</div>
+          <div class="tag-chip"><span class="check-box"></span> FOMO</div>
+          <div class="tag-chip"><span class="check-box"></span> CHASE</div>
+          <div class="tag-chip"><span class="check-box"></span> OTHER</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:7pt">
+        <div class="field-label">Loss Category (if red)</div>
+        <div class="tag-row">
+          <div class="tag-chip"><span class="check-box"></span> EARLY</div>
+          <div class="tag-chip"><span class="check-box"></span> CHOP</div>
+          <div class="tag-chip"><span class="check-box"></span> REVERSAL</div>
+          <div class="tag-chip"><span class="check-box"></span> CHASE</div>
+          <div class="tag-chip"><span class="check-box"></span> OVERSIZED</div>
+          <div class="tag-chip"><span class="check-box"></span> FOMO</div>
+          <div class="tag-chip"><span class="check-box"></span> LOW VOLUME</div>
+          <div class="tag-chip"><span class="check-box"></span> COUNTERTREND</div>
+          <div class="tag-chip"><span class="check-box"></span> OR NOISE</div>
+          <div class="tag-chip"><span class="check-box"></span> EXPANSION</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:7pt">
+        <div>
+          <div class="field-label">Did Market Do What I Expected?</div>
+          <div class="yn-pair" style="margin-top:3pt">
+            <span class="check-box"></span><span style="font-size:7.5pt; margin-right:12pt">YES</span>
+            <span class="check-box"></span><span style="font-size:7.5pt">NO</span>
           </div>
-
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:24 }}>
-            <Stat label="MAE WINNERS (pts)" value={winMAE}  color={C.green} sub="avg adverse excursion" />
-            <Stat label="MAE LOSERS (pts)"  value={lossMAE} color={C.red}   sub="avg adverse excursion" />
-            <Stat label="IFT YES / NO"      value={`${iftYes} / ${iftNo}`} sub="immediate follow-through" />
-            <Stat label="NEGOTIABLE Y / N"  value={`${negYes} / ${negNo}`} sub="market gave time" />
+        </div>
+        <div>
+          <div class="field-label">Would Take Again?</div>
+          <div class="yn-pair" style="margin-top:3pt">
+            <span class="check-box"></span><span style="font-size:7.5pt; margin-right:10pt">YES</span>
+            <span class="check-box"></span><span style="font-size:7.5pt; margin-right:10pt">MAYBE</span>
+            <span class="check-box"></span><span style="font-size:7.5pt">NO</span>
           </div>
+        </div>
+      </div>
 
-          {/* Equity curve */}
-          <SectionHead>CUMULATIVE P&L</SectionHead>
-          {pnlCurve.length > 0 && (
-            <div style={{ background:C.card, border:`1px solid ${C.border2}`, borderRadius:8, padding:"16px 8px", marginBottom:20 }}>
-              <ResponsiveContainer width="100%" height={180}>
-                <LineChart data={pnlCurve}>
-                  <XAxis dataKey="i" tick={{ fill:C.muted, fontSize:9, fontFamily:"monospace" }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill:C.muted, fontSize:9, fontFamily:"monospace" }} axisLine={false} tickLine={false} />
-                  <ReferenceLine y={0} stroke={C.border2} strokeDasharray="3 3" />
-                  <Tooltip content={<TT />} />
-                  <Line type="monotone" dataKey="pnl" name="Cumulative" stroke={C.blue} strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )}
+      <div style="margin-bottom:7pt">
+        <div class="field-label">Trade Grade — Grade the TRADE, not the result. A losing trade can be an A.</div>
+        <div class="yn-pair" style="margin-top:3pt">
+          <span class="check-box"></span><span style="font-size:7.5pt; margin-right:4pt">A — Take again tomorrow</span>
+          <span style="margin-right:8pt"></span>
+          <span class="check-box"></span><span style="font-size:7.5pt; margin-right:4pt">B — Good, minor flaw</span>
+          <span style="margin-right:8pt"></span>
+          <span class="check-box"></span><span style="font-size:7.5pt; margin-right:4pt">C — Questionable</span>
+          <span style="margin-right:8pt"></span>
+          <span class="check-box"></span><span style="font-size:7.5pt">F — Never should happen</span>
+        </div>
+      </div>
 
-          {/* Daily bars */}
-          <SectionHead>DAILY P&L</SectionHead>
-          {dailyBars.length > 0 && (
-            <div style={{ background:C.card, border:`1px solid ${C.border2}`, borderRadius:8, padding:"16px 8px", marginBottom:20 }}>
-              <ResponsiveContainer width="100%" height={140}>
-                <BarChart data={dailyBars}>
-                  <XAxis dataKey="date" tick={{ fill:C.muted, fontSize:9, fontFamily:"monospace" }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill:C.muted, fontSize:9, fontFamily:"monospace" }} axisLine={false} tickLine={false} />
-                  <ReferenceLine y={0} stroke={C.border2} />
-                  <Tooltip content={<TT />} />
-                  <Bar dataKey="pnl" name="P&L" radius={[2,2,0,0]}>
-                    {dailyBars.map((d,i)=><Cell key={i} fill={d.pnl>=0?C.green:C.red} />)}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
+      <div style="margin-bottom:6pt">
+        <div class="field-label">What Would've Happened If I Did Nothing?</div>
+        <div class="hint">Compare vs. the monster move: no trade. e.g. "Better entry 4 min later" · "Saved $80" · "Missed winner"</div>
+        <div class="rule-line"></div>
+      </div>
 
-          {/* Grade + Env side by side */}
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:20 }}>
-            <div style={{ background:C.card, border:`1px solid ${C.border2}`, borderRadius:8, padding:16 }}>
-              <SectionHead>TRADE GRADES</SectionHead>
-              {[["A",C.green],["B",C.blue],["C",C.yellow],["F",C.red]].map(([g,c])=>(
-                <Bar2 key={g} label={g} val={grades[g]} max={Math.max(...Object.values(grades),1)} color={c} />
-              ))}
-            </div>
-            <div style={{ background:C.card, border:`1px solid ${C.border2}`, borderRadius:8, padding:16 }}>
-              <SectionHead>P&L BY ENVIRONMENT</SectionHead>
-              {Object.entries(envPnL).sort((a,b)=>b[1].pnl-a[1].pnl).map(([env,{pnl,count}])=>(
-                <div key={env} style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
-                  <span style={{ color:C.muted, fontSize:10 }}>{env}</span>
-                  <div style={{ textAlign:"right" }}>
-                    <span style={{ color:pnl>=0?C.green:C.red, fontSize:11, fontWeight:700 }}>{pnl>=0?"+":""}{pnl.toFixed(0)}</span>
-                    <span style={{ color:C.faint, fontSize:9, marginLeft:6 }}>({count} sessions)</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+      <div>
+        <div class="field-label">One-Line Lesson</div>
+        <div class="rule-line"></div>
+      </div>
+    </div><!-- end trade-block -->
 
-          {/* Loss breakdown */}
-          {topLoss.length > 0 && <>
-            <SectionHead>LOSS BREAKDOWN — YOUR ENEMY</SectionHead>
-            <div style={{ background:C.card, border:`1px solid ${C.border2}`, borderRadius:8, padding:16, marginBottom:20 }}>
-              {topLoss.map(([tag,count])=>(
-                <Bar2 key={tag} label={tag} val={count} max={topLoss[0][1]} color={C.red} />
-              ))}
-            </div>
-          </>}
+  </div><!-- end trade-container -->
 
-          {/* Setup win rate */}
-          {Object.keys(setupWR).length > 0 && <>
-            <SectionHead>WIN RATE BY SETUP</SectionHead>
-            <div style={{ background:C.card, border:`1px solid ${C.border2}`, borderRadius:8, padding:16 }}>
-              {Object.entries(setupWR).map(([tag,{w,l}])=>{
-                const wr = (w/(w+l)*100).toFixed(0);
-                return (
-                  <div key={tag} style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
-                    <span style={{ color:C.muted, fontSize:10 }}>{tag}</span>
-                    <div>
-                      <span style={{ color:parseInt(wr)>=55?C.green:parseInt(wr)>=45?C.yellow:C.red, fontSize:11, fontWeight:700 }}>{wr}%</span>
-                      <span style={{ color:C.faint, fontSize:9, marginLeft:6 }}>{w}W {l}L</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </>}
-        </>}
+</div><!-- end page 1 -->
 
-        {/* ── GRAND SLAMS ── */}
-        {view==="slams" && <>
-          <div style={{ borderLeft:`2px solid ${C.faint}`, paddingLeft:14, marginBottom:20 }}>
-            <div style={{ color:C.faint, fontSize:11, fontStyle:"italic", lineHeight:1.9 }}>
-              You do not become dominant because you string together 100 green days.<br/>
-              You become dominant because you become so difficult to knock off course<br/>
-              that 100 green days eventually emerge from the process.
-            </div>
-          </div>
-          <GrandSlams stats={gStats} />
-        </>}
 
-        {/* ── TRADE BREAKDOWN ── */}
-        {view==="trades" && <>
-          <div style={{ overflowX:"auto" }}>
-            <table style={{ ...mono, width:"100%", borderCollapse:"collapse", fontSize:10 }}>
-              <thead>
-                <tr style={{ borderBottom:`1px solid ${C.border2}` }}>
-                  {["Date","Dir","Result","MAE","MFE","Grade","IFT","Neg","Setup","Loss Tag","Why"].map(h=>(
-                    <th key={h} style={{ color:C.muted, padding:"8px 10px", textAlign:"left", fontWeight:400, fontSize:9, letterSpacing:"0.1em" }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {allTrades.map((t,i)=>{
-                  const res = parseFloat(t.result);
-                  return (
-                    <tr key={i} style={{ borderBottom:`1px solid ${C.border}` }}>
-                      <td style={{ padding:"7px 10px", color:C.muted }}>{t.sessionDate}</td>
-                      <td style={{ padding:"7px 10px", color:t.direction==="LONG"?C.green:t.direction==="SHORT"?C.red:C.muted }}>{t.direction||"—"}</td>
-                      <td style={{ padding:"7px 10px", color:isNaN(res)?C.muted:res>=0?C.green:C.red, fontWeight:700 }}>{isNaN(res)?t.result:`${res>=0?"+":""}${res}`}</td>
-                      <td style={{ padding:"7px 10px", color:C.yellow }}>{t.mae||"—"}</td>
-                      <td style={{ padding:"7px 10px", color:C.muted }}>{t.mfe||"—"}</td>
-                      <td style={{ padding:"7px 10px", color:t.grade==="A"?C.green:t.grade==="B"?C.blue:t.grade==="C"?C.yellow:t.grade==="F"?C.red:C.muted, fontWeight:700 }}>{t.grade||"—"}</td>
-                      <td style={{ padding:"7px 10px", color:t.immediateFollowThrough===true?C.green:t.immediateFollowThrough===false?C.red:C.faint }}>{t.immediateFollowThrough===true?"Y":t.immediateFollowThrough===false?"N":"—"}</td>
-                      <td style={{ padding:"7px 10px", color:t.negotiable===true?C.green:t.negotiable===false?C.red:C.faint }}>{t.negotiable===true?"Y":t.negotiable===false?"N":"—"}</td>
-                      <td style={{ padding:"7px 10px", color:C.muted }}>{t.setupTag||"—"}</td>
-                      <td style={{ padding:"7px 10px", color:C.red }}>{t.lossTag||"—"}</td>
-                      <td style={{ padding:"7px 10px", color:C.muted, maxWidth:180, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{t.why||"—"}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </>}
+<!-- ═══════════════════════════════════════════════════════ PAGE 2: METRICS + CLOSE -->
+<div class="page" id="session-page-2">
 
-        {/* ── SESSION LOG ── */}
-        {view==="sessions" && <>
-          {[...sessions].reverse().map(s=>{
-            const st=s.trades||[];
-            const wr=st.filter(t=>!isNaN(parseFloat(t.result)));
-            const spnl=wr.reduce((x,t)=>x+parseFloat(t.result),0);
-            const wins=wr.filter(t=>parseFloat(t.result)>=0).length;
-            return (
-              <div key={s.id} style={{ background:C.card, border:`1px solid ${C.border2}`, borderRadius:8, padding:"14px 16px", marginBottom:10 }}>
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
-                  <div>
-                    <span style={{ color:C.text, fontSize:13, fontWeight:700 }}>{s.date}</span>
-                    <span style={{ color:C.muted, fontSize:10, marginLeft:10 }}>{s.environment||"—"}</span>
-                  </div>
-                  <div style={{ display:"flex", gap:16, alignItems:"center" }}>
-                    <span style={{ color:spnl>=0?C.green:C.red, fontSize:13, fontWeight:700 }}>{spnl>=0?"+":""}{spnl.toFixed(0)}</span>
-                    <span style={{ color:C.muted, fontSize:10 }}>{wins}W/{wr.length-wins}L</span>
-                    <span style={{ color:s.survived?C.green:C.faint, fontSize:10 }}>{s.survived?"✓ SURVIVED":"—"}</span>
-                  </div>
-                </div>
-                {s.sessionNotes && <div style={{ color:C.muted, fontSize:10, fontStyle:"italic" }}>{s.sessionNotes}</div>}
-              </div>
-            );
-          })}
-        </>}
+  <div class="header">
+    <div>
+      <div class="eyebrow">Kaizen Trade Autopsy</div>
+      <div class="heading">Session Close</div>
+    </div>
+    <div class="mantra">
+      The account staying open is the win condition.<br>Profit is the bonus.
+    </div>
+  </div>
 
+  <!-- TRADES AVOIDED -->
+  <div class="section-head">Trades Avoided — Every correctly avoided garbage setup = +1</div>
+  <div class="hint" style="margin-bottom:6pt">This is a skill. Track it like one.</div>
+
+  <table style="width:100%; border-collapse:collapse; font-size:8pt; margin-bottom:10pt">
+    <thead>
+      <tr style="border-bottom:0.5pt solid var(--rule)">
+        <th style="text-align:left; padding:4pt 6pt; font-size:6pt; letter-spacing:0.12em; color:var(--ink3); font-weight:400">#</th>
+        <th style="text-align:left; padding:4pt 6pt; font-size:6pt; letter-spacing:0.12em; color:var(--ink3); font-weight:400">SETUP SEEN</th>
+        <th style="text-align:left; padding:4pt 6pt; font-size:6pt; letter-spacing:0.12em; color:var(--ink3); font-weight:400">PASSED?</th>
+        <th style="text-align:left; padding:4pt 6pt; font-size:6pt; letter-spacing:0.12em; color:var(--ink3); font-weight:400">OUTCOME IF TRADED</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:0.5pt solid var(--rule2)">
+        <td style="padding:6pt 6pt">1</td>
+        <td style="padding:6pt 6pt"><div style="border-bottom:0.5pt solid var(--rule2); min-width:160pt">&nbsp;</div></td>
+        <td style="padding:6pt 6pt"><span class="check-box"></span>Y <span style="margin-left:8pt"></span><span class="check-box"></span>N</td>
+        <td style="padding:6pt 6pt"><div style="border-bottom:0.5pt solid var(--rule2); min-width:140pt">&nbsp;</div></td>
+      </tr>
+      <tr style="border-bottom:0.5pt solid var(--rule2)">
+        <td style="padding:6pt 6pt">2</td>
+        <td style="padding:6pt 6pt"><div style="border-bottom:0.5pt solid var(--rule2); min-width:160pt">&nbsp;</div></td>
+        <td style="padding:6pt 6pt"><span class="check-box"></span>Y <span style="margin-left:8pt"></span><span class="check-box"></span>N</td>
+        <td style="padding:6pt 6pt"><div style="border-bottom:0.5pt solid var(--rule2); min-width:140pt">&nbsp;</div></td>
+      </tr>
+      <tr style="border-bottom:0.5pt solid var(--rule2)">
+        <td style="padding:6pt 6pt">3</td>
+        <td style="padding:6pt 6pt"><div style="border-bottom:0.5pt solid var(--rule2); min-width:160pt">&nbsp;</div></td>
+        <td style="padding:6pt 6pt"><span class="check-box"></span>Y <span style="margin-left:8pt"></span><span class="check-box"></span>N</td>
+        <td style="padding:6pt 6pt"><div style="border-bottom:0.5pt solid var(--rule2); min-width:140pt">&nbsp;</div></td>
+      </tr>
+      <tr>
+        <td style="padding:6pt 6pt">4</td>
+        <td style="padding:6pt 6pt"><div style="border-bottom:0.5pt solid var(--rule2); min-width:160pt">&nbsp;</div></td>
+        <td style="padding:6pt 6pt"><span class="check-box"></span>Y <span style="margin-left:8pt"></span><span class="check-box"></span>N</td>
+        <td style="padding:6pt 6pt"><div style="border-bottom:0.5pt solid var(--rule2); min-width:140pt">&nbsp;</div></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="text-align:right; font-size:8pt; margin-bottom:14pt">
+    <strong>Total correctly avoided: _______</strong>
+  </div>
+
+  <!-- SESSION METRICS -->
+  <div class="section-head">Session Metrics</div>
+  <div class="grid-3" style="margin-bottom:10pt">
+    <div>
+      <div class="field-label">Re-entry Count</div>
+      <div class="hint">Times re-entered after a loss</div>
+      <div class="rule-line"></div>
+    </div>
+    <div>
+      <div class="field-label">Conscious Walk-Aways</div>
+      <div class="hint">Times you saw a setup and passed</div>
+      <div class="rule-line"></div>
+    </div>
+    <div>
+      <div class="field-label">Patience Score (1–5)</div>
+      <div class="hint">1=clicked fast · 5=market fully proved itself</div>
+      <div class="rule-line"></div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:10pt">
+    <div class="field-label">Was Environment Call Correct?</div>
+    <div class="yn-pair" style="margin-top:4pt">
+      <span class="check-box"></span><span style="font-size:7.5pt; margin-right:12pt">YES</span>
+      <span class="check-box"></span><span style="font-size:7.5pt; margin-right:12pt">NO</span>
+      <span class="check-box"></span><span style="font-size:7.5pt">UNKNOWN</span>
+    </div>
+  </div>
+
+  <div style="margin-bottom:12pt">
+    <div class="field-label">Session Notes / Key Takeaway</div>
+    <div class="rule-line" style="margin-bottom:2pt"></div>
+    <div class="rule-line" style="margin-bottom:2pt"></div>
+    <div class="rule-line"></div>
+  </div>
+
+  <!-- SESSION SUMMARY -->
+  <div class="section-head">Session Summary</div>
+  <div class="summary-grid" style="margin-bottom:14pt">
+    <div class="summary-cell">
+      <div class="field-label" style="text-align:center">NET P&L ($)</div>
+      <div class="summary-val">&nbsp;</div>
+    </div>
+    <div class="summary-cell">
+      <div class="field-label" style="text-align:center">TOTAL TRADES</div>
+      <div class="summary-val">&nbsp;</div>
+    </div>
+    <div class="summary-cell">
+      <div class="field-label" style="text-align:center">WINNERS</div>
+      <div class="summary-val">&nbsp;</div>
+    </div>
+    <div class="summary-cell">
+      <div class="field-label" style="text-align:center">LOSERS</div>
+      <div class="summary-val">&nbsp;</div>
+    </div>
+    <div class="summary-cell">
+      <div class="field-label" style="text-align:center">AVG MAE WIN (pts)</div>
+      <div class="summary-val">&nbsp;</div>
+    </div>
+    <div class="summary-cell">
+      <div class="field-label" style="text-align:center">AVG MAE LOSS (pts)</div>
+      <div class="summary-val">&nbsp;</div>
+    </div>
+    <div class="summary-cell">
+      <div class="field-label" style="text-align:center">IFT YES / NO</div>
+      <div class="summary-val">&nbsp;</div>
+    </div>
+    <div class="summary-cell">
+      <div class="field-label" style="text-align:center">AVOIDED SETUPS</div>
+      <div class="summary-val">&nbsp;</div>
+    </div>
+  </div>
+
+  <!-- GRADE TALLY -->
+  <div class="grid-4" style="margin-bottom:14pt">
+    <div class="summary-cell">
+      <div class="field-label" style="text-align:center">A GRADES</div>
+      <div class="summary-val">&nbsp;</div>
+    </div>
+    <div class="summary-cell">
+      <div class="field-label" style="text-align:center">B GRADES</div>
+      <div class="summary-val">&nbsp;</div>
+    </div>
+    <div class="summary-cell">
+      <div class="field-label" style="text-align:center">C GRADES</div>
+      <div class="summary-val">&nbsp;</div>
+    </div>
+    <div class="summary-cell">
+      <div class="field-label" style="text-align:center">F GRADES</div>
+      <div class="summary-val">&nbsp;</div>
+    </div>
+  </div>
+
+  <!-- POST-SESSION CHECKLIST -->
+  <div class="section-head">Post-Session Checklist</div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:8pt; margin-bottom:14pt">
+    <div class="check-row"><span class="check-box"></span> Did I follow rules?</div>
+    <div class="check-row"><span class="check-box"></span> Did I protect both accounts?</div>
+    <div class="check-row"><span class="check-box"></span> Did I record everything?</div>
+    <div class="check-row"><span class="check-box"></span> Did I review?</div>
+    <div class="check-row"><span class="check-box"></span> Did I survive?</div>
+    <div class="check-row"><span class="check-box"></span> Locked second account after first failed?</div>
+  </div>
+
+  <!-- GRAND SLAMS TALLY -->
+  <div class="section-head">Grand Slams — Running Totals</div>
+  <div class="grid-2" style="margin-bottom:16pt">
+    <div>
+      <div class="check-row" style="justify-content:space-between; border-bottom:0.5pt solid var(--rule2); padding-bottom:4pt; margin-bottom:4pt">
+        <span>Days Account Alive</span><span>_______</span>
+      </div>
+      <div class="check-row" style="justify-content:space-between; border-bottom:0.5pt solid var(--rule2); padding-bottom:4pt; margin-bottom:4pt">
+        <span>Consecutive Rule-Following Sessions</span><span>_______</span>
+      </div>
+      <div class="check-row" style="justify-content:space-between; border-bottom:0.5pt solid var(--rule2); padding-bottom:4pt; margin-bottom:4pt">
+        <span>Consecutive Days No Revenge Trading</span><span>_______</span>
+      </div>
+      <div class="check-row" style="justify-content:space-between; border-bottom:0.5pt solid var(--rule2); padding-bottom:4pt; margin-bottom:4pt">
+        <span>Trades Reviewed (lifetime)</span><span>_______</span>
+      </div>
+      <div class="check-row" style="justify-content:space-between">
+        <span>Sessions Reviewed (lifetime)</span><span>_______</span>
       </div>
     </div>
-  );
-}
+    <div>
+      <div class="check-row" style="justify-content:space-between; border-bottom:0.5pt solid var(--rule2); padding-bottom:4pt; margin-bottom:4pt">
+        <span>Chop Sessions Avoided</span><span>_______</span>
+      </div>
+      <div class="check-row" style="justify-content:space-between; border-bottom:0.5pt solid var(--rule2); padding-bottom:4pt; margin-bottom:4pt">
+        <span>Correct Environment Calls</span><span>_______</span>
+      </div>
+      <div class="check-row" style="justify-content:space-between; border-bottom:0.5pt solid var(--rule2); padding-bottom:4pt; margin-bottom:4pt">
+        <span>Longest Funded Account Lifespan</span><span>_______</span>
+      </div>
+      <div class="check-row" style="justify-content:space-between; border-bottom:0.5pt solid var(--rule2); padding-bottom:4pt; margin-bottom:4pt">
+        <span>A-Grade Streak (current)</span><span>_______</span>
+      </div>
+      <div class="check-row" style="justify-content:space-between">
+        <span>F-Grade Free Streak (current)</span><span>_______</span>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+  <div style="text-align:center; color:#bbb; font-size:7pt; font-style:italic; margin-top:10pt">
+    The monster does not chase. The monster does not beg the market. The monster survives today so he can dominate later.
+  </div>
+
+</div><!-- end page 2 -->
+
+<script>
+  // Clone a trade block and renumber it
+  let tradeCount = 1;
+
+  function addTrade() {
+    tradeCount++;
+    const container = document.getElementById('trade-container-1') || document.querySelector('[id^="trade-container"]');
+    const existing = container.querySelector('.trade-block');
+    const clone = existing.cloneNode(true);
+
+    // Update trade number
+    clone.querySelector('.trade-num').textContent = 'TRADE #' + tradeCount;
+
+    // Clear all rule-lines (inputs)
+    clone.querySelectorAll('.rule-line').forEach(el => el.style.content = '');
+
+    container.appendChild(clone);
+  }
+
+  function addPage() {
+    // Clone page 1 structure and append
+    const page1 = document.getElementById('session-page-1');
+    const clone = page1.cloneNode(true);
+    clone.id = 'session-page-' + Date.now();
+
+    // Reset trade count for new page
+    const tradeNums = clone.querySelectorAll('.trade-num');
+    tradeNums.forEach((el, i) => el.textContent = 'TRADE #' + (i+1));
+
+    document.body.insertBefore(clone, document.querySelector('.no-print'));
+    clone.scrollIntoView({ behavior:'smooth' });
+  }
+</script>
+
+</body>
+</html>
