@@ -1,1090 +1,776 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kaizen Trade Autopsy System</title>
-  
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaizen Core Suite — Pro Terminal</title>
+    
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
+    <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
 
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  
-  <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
-  <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
-  
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background-color: #08080a;
-    }
-    /* Simple Custom Scrollbar to match Dark UI theme */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #08080a; }
-    ::-webkit-scrollbar-thumb { background: #222224; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #2e2e32; }
-  </style>
-</head>
-<body>
-
-  <div id="root"></div>
-
-  <script type="text/babel">
-    const { useState, useEffect, useCallback } = React;
-    const { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Cell } = Recharts;
-
-    // ─────────────────────────────────────────────────────────────────────────────
-    // STORAGE INTERFACE (Patched for Browser LocalStorage compatibility)
-    // ─────────────────────────────────────────────────────────────────────────────
-    const KEY = "kaizen:sessions:v2";
-    async function loadSessions() {
-      try { 
-        const r = localStorage.getItem(KEY); 
-        return r ? JSON.parse(r) : []; 
-      }
-      catch { return []; }
-    }
-    async function saveSessions(s) {
-      try { 
-        localStorage.setItem(KEY, JSON.stringify(s)); 
-        return true; 
-      }
-      catch { return false; }
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────────
-    // CONSTANTS
-    // ─────────────────────────────────────────────────────────────────────────────
-    const ENV_OPTIONS   = ["ROTATIONAL","TRENDING","CHOP","EXPANSION","UNKNOWN"];
-    const SETUP_TAGS    = ["BREAKOUT","PULLBACK","REVERSAL","CONTINUATION","OPENING RANGE","FAILED AUCTION","ANTICIPATION","FOMO","CHASE","OTHER"];
-    const LOSS_TAGS     = ["EARLY","CHOP","REVERSAL","CHASE","OVERSIZED","FOMO","LOW VOLUME","COUNTERTREND","OR NOISE","EXPANSION"];
-    const GRADE_DESC    = { A:"Take again tomorrow", B:"Good, minor flaw", C:"Questionable", F:"Never should happen" };
-
-    const C = {
-      bg:"#08080a", surface:"#0f0f12", card:"#141417", card2:"#1a1a1e",
-      border:"#222224", border2:"#2e2e32", border3:"#3a3a3f",
-      text:"#e8e8ea", muted:"#6b6b72", faint:"#35353a", dim:"#4a4a52",
-      green:"#22c55e", greenDim:"#15803d", greenBg:"#052e16", greenText:"#86efac",
-      red:"#ef4444",  redDim:"#b91c1c",   redBg:"#450a0a",   redText:"#fca5a5",
-      blue:"#6366f1", blueDim:"#4338ca",  blueBg:"#1e1b4b",  blueText:"#a5b4fc",
-      amber:"#f59e0b",amberBg:"#451a03",  amberText:"#fcd34d",
-      purple:"#a855f7",purpleBg:"#2e1065",purpleText:"#d8b4fe",
-    };
-
-    const MONO = "'JetBrains Mono','Courier New',monospace";
-
-    // ─────────────────────────────────────────────────────────────────────────────
-    // FACTORIES
-    // ─────────────────────────────────────────────────────────────────────────────
-    const uid  = () => Math.random().toString(36).slice(2);
-    const newTrade = () => ({
-      id:uid(), direction:"", time:"", entry:"", exit:"", result:"",
-      grade:"", immediateFollowThrough:null, negotiable:null,
-      mae:"", mfe:"", why:"", wouldTakeAgain:null, marketDid:null,
-      lossTag:"", setupTag:"", doNothingOutcome:"", notes:"",
-    });
-    const newSession = () => ({
-      id:uid(), date:new Date().toISOString().slice(0,10),
-      environment:"", environmentCorrect:null, firstTradeSetup:null,
-      reentryCount:"", walkAways:"", patienceScore:"", sessionNotes:"",
-      followedRules:null, protectedAccounts:null, recorded:null, reviewed:null, survived:null,
-      trades:[newTrade()], avoided:[],
-    });
-
-    // ─────────────────────────────────────────────────────────────────────────────
-    // PRIMITIVE UI
-    // ─────────────────────────────────────────────────────────────────────────────
-    function Lbl({ children, hint }) {
-      return (
-        <div style={{ marginBottom: hint ? 2 : 5 }}>
-          <div style={{ fontFamily:MONO, color:C.muted, fontSize:9, letterSpacing:"0.16em", textTransform:"uppercase" }}>{children}</div>
-          {hint && <div style={{ fontFamily:MONO, color:"#4a4a52", fontSize:8, fontStyle:"italic", marginBottom:4 }}>{hint}</div>}
-        </div>
-      );
-    }
-
-    function TInput({ value, onChange, placeholder, type="text" }) {
-      return (
-        <input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder}
-          style={{ fontFamily:MONO, background:C.surface, border:`1px solid ${C.border3}`, color:C.text,
-            borderRadius:3, padding:"6px 9px", fontSize:11, width:"100%", boxSizing:"border-box", outline:"none" }} />
-      );
-    }
-
-    function TArea({ value, onChange, placeholder, rows=2 }) {
-      return (
-        <textarea value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} rows={rows}
-          style={{ fontFamily:MONO, background:C.surface, border:`1px solid ${C.border3}`, color:C.text,
-            borderRadius:3, padding:"6px 9px", fontSize:11, width:"100%", boxSizing:"border-box", outline:"none", resize:"none" }} />
-      );
-    }
-
-    function Chip({ label, active, onClick, color="blue", small }) {
-      const map = {
-        blue:  [C.blueBg,   C.blueText,   C.blue],
-        green: [C.greenBg,  C.greenText,  C.green],
-        red:   [C.redBg,    C.redText,    C.red],
-        amber: [C.amberBg,  C.amberText,  C.amber],
-        purple:[C.purpleBg, C.purpleText, C.purple],
-      };
-      const [bg, fg, border] = map[color] || map.blue;
-      return (
-        <button onClick={onClick} style={{
-          fontFamily:MONO, background:active?bg:C.surface, border:`1px solid ${active?border:C.border3}`,
-          color:active?fg:C.dim, borderRadius:3, padding:small?"3px 8px":"5px 10px",
-          fontSize:small?9:10, cursor:"pointer", transition:"all .12s", lineHeight:1.3,
-        }}>{label}</button>
-      );
-    }
-
-    function YN({ value, onChange, yL="YES", nL="NO" }) {
-      return (
-        <div style={{ display:"flex", gap:5 }}>
-          <Chip label={yL} active={value===true}  onClick={()=>onChange(value===true  ? null : true)}  color="green" />
-          <Chip label={nL} active={value===false} onClick={()=>onChange(value===false ? null : false)} color="red" />
-        </div>
-      );
-    }
-
-    function GradeRow({ value, onChange }) {
-      return (
-        <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
-          {["A","B","C","F"].map(g => {
-            const col = {A:"green",B:"blue",C:"amber",F:"red"}[g];
-            return (
-              <Chip key={g} label={`${g} — ${GRADE_DESC[g]}`} active={value===g}
-                onClick={()=>onChange(value===g ? "" : g)} color={col} />
-            );
-          })}
-        </div>
-      );
-    }
-
-    function Divider() {
-      return <div style={{ borderTop:`1px solid ${C.border}`, margin:"14px 0" }} />;
-    }
-
-    function StatBox({ label, value, sub, color, small }) {
-      return (
-        <div style={{ background:C.card, border:`1px solid ${C.border2}`, borderRadius:6, padding:small?"10px 12px":"13px 15px" }}>
-          <div style={{ fontFamily:MONO, color:C.muted, fontSize:8, letterSpacing:"0.14em", textTransform:"uppercase", marginBottom:5 }}>{label}</div>
-          <div style={{ fontFamily:MONO, color:color||C.text, fontSize:small?16:20, fontWeight:700 }}>{value}</div>
-          {sub && <div style={{ fontFamily:MONO, color:C.faint, fontSize:9, marginTop:3 }}>{sub}</div>}
-        </div>
-      );
-    }
-
-    function SecHead({ children }) {
-      return <div style={{ fontFamily:MONO, color:C.muted, fontSize:8, letterSpacing:"0.2em", textTransform:"uppercase", borderBottom:`1px solid ${C.border}`, paddingBottom:5, marginBottom:10, marginTop:20 }}>{children}</div>;
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────────
-    // TRADE CARD
-    // ─────────────────────────────────────────────────────────────────────────────
-    function TradeCard({ trade, idx, onChange, onRemove }) {
-      const u = (k,v) => onChange({...trade,[k]:v});
-      const res = parseFloat(trade.result);
-      const resColor = isNaN(res) ? C.muted : res >= 0 ? C.green : C.red;
-      const isLoss = !isNaN(res) && res < 0;
-
-      return (
-        <div style={{ border:`1px solid ${C.border2}`, borderRadius:6, padding:14, marginBottom:10, background:C.card }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
-            <div style={{ display:"flex", gap:8, alignItems:"baseline" }}>
-              <span style={{ fontFamily:MONO, color:C.muted, fontSize:9 }}>TRADE</span>
-              <span style={{ fontFamily:MONO, color:C.text, fontSize:16, fontWeight:700 }}>#{idx+1}</span>
-              {trade.result !== "" && <span style={{ fontFamily:MONO, color:resColor, fontSize:14, fontWeight:700 }}>{res>=0?"+":""}{trade.result}</span>}
-            </div>
-            <div style={{ display:"flex", gap:6, alignItems:"center" }}>
-              <Chip label="LONG"  active={trade.direction==="LONG"}  onClick={()=>u("direction",trade.direction==="LONG"?"":"LONG")}  color="green" small />
-              <Chip label="SHORT" active={trade.direction==="SHORT"} onClick={()=>u("direction",trade.direction==="SHORT"?"":"SHORT")} color="red"   small />
-              <button onClick={onRemove} style={{ fontFamily:MONO, background:"none", border:"none", color:C.faint, fontSize:9, cursor:"pointer", marginLeft:4 }}>✕</button>
-            </div>
-          </div>
-
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8, marginBottom:10 }}>
-            {[["Time","time","8:32"],["Entry","entry","21,450"],["Exit","exit","21,460"],["Result $","result","+50"]].map(([l,k,p])=>(
-              <div key={k}><Lbl>{l}</Lbl><TInput value={trade[k]} onChange={v=>u(k,v)} placeholder={p} /></div>
-            ))}
-          </div>
-
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:10 }}>
-            <div><Lbl hint="How far against you before exit — TIER 1">MAE (pts)</Lbl><TInput value={trade.mae} onChange={v=>u("mae",v)} placeholder="8" /></div>
-            <div><Lbl hint="How far in your favor before exit">MFE (pts)</Lbl><TInput value={trade.mfe} onChange={v=>u("mfe",v)} placeholder="15" /></div>
-          </div>
-
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:10 }}>
-            <div><Lbl hint="Did price move your direction almost immediately?">Immediate Follow Through?</Lbl><YN value={trade.immediateFollowThrough} onChange={v=>u("immediateFollowThrough",v)} /></div>
-            <div><Lbl hint="Did you have time to manage discretion, or moved too fast?">Market Negotiable?</Lbl><YN value={trade.negotiable} onChange={v=>u("negotiable",v)} /></div>
-          </div>
-
-          <div style={{ marginBottom:10 }}>
-            <Lbl hint="One sentence. e.g. 'Failed auction at prior high'">Why Did I Take It?</Lbl>
-            <TArea value={trade.why} onChange={v=>u("why",v)} placeholder="One sentence only." rows={1} />
-          </div>
-
-          <div style={{ marginBottom:10 }}>
-            <Lbl>Setup Tag</Lbl>
-            <div style={{ display:"flex", flexWrap:"wrap", gap:4 }}>
-              {SETUP_TAGS.map(t=><Chip key={t} label={t} active={trade.setupTag===t} onClick={()=>u("setupTag",trade.setupTag===t?"":t)} color="blue" small />)}
-            </div>
-          </div>
-
-          {isLoss && (
-            <div style={{ marginBottom:10 }}>
-              <Lbl>Loss Category</Lbl>
-              <div style={{ display:"flex", flexWrap:"wrap", gap:4 }}>
-                {LOSS_TAGS.map(t=><Chip key={t} label={t} active={trade.lossTag===t} onClick={()=>u("lossTag",trade.lossTag===t?"":t)} color="red" small />)}
-              </div>
-            </div>
-          )}
-
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:10 }}>
-            <div><Lbl>Did Market Do What I Expected?</Lbl><YN value={trade.marketDid} onChange={v=>u("marketDid",v)} /></div>
-            <div>
-              <Lbl>Would Take Again?</Lbl>
-              <div style={{ display:"flex", gap:4 }}>
-                {[["YES","yes","green"],["MAYBE","maybe","amber"],["NO","no","red"]].map(([l,v,c])=>(
-                  <Chip key={v} label={l} active={trade.wouldTakeAgain===v} onClick={()=>u("wouldTakeAgain",trade.wouldTakeAgain===v?null:v)} color={c} small />
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div style={{ marginBottom:10 }}>
-            <Lbl hint="Grade the trade, not the result. A losing trade can be an A.">Trade Grade</Lbl>
-            <GradeRow value={trade.grade} onChange={v=>u("grade",v)} />
-          </div>
-
-          <div style={{ marginBottom:8 }}>
-            <Lbl hint="Compare vs. the monster move: no trade.">What If I Did Nothing?</Lbl>
-            <TArea value={trade.doNothingOutcome} onChange={v=>u("doNothingOutcome",v)} placeholder="e.g. 'Better entry 4 min later' / 'Saved $80' / 'Missed winner'" rows={1} />
-          </div>
-
-          <div>
-            <Lbl>One-Line Lesson</Lbl>
-            <TArea value={trade.notes} onChange={v=>u("notes",v)} placeholder="Lesson from this trade." rows={1} />
-          </div>
-        </div>
-      );
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────────
-    // AVOIDED SECTION
-    // ─────────────────────────────────────────────────────────────────────────────
-    function AvoidedSection({ avoided, onChange }) {
-      const add = () => onChange([...avoided, {id:uid(), setup:"", passed:null, outcome:""}]);
-      const upd = (id,k,v) => onChange(avoided.map(a=>a.id===id?{...a,[k]:v}:a));
-      const rem = id => onChange(avoided.filter(a=>a.id!==id));
-      const pts = avoided.filter(a=>a.passed===true).length;
-
-      return (
-        <div style={{ border:`1px solid ${C.border2}`, borderRadius:6, padding:14, marginBottom:12, background:C.card }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
-            <div>
-              <Lbl>Trades Avoided</Lbl>
-              <div style={{ fontFamily:MONO, color:"#3f3f46", fontSize:8, fontStyle:"italic" }}>Every correctly avoided garbage setup = +1. This is a skill.</div>
-            </div>
-            <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-              {pts > 0 && <span style={{ fontFamily:MONO, color:C.green, fontSize:12, fontWeight:700 }}>+{pts}</span>}
-              <button onClick={add} style={{ fontFamily:MONO, background:"none", border:`1px solid ${C.border3}`, color:C.muted, padding:"4px 10px", borderRadius:3, fontSize:9, cursor:"pointer" }}>+ ADD</button>
-            </div>
-          </div>
-          {avoided.map(a=>(
-            <div key={a.id} style={{ display:"grid", gridTemplateColumns:"2fr 1fr 2fr auto", gap:8, marginBottom:6, alignItems:"end" }}>
-              <div><Lbl>Setup Seen</Lbl><TInput value={a.setup} onChange={v=>upd(a.id,"setup",v)} placeholder="Chop reversal" /></div>
-              <div><Lbl>Passed?</Lbl><YN value={a.passed} onChange={v=>upd(a.id,"passed",v)} /></div>
-              <div><Lbl>Outcome If Traded</Lbl><TInput value={a.outcome} onChange={v=>upd(a.id,"outcome",v)} placeholder="Would've lost" /></div>
-              <button onClick={()=>rem(a.id)} style={{ fontFamily:MONO, background:"none", border:"none", color:C.faint, fontSize:10, cursor:"pointer", paddingBottom:8 }}>✕</button>
-            </div>
-          ))}
-        </div>
-      );
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────────
-    // LOGGER VIEW
-    // ─────────────────────────────────────────────────────────────────────────────
-    function LoggerView({ session, setSession, onSave, saving, saved, sessionCount }) {
-      const upd = (k,v) => setSession(p=>({...p,[k]:v}));
-      const addTrade    = () => setSession(p=>({...p,trades:[...p.trades,newTrade()]}));
-      const updateTrade = (id,t) => setSession(p=>({...p,trades:p.trades.map(x=>x.id===id?t:x)}));
-      const removeTrade = id => setSession(p=>({...p,trades:p.trades.filter(x=>x.id!==id)}));
-      const withRes = session.trades.filter(t=>t.result!==""&&!isNaN(parseFloat(t.result)));
-      const pnl = withRes.reduce((s,t)=>s+parseFloat(t.result),0);
-
-      const CHECKLIST = [
-        {k:"followedRules",     q:"Did I follow rules?"},
-        {k:"protectedAccounts", q:"Did I protect both accounts?"},
-        {k:"recorded",          q:"Did I record everything?"},
-        {k:"reviewed",          q:"Did I review?"},
-        {k:"survived",          q:"Did I survive?"},
-      ];
-
-      return (
-        <div>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
-            <div style={{ fontFamily:MONO, color:C.muted, fontSize:9 }}>
-              SESSION {sessionCount !== null ? `#${sessionCount+1}` : ""}
-              {withRes.length > 0 && (
-                <span style={{ color:pnl>=0?C.green:C.red, fontWeight:700, marginLeft:10 }}>
-                  {pnl>=0?"+":""}{pnl.toFixed(0)}
-                </span>
-              )}
-            </div>
-            <button onClick={onSave} disabled={saving} style={{
-              fontFamily:MONO, background:saved?C.greenBg:C.blueBg,
-              border:`1px solid ${saved?C.green:C.blue}`, color:saved?C.greenText:C.blueText,
-              padding:"6px 14px", borderRadius:4, fontSize:11, fontWeight:700, cursor:"pointer",
-            }}>{saving?"SAVING…":saved?"✓ SAVED":"SAVE SESSION"}</button>
-          </div>
-
-          <div style={{ borderLeft:`2px solid ${C.border2}`, paddingLeft:12, marginBottom:18 }}>
-            <div style={{ fontFamily:MONO, color:C.faint, fontSize:10, fontStyle:"italic", lineHeight:1.9 }}>
-              I protect the account. I stack clean days. I become impossible to kill.<br/>
-              <strong style={{ color:C.dim }}>Has the market earned my participation?</strong>
-            </div>
-          </div>
-
-          <div style={{ border:`1px solid ${C.border2}`, borderRadius:6, padding:14, marginBottom:12, background:C.card }}>
-            <div style={{ fontFamily:MONO, color:C.muted, fontSize:8, letterSpacing:"0.18em", marginBottom:12 }}>PRE-SESSION</div>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:12 }}>
-              <div><Lbl>Date</Lbl><TInput type="date" value={session.date} onChange={v=>upd("date",v)} /></div>
-              <div>
-                <Lbl>First Trade Followed Setup?</Lbl>
-                <YN value={session.firstTradeSetup} onChange={v=>upd("firstTradeSetup",v)} />
-              </div>
-            </div>
-            <div>
-              <Lbl hint="Classify BEFORE first trade. ROTATIONAL = levels respected · CHOP = whipsaws, consider sitting out · EXPANSION = violent, kills discretion">Market Environment</Lbl>
-              <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
-                {ENV_OPTIONS.map(e=><Chip key={e} label={e} active={session.environment===e} onClick={()=>upd("environment",session.environment===e?"":e)} color="purple" />)}
-              </div>
-            </div>
-          </div>
-
-          <div style={{ fontFamily:MONO, color:C.muted, fontSize:8, letterSpacing:"0.18em", marginBottom:8 }}>TRADE LOG</div>
-          {session.trades.map((t,i)=>(
-            <TradeCard key={t.id} trade={t} idx={i}
-              onChange={u=>updateTrade(t.id,u)}
-              onRemove={()=>removeTrade(t.id)} />
-          ))}
-          <button onClick={addTrade} style={{
-            fontFamily:MONO, width:"100%", background:"none", border:`1px dashed ${C.border2}`,
-            color:C.faint, padding:10, borderRadius:6, fontSize:10, cursor:"pointer", marginBottom:14,
-          }}>+ ADD TRADE</button>
-
-          <AvoidedSection avoided={session.avoided} onChange={v=>upd("avoided",v)} />
-
-          <div style={{ border:`1px solid ${C.border2}`, borderRadius:6, padding:14, marginBottom:12, background:C.card }}>
-            <div style={{ fontFamily:MONO, color:C.muted, fontSize:8, letterSpacing:"0.18em", marginBottom:12 }}>SESSION METRICS</div>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10, marginBottom:12 }}>
-              {[
-                {k:"reentryCount",  l:"Re-entry Count",       h:"Times re-entered after a loss"},
-                {k:"walkAways",     l:"Conscious Walk-Aways",  h:"Times you saw a setup and passed"},
-                {k:"patienceScore", l:"Patience Score (1–5)",  h:"1=clicked fast · 5=market fully proved itself"},
-              ].map(({k,l,h})=>(
-                <div key={k}><Lbl hint={h}>{l}</Lbl><TInput value={session[k]} onChange={v=>upd(k,v)} placeholder="0" /></div>
-              ))}
-            </div>
-            <div style={{ marginBottom:12 }}>
-              <Lbl hint="Review after session closes">Was Environment Call Correct?</Lbl>
-              <div style={{ display:"flex", gap:5 }}>
-                {[[true,"YES","green"],[false,"NO","red"],["unknown","UNKNOWN","blue"]].map(([v,l,c])=>(
-                  <Chip key={l} label={l} active={session.environmentCorrect===v} onClick={()=>upd("environmentCorrect",session.environmentCorrect===v?null:v)} color={c} />
-                ))}
-              </div>
-            </div>
-            <div><Lbl>Session Notes / Key Takeaway</Lbl><TArea value={session.sessionNotes} onChange={v=>upd("sessionNotes",v)} placeholder="One key lesson from today." rows={2} /></div>
-          </div>
-
-          <div style={{ border:`1px solid ${C.border2}`, borderRadius:6, padding:14, marginBottom:16, background:C.card }}>
-            <div style={{ fontFamily:MONO, color:C.muted, fontSize:8, letterSpacing:"0.18em", marginBottom:12 }}>POST-SESSION CHECKLIST</div>
-            {CHECKLIST.map(({k,q})=>(
-              <div key={k} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:9 }}>
-                <span style={{ fontFamily:MONO, color:C.text, fontSize:11 }}>{q}</span>
-                <YN value={session[k]} onChange={v=>upd(k,v)} />
-              </div>
-            ))}
-          </div>
-
-          <button onClick={onSave} disabled={saving} style={{
-            fontFamily:MONO, width:"100%", background:saved?C.greenBg:C.blueBg,
-            border:`1px solid ${saved?C.green:C.blue}`, color:saved?C.greenText:C.blueText,
-            padding:12, borderRadius:6, fontSize:12, fontWeight:700, cursor:"pointer", marginBottom:24,
-          }}>{saving?"SAVING…":saved?"✓ SESSION SAVED TO DASHBOARD":"SAVE SESSION TO DASHBOARD"}</button>
-
-          <div style={{ fontFamily:MONO, color:C.border2, fontSize:9, textAlign:"center", fontStyle:"italic" }}>
-            The account staying open is the win condition. Profit is the bonus.
-          </div>
-        </div>
-      );
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────────
-    // DASHBOARD VIEW
-    // ─────────────────────────────────────────────────────────────────────────────
-    const TTip = ({ active, payload, label }) => {
-      if (!active||!payload?.length) return null;
-      return (
-        <div style={{ fontFamily:MONO, background:C.card2, border:`1px solid ${C.border3}`, borderRadius:5, padding:"7px 11px", fontSize:10 }}>
-          <div style={{ color:C.muted, marginBottom:3 }}>{label}</div>
-          {payload.map((p,i)=>(
-            <div key={i} style={{ color:typeof p.value==="number"&&p.value<0?C.red:C.green }}>
-              {p.name}: {typeof p.value==="number"&&p.value>=0?"+":""}{typeof p.value==="number"?p.value.toFixed(0):p.value}
-            </div>
-          ))}
-        </div>
-      );
-    };
-
-    function MiniBar({ label, val, max, color }) {
-      const pct = max>0 ? Math.min(100,(val/max)*100) : 0;
-      return (
-        <div style={{ marginBottom:7 }}>
-          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:2 }}>
-            <span style={{ fontFamily:MONO, color:C.muted, fontSize:9 }}>{label}</span>
-            <span style={{ fontFamily:MONO, color:C.text, fontSize:9, fontWeight:700 }}>{val}</span>
-          </div>
-          <div style={{ background:C.surface, borderRadius:2, height:3 }}>
-            <div style={{ background:color||C.blue, borderRadius:2, height:3, width:`${pct}%` }} />
-          </div>
-        </div>
-      );
-    }
-
-    function GrandSlams({ stats }) {
-      const slams = [
-        { label:"Trades Reviewed",       val:stats.totalTrades,          targets:[100,500,1000,3000] },
-        { label:"Sessions Logged",        val:stats.totalSessions,        targets:[30,100,250,500]   },
-        { label:"Chop Sessions Avoided",  val:stats.totalAvoided,         targets:[20,50,100,250]    },
-        { label:"Correct Env Calls",      val:stats.correctEnvCalls,      targets:[10,30,75,150]     },
-        { label:"A-Grade Trades",         val:stats.aGrades,              targets:[25,100,250,500]   },
-        { label:"F-Grade Free Streak",    val:stats.freeStreak,           targets:[10,25,50,100]     },
-        { label:"Clean Sessions Streak",  val:stats.cleanStreak,          targets:[5,10,20,50]       },
-        { label:"Non-Expansion Sessions", val:stats.nonExpansionSessions, targets:[10,30,60,120]     },
-      ];
-      return (
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
-          {slams.map(s=>{
-            const next = s.targets.find(t=>t>s.val)||s.targets[s.targets.length-1];
-            const prev = s.targets[s.targets.indexOf(next)-1]||0;
-            const pct  = next>prev ? Math.min(100,((s.val-prev)/(next-prev))*100) : 100;
-            const done = s.val>=next;
-            return (
-              <div key={s.label} style={{ background:C.card, border:`1px solid ${done?C.green:C.border2}`, borderRadius:6, padding:"11px 13px" }}>
-                <div style={{ fontFamily:MONO, color:done?C.greenText:C.muted, fontSize:8, letterSpacing:"0.1em", marginBottom:5 }}>{s.label}</div>
-                <div style={{ display:"flex", alignItems:"baseline", gap:5, marginBottom:6 }}>
-                  <span style={{ fontFamily:MONO, color:done?C.green:C.text, fontSize:17, fontWeight:700 }}>{s.val}</span>
-                  <span style={{ fontFamily:MONO, color:C.faint, fontSize:9 }}>/ {next}</span>
-                </div>
-                <div style={{ background:C.surface, borderRadius:2, height:3 }}>
-                  <div style={{ background:done?C.green:C.blue, height:3, borderRadius:2, width:`${pct}%` }} />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      );
-    }
-
-    function DashboardView({ sessions }) {
-      const [sub, setSub] = useState("overview");
-
-      if (sessions.length===0) {
-        return (
-          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:60, gap:8 }}>
-            <div style={{ fontFamily:MONO, color:C.muted, fontSize:12 }}>No sessions saved yet.</div>
-            <div style={{ fontFamily:MONO, color:C.faint, fontSize:10 }}>Complete a session in the Logger tab and hit Save.</div>
-          </div>
-        );
-      }
-
-      const allTrades = sessions.flatMap(s=>(s.trades||[]).map(t=>({...t,sessionDate:s.date,env:s.environment})));
-      const withRes   = allTrades.filter(t=>t.result!==""&&!isNaN(parseFloat(t.result)));
-      const winners   = withRes.filter(t=>parseFloat(t.result)>=0);
-      const losers    = withRes.filter(t=>parseFloat(t.result)<0);
-      const totalPnL  = withRes.reduce((s,t)=>s+parseFloat(t.result),0);
-      const winRate   = withRes.length>0?(winners.length/withRes.length*100).toFixed(1):"—";
-      const avgWin    = winners.length>0?(winners.reduce((s,t)=>s+parseFloat(t.result),0)/winners.length).toFixed(0):0;
-      const avgLoss   = losers.length>0?(losers.reduce((s,t)=>s+parseFloat(t.result),0)/losers.length).toFixed(0):0;
-      const mae = arr => {
-        const f=arr.filter(t=>t.mae!==""&&!isNaN(parseFloat(t.mae)));
-        return f.length>0?(f.reduce((s,t)=>s+parseFloat(t.mae),0)/f.length).toFixed(1):"—";
-      };
-      const winMAE=mae(winners), lossMAE=mae(losers);
-      const pnlCurve = withRes.map((t,i)=>({ i:i+1, pnl:withRes.slice(0,i+1).reduce((s,x)=>s+parseFloat(x.result),0) }));
-      const byDate={};
-      withRes.forEach(t=>{ byDate[t.sessionDate]=(byDate[t.sessionDate]||0)+parseFloat(t.result); });
-      const dailyBars=Object.entries(byDate).sort().map(([date,pnl])=>({date:date.slice(5),pnl}));
-      const lossTags={};
-      losers.forEach(t=>{ if(t.lossTag) lossTags[t.lossTag]=(lossTags[t.lossTag]||0)+1; });
-      const setupWR={};
-      withRes.forEach(t=>{ if(!t.setupTag) return; if(!setupWR[t.setupTag]) setupWR[t.setupTag]={w:0,l:0}; parseFloat(t.result)>=0?setupWR[t.setupTag].w++:setupWR[t.setupTag].l++; });
-      const grades={A:0,B:0,C:0,F:0};
-      allTrades.forEach(t=>{ if(t.grade) grades[t.grade]++; });
-      const iftYes=allTrades.filter(t=>t.immediateFollowThrough===true).length;
-      const iftNo =allTrades.filter(t=>t.immediateFollowThrough===false).length;
-      const negYes=allTrades.filter(t=>t.negotiable===true).length;
-      const negNo =allTrades.filter(t=>t.negotiable===false).length;
-      const envPnL={};
-      sessions.forEach(s=>{
-        if(!s.environment) return;
-        const sp=(s.trades||[]).filter(t=>t.result!==""&&!isNaN(parseFloat(t.result))).reduce((x,t)=>x+parseFloat(t.result),0);
-        if(!envPnL[s.environment]) envPnL[s.environment]={pnl:0,count:0};
-        envPnL[s.environment].pnl+=sp; envPnL[s.environment].count++;
-      });
-      const totalAvoided=sessions.reduce((s,x)=>(x.avoided||[]).filter(a=>a.passed===true).length+s,0);
-      const correctEnvCalls=sessions.filter(s=>s.environmentCorrect===true).length;
-      let freeStreak=0;
-      for(let i=allTrades.length-1;i>=0;i--){ if(allTrades[i].grade==="F") break; if(allTrades[i].grade) freeStreak++; }
-      const cleanStreak=sessions.filter(s=>s.survived===true).length;
-      const nonExpansionSessions=sessions.filter(s=>s.environment&&s.environment!=="EXPANSION"&&s.environment!=="CHOP").length;
-      const gStats={totalTrades:allTrades.length,totalSessions:sessions.length,totalAvoided,correctEnvCalls,aGrades:grades.A,freeStreak,cleanStreak,nonExpansionSessions};
-
-      const SUBTAB = (id,label) => (
-        <button onClick={()=>setSub(id)} style={{
-          fontFamily:MONO, background:"none", border:"none",
-          borderBottom:`2px solid ${sub===id?C.blue:"transparent"}`,
-          color:sub===id?C.blueText:C.muted, padding:"7px 14px", fontSize:10, cursor:"pointer",
-        }}>{label}</button>
-      );
-
-      return (
-        <div>
-          <div style={{ borderBottom:`1px solid ${C.border}`, marginBottom:16, display:"flex" }}>
-            {SUBTAB("overview","OVERVIEW")}
-            {SUBTAB("slams","GRAND SLAMS")}
-            {SUBTAB("trades","ALL TRADES")}
-            {SUBTAB("sessions","SESSION LOG")}
-          </div>
-
-          {sub==="overview" && <>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8, marginBottom:12 }}>
-              <StatBox label="Net P&L ($)" value={`${totalPnL>=0?"+":""}${totalPnL.toFixed(0)}`} color={totalPnL>=0?C.green:C.red} sub={`${sessions.length} sessions`} />
-              <StatBox label="Win Rate"    value={`${winRate}%`} sub={`${winners.length}W / ${losers.length}L`} color={parseFloat(winRate)>=55?C.green:parseFloat(winRate)>=45?C.amber:C.red} />
-              <StatBox label="Avg Win / Loss" value={`+${avgWin}`} sub={`avg loss ${avgLoss}`} color={C.green} />
-              <StatBox label="Trades Reviewed" value={allTrades.length} sub={`${totalAvoided} avoided`} color={C.blue} />
-            </div>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8, marginBottom:16 }}>
-              <StatBox label="MAE Winners" value={winMAE}  sub="avg pts adverse" color={C.green} small />
-              <StatBox label="MAE Losers"  value={lossMAE} sub="avg pts adverse" color={C.red}   small />
-              <StatBox label="IFT Yes / No"   value={`${iftYes} / ${iftNo}`}  sub="follow-through" small />
-              <StatBox label="Negotiable Y/N" value={`${negYes} / ${negNo}`}  sub="market gave time" small />
-            </div>
-            <SecHead>Cumulative P&L</SecHead>
-            {pnlCurve.length>0&&(
-              <div style={{ background:C.card, border:`1px solid ${C.border2}`, borderRadius:6, padding:"14px 6px", marginBottom:14 }}>
-                <ResponsiveContainer width="100%" height={160}>
-                  <LineChart data={pnlCurve}>
-                    <XAxis dataKey="i" tick={{fill:C.muted,fontSize:8,fontFamily:"monospace"}} axisLine={false} tickLine={false} />
-                    <YAxis tick={{fill:C.muted,fontSize:8,fontFamily:"monospace"}} axisLine={false} tickLine={false} />
-                    <ReferenceLine y={0} stroke={C.border2} strokeDasharray="3 3" />
-                    <Tooltip content={<TTip />} />
-                    <Line type="monotone" dataKey="pnl" name="Cumulative" stroke={C.blue} strokeWidth={1.5} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-            <SecHead>Daily P&L</SecHead>
-            {dailyBars.length>0&&(
-              <div style={{ background:C.card, border:`1px solid ${C.border2}`, borderRadius:6, padding:"14px 6px", marginBottom:14 }}>
-                <ResponsiveContainer width="100%" height={120}>
-                  <BarChart data={dailyBars}>
-                    <XAxis dataKey="date" tick={{fill:C.muted,fontSize:8,fontFamily:"monospace"}} axisLine={false} tickLine={false} />
-                    <YAxis tick={{fill:C.muted,fontSize:8,fontFamily:"monospace"}} axisLine={false} tickLine={false} />
-                    <ReferenceLine y={0} stroke={C.border2} />
-                    <Tooltip content={<TTip />} />
-                    <Bar dataKey="pnl" name="P&L" radius={[2,2,0,0]}>
-                      {dailyBars.map((d,i)=><Cell key={i} fill={d.pnl>=0?C.green:C.red} />)}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
-              <div>
-                <SecHead>Trade Grades</SecHead>
-                <div style={{ background:C.card, border:`1px solid ${C.border2}`, borderRadius:6, padding:14 }}>
-                  {[["A",C.green],["B",C.blue],["C",C.amber],["F",C.red]].map(([g,c])=>(
-                    <MiniBar key={g} label={g} val={grades[g]} max={Math.max(...Object.values(grades),1)} color={c} />
-                  ))}
-                </div>
-                <SecHead>P&L by Environment</SecHead>
-                <div style={{ background:C.card, border:`1px solid ${C.border2}`, borderRadius:6, padding:14 }}>
-                  {Object.entries(envPnL).sort((a,b)=>b[1].pnl-a[1].pnl).map(([env,{pnl,count}])=>(
-                    <div key={env} style={{ display:"flex", justifyContent:"space-between", marginBottom:7 }}>
-                      <span style={{ fontFamily:MONO, color:C.muted, fontSize:9 }}>{env}</span>
-                      <div>
-                        <span style={{ fontFamily:MONO, color:pnl>=0?C.green:C.red, fontSize:10, fontWeight:700 }}>{pnl>=0?"+":""}{pnl.toFixed(0)}</span>
-                        <span style={{ fontFamily:MONO, color:C.faint, fontSize:8, marginLeft:5 }}>({count})</span>
-                      </div>
-                    </div>
-                  ))}
-                  {Object.keys(envPnL).length===0&&<div style={{ fontFamily:MONO, color:C.faint, fontSize:9 }}>No environment data yet.</div>}
-                </div>
-              </div>
-              <div>
-                {Object.keys(lossTags).length>0&&<>
-                  <SecHead>Loss Breakdown — Your Enemy</SecHead>
-                  <div style={{ background:C.card, border:`1px solid ${C.border2}`, borderRadius:6, padding:14, marginBottom:14 }}>
-                    {Object.entries(lossTags).sort((a,b)=>b[1]-a[1]).map(([tag,count])=>(
-                      <MiniBar key={tag} label={tag} val={count} max={Object.values(lossTags).reduce((a,b)=>Math.max(a,b),1)} color={C.red} />
-                    ))}
-                  </div>
-                </>}
-                {Object.keys(setupWR).length>0&&<>
-                  <SecHead>Win Rate by Setup</SecHead>
-                  <div style={{ background:C.card, border:`1px solid ${C.border2}`, borderRadius:6, padding:14 }}>
-                    {Object.entries(setupWR).map(([tag,{w,l}])=>{
-                      const wr=(w/(w+l)*100).toFixed(0);
-                      return (
-                        <div key={tag} style={{ display:"flex", justifyContent:"space-between", marginBottom:7 }}>
-                          <span style={{ fontFamily:MONO, color:C.muted, fontSize:9 }}>{tag}</span>
-                          <div>
-                            <span style={{ fontFamily:MONO, color:parseInt(wr)>=55?C.green:parseInt(wr)>=45?C.amber:C.red, fontSize:10, fontWeight:700 }}>{wr}%</span>
-                            <span style={{ fontFamily:MONO, color:C.faint, fontSize:8, marginLeft:5 }}>{w}W {l}L</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>}
-              </div>
-            </div>
-          </>}
-
-          {sub==="slams"&&<>
-            <div style={{ borderLeft:`2px solid ${C.border2}`, paddingLeft:12, marginBottom:16 }}>
-              <div style={{ fontFamily:MONO, color:C.faint, fontSize:10, fontStyle:"italic", lineHeight:1.9 }}>
-                You do not become dominant because you string together 100 green days.<br/>
-                You become dominant because you become so difficult to knock off course<br/>
-                that 100 green days eventually emerge from the process.
-              </div>
-            </div>
-            <GrandSlams stats={gStats} />
-          </>}
-
-          {sub==="trades"&&(
-            <div style={{ overflowX:"auto" }}>
-              <table style={{ fontFamily:MONO, width:"100%", borderCollapse:"collapse", fontSize:9 }}>
-                <thead>
-                  <tr style={{ borderBottom:`1px solid ${C.border2}` }}>
-                    {["Date","Dir","Result","MAE","MFE","Grade","IFT","Neg","Setup","Loss","Why"].map(h=>(
-                      <th key={h} style={{ color:C.muted, padding:"7px 8px", textAlign:"left", fontWeight:400, fontSize:8, letterSpacing:"0.1em" }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {allTrades.map((t,i)=>{
-                    const res=parseFloat(t.result);
-                    return (
-                      <tr key={i} style={{ borderBottom:`1px solid ${C.border}` }}>
-                        <td style={{ padding:"6px 8px", color:C.muted }}>{t.sessionDate}</td>
-                        <td style={{ padding:"6px 8px", color:t.direction==="LONG"?C.green:t.direction==="SHORT"?C.red:C.muted }}>{t.direction||"—"}</td>
-                        <td style={{ padding:"6px 8px", color:isNaN(res)?C.muted:res>=0?C.green:C.red, fontWeight:700 }}>{isNaN(res)?t.result:`${res>=0?"+":""}${res}`}</td>
-                        <td style={{ padding:"6px 8px", color:C.amber }}>{t.mae||"—"}</td>
-                        <td style={{ padding:"6px 8px", color:C.muted }}>{t.mfe||"—"}</td>
-                        <td style={{ padding:"6px 8px", color:t.grade==="A"?C.green:t.grade==="B"?C.blue:t.grade==="C"?C.amber:t.grade==="F"?C.red:C.muted, fontWeight:700 }}>{t.grade||"—"}</td>
-                        <td style={{ padding:"6px 8px", color:t.immediateFollowThrough===true?C.green:t.immediateFollowThrough===false?C.red:C.faint }}>{t.immediateFollowThrough===true?"Y":t.immediateFollowThrough===false?"N":"—"}</td>
-                        <td style={{ padding:"6px 8px", color:t.negotiable===true?C.green:t.negotiable===false?C.red:C.faint }}>{t.negotiable===true?"Y":t.negotiable===false?"N":"—"}</td>
-                        <td style={{ padding:"6px 8px", color:C.muted }}>{t.setupTag||"—"}</td>
-                        <td style={{ padding:"6px 8px", color:C.red }}>{t.lossTag||"—"}</td>
-                        <td style={{ padding:"6px 8px", color:C.muted, maxWidth:160, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{t.why||"—"}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {sub==="sessions"&&(
-            [...sessions].reverse().map(s=>{
-              const st=s.trades||[];
-              const wr=st.filter(t=>!isNaN(parseFloat(t.result)));
-              const spnl=wr.reduce((x,t)=>x+parseFloat(t.result),0);
-              const wins=wr.filter(t=>parseFloat(t.result)>=0).length;
-              return (
-                <div key={s.id} style={{ background:C.card, border:`1px solid ${C.border2}`, borderRadius:6, padding:"12px 14px", marginBottom:8 }}>
-                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
-                    <div style={{ display:"flex", gap:10, alignItems:"baseline" }}>
-                      <span style={{ fontFamily:MONO, color:C.text, fontSize:12, fontWeight:700 }}>{s.date}</span>
-                      <span style={{ fontFamily:MONO, color:C.muted, fontSize:9 }}>{s.environment||"—"}</span>
-                    </div>
-                    <div style={{ display:"flex", gap:14, alignItems:"center" }}>
-                      <span style={{ fontFamily:MONO, color:spnl>=0?C.green:C.red, fontSize:12, fontWeight:700 }}>{spnl>=0?"+":""}{spnl.toFixed(0)}</span>
-                      <span style={{ fontFamily:MONO, color:C.muted, fontSize:9 }}>{wins}W/{wr.length-wins}L</span>
-                      <span style={{ fontFamily:MONO, color:s.survived?C.green:C.faint, fontSize:9 }}>{s.survived?"✓ SURVIVED":"—"}</span>
-                    </div>
-                  </div>
-                  {s.sessionNotes&&<div style={{ fontFamily:MONO, color:C.muted, fontSize:9, fontStyle:"italic" }}>{s.sessionNotes}</div>}
-                </div>
-              );
-            })
-          )}
-        </div>
-      );
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────────
-    // PRINT VIEW
-    // ─────────────────────────────────────────────────────────────────────────────
-    function PrintView({ session }) {
-      const handlePrint = () => {
-        const trades = session.trades || [{}];
-        const tradeBlocks = trades.map((t,i) => `
-          <div class="trade-block">
-            <div class="trade-header">
-              <span class="trade-num">TRADE #${i+1}</span>
-              <div class="yn-pair">
-                <span class="yn-label">Direction:</span>
-                <span class="cb ${t.direction==='LONG'?'checked':''}"></span><span class="yn-opt">LONG</span>
-                <span class="cb ${t.direction==='SHORT'?'checked':''}"></span><span class="yn-opt">SHORT</span>
-              </div>
-            </div>
-            <div class="grid5" style="margin-bottom:8pt">
-              <div><div class="fl">Time</div><div class="val">${t.time||''}</div></div>
-              <div><div class="fl">Entry</div><div class="val">${t.entry||''}</div></div>
-              <div><div class="fl">Exit</div><div class="val">${t.exit||''}</div></div>
-              <div><div class="fl">Result ($)</div><div class="val ${parseFloat(t.result)>=0?'pos':'neg'}">${t.result||''}</div></div>
-              <div><div class="fl">Grade</div><div class="val grade-${t.grade||'none'}">${t.grade||''}</div></div>
-            </div>
-            <div class="grid2" style="margin-bottom:8pt">
-              <div><div class="fl">MAE (pts) — TIER 1</div><div class="val amber">${t.mae||''}</div></div>
-              <div><div class="fl">MFE (pts)</div><div class="val">${t.mfe||''}</div></div>
-            </div>
-            <div class="grid2" style="margin-bottom:8pt">
-              <div>
-                <div class="fl">Immediate Follow Through?</div>
-                <div class="yn-pair">
-                  <span class="cb ${t.immediateFollowThrough===true?'checked':''}"></span><span class="yn-opt">YES</span>
-                  <span class="cb ${t.immediateFollowThrough===false?'checked':''}"></span><span class="yn-opt">NO</span>
-                </div>
-              </div>
-              <div>
-                <div class="fl">Market Negotiable?</div>
-                <div class="yn-pair">
-                  <span class="cb ${t.negotiable===true?'checked':''}"></span><span class="yn-opt">YES</span>
-                  <span class="cb ${t.negotiable===false?'checked':''}"></span><span class="yn-opt">NO</span>
-                </div>
-              </div>
-            </div>
-            <div style="margin-bottom:7pt"><div class="fl">Why Did I Take It?</div><div class="val">${t.why||''}</div><div class="rl"></div></div>
-            <div style="margin-bottom:7pt">
-              <div class="fl">Setup Tag</div>
-              <div class="tag-row">${['BREAKOUT','PULLBACK','REVERSAL','CONTINUATION','OPENING RANGE','FAILED AUCTION','ANTICIPATION','FOMO','CHASE','OTHER'].map(tag=>`<span class="tag ${t.setupTag===tag?'tag-active':''}">${tag}</span>`).join('')}</div>
-            </div>
-            ${parseFloat(t.result)<0?`
-            <div style="margin-bottom:7pt">
-              <div class="fl">Loss Category</div>
-              <div class="tag-row">${['EARLY','CHOP','REVERSAL','CHASE','OVERSIZED','FOMO','LOW VOLUME','COUNTERTREND','OR NOISE','EXPANSION'].map(tag=>`<span class="tag ${t.lossTag===tag?'tag-active tag-red':''}">${tag}</span>`).join('')}</div>
-            </div>`:''}
-            <div class="grid2" style="margin-bottom:7pt">
-              <div>
-                <div class="fl">Did Market Do What I Expected?</div>
-                <div class="yn-pair">
-                  <span class="cb ${t.marketDid===true?'checked':''}"></span><span class="yn-opt">YES</span>
-                  <span class="cb ${t.marketDid===false?'checked':''}"></span><span class="yn-opt">NO</span>
-                </div>
-              </div>
-              <div>
-                <div class="fl">Would Take Again?</div>
-                <div class="yn-pair">
-                  <span class="cb ${t.wouldTakeAgain==='yes'?'checked':''}"></span><span class="yn-opt">YES</span>
-                  <span class="cb ${t.wouldTakeAgain==='maybe'?'checked':''}"></span><span class="yn-opt">MAYBE</span>
-                  <span class="cb ${t.wouldTakeAgain==='no'?'checked':''}"></span><span class="yn-opt">NO</span>
-                </div>
-              </div>
-            </div>
-            <div style="margin-bottom:7pt"><div class="fl">What If I Did Nothing?</div><div class="val">${t.doNothingOutcome||''}</div><div class="rl"></div></div>
-            <div><div class="fl">One-Line Lesson</div><div class="val">${t.notes||''}</div><div class="rl"></div></div>
-          </div>
-        `).join('');
-
-        const avoided = (session.avoided||[]);
-        const avoidedRows = avoided.length===0
-          ? ['','','',''].map((_,i)=>`<tr><td style="padding:5pt 6pt">${i+1}</td><td style="padding:5pt 6pt"><div class="rl"></div></td><td style="padding:5pt 6pt"><span class="cb"></span> Y &nbsp;<span class="cb"></span> N</td><td style="padding:5pt 6pt"><div class="rl"></div></td></tr>`).join('')
-          : avoided.map((a,i)=>`<tr><td style="padding:5pt 6pt">${i+1}</td><td style="padding:5pt 6pt">${a.setup||''}<div class="rl"></div></td><td style="padding:5pt 6pt"><span class="cb ${a.passed===true?'checked':''}"></span> Y &nbsp;<span class="cb ${a.passed===false?'checked':''}"></span> N</td><td style="padding:5pt 6pt">${a.outcome||''}<div class="rl"></div></td></tr>`).join('');
-
-        const withRes = (session.trades||[]).filter(t=>t.result!==""&&!isNaN(parseFloat(t.result)));
-        const pnl     = withRes.reduce((s,t)=>s+parseFloat(t.result),0);
-        const wins    = withRes.filter(t=>parseFloat(t.result)>=0).length;
-        const losses  = withRes.filter(t=>parseFloat(t.result)<0).length;
-
-        const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Kaizen — ${session.date}</title>
     <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Courier New',monospace;background:#fff;color:#0a0a0a;font-size:9pt;line-height:1.5}
-    .page{width:8.5in;min-height:11in;margin:0 auto;padding:.55in .6in;page-break-after:always}
-    .page:last-child{page-break-after:avoid}
-    @media print{body{background:#fff}.page{margin:0;padding:.55in .6in}@page{size:letter;margin:0}}
-    .header{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1.5pt solid #0a0a0a;padding-bottom:8pt;margin-bottom:14pt}
-    .eyebrow{font-size:6.5pt;letter-spacing:.22em;text-transform:uppercase;color:#555}
-    .heading{font-size:15pt;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
-    .mantra{font-size:6pt;color:#555;font-style:italic;line-height:1.8;text-align:right}
-    .sh{font-size:6.5pt;letter-spacing:.2em;text-transform:uppercase;color:#555;border-bottom:.5pt solid #ccc;padding-bottom:4pt;margin-bottom:10pt;margin-top:14pt}
-    .fl{font-size:6pt;letter-spacing:.16em;text-transform:uppercase;color:#555;margin-bottom:2pt}
-    .val{font-size:10pt;font-weight:600;min-height:14pt;border-bottom:.5pt solid #ddd;padding-bottom:2pt;margin-bottom:4pt}
-    .rl{border-bottom:.5pt solid #ddd;height:14pt}
-    .pos{color:#15803d}.neg{color:#b91c1c}.amber{color:#92400e}
-    .grade-A{color:#15803d}.grade-B{color:#1e40af}.grade-C{color:#92400e}.grade-F{color:#b91c1c}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12pt}
-    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10pt}
-    .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8pt}
-    .grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:6pt}
-    .trade-block{border:.5pt solid #ccc;border-radius:3pt;padding:9pt 10pt;margin-bottom:8pt;page-break-inside:avoid}
-    .trade-header{display:flex;justify-content:space-between;align-items:baseline;border-bottom:.5pt solid #eee;padding-bottom:5pt;margin-bottom:8pt}
-    .trade-num{font-size:11pt;font-weight:700}
-    .yn-pair{display:flex;align-items:center;gap:4pt;flex-wrap:wrap}
-    .yn-label{font-size:7pt;color:#333;margin-right:4pt}
-    .yn-opt{font-size:7.5pt;margin-right:8pt}
-    .cb{display:inline-block;width:9pt;height:9pt;border:1pt solid #333;vertical-align:middle;margin-right:2pt;border-radius:1pt;position:relative}
-    .cb.checked::after{content:'✓';position:absolute;top:-1pt;left:1pt;font-size:8pt;color:#0a0a0a}
-    .tag-row{display:flex;flex-wrap:wrap;gap:3pt;margin-top:3pt}
-    .tag{border:.5pt solid #bbb;border-radius:2pt;padding:1.5pt 5pt;font-size:6.5pt;letter-spacing:.06em;text-transform:uppercase;color:#555}
-    .tag-active{border-color:#0a0a0a;color:#0a0a0a;font-weight:700;background:#f0f0f0}
-    .tag-red.tag-active{border-color:#b91c1c;color:#b91c1c;background:#fff0f0}
-    .env-row{display:flex;gap:6pt;flex-wrap:wrap;margin-top:4pt}
-    .env{border:.5pt solid #555;border-radius:2pt;padding:2pt 8pt;font-size:7pt;letter-spacing:.1em;text-transform:uppercase}
-    .env.active{background:#0a0a0a;color:#fff}
-    .sum-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8pt}
-    .sum-cell{border:.5pt solid #ccc;border-radius:2pt;padding:6pt 8pt;text-align:center}
-    .sum-val{font-size:14pt;font-weight:700}
-    .check-row{display:flex;align-items:center;margin-bottom:5pt;font-size:8pt}
-    .slam-grid{display:grid;grid-template-columns:1fr 1fr;gap:8pt}
-    .slam-cell{display:flex;justify-content:space-between;align-items:center;border-bottom:.5pt solid #eee;padding:4pt 0;font-size:8pt}
-    </style></head><body>
-
-    <div class="page">
-      <div class="header">
-        <div><div class="eyebrow">Kaizen Trade Autopsy</div><div class="heading">Session Log</div></div>
-        <div class="mantra">I protect the account. I stack clean days.<br>I become impossible to kill.<br><strong>Has the market earned my participation?</strong></div>
-      </div>
-      <div class="sh">Pre-Session</div>
-      <div class="grid3" style="margin-bottom:10pt">
-        <div><div class="fl">Date</div><div class="val">${session.date||''}</div></div>
-        <div><div class="fl">Environment</div>
-          <div class="env-row">${['ROTATIONAL','TRENDING','CHOP','EXPANSION','UNKNOWN'].map(e=>`<span class="env ${session.environment===e?'active':''}">${e}</span>`).join('')}</div>
-        </div>
-        <div><div class="fl">First Trade Setup?</div>
-          <div class="yn-pair" style="margin-top:4pt">
-            <span class="cb ${session.firstTradeSetup===true?'checked':''}"></span><span class="yn-opt">YES</span>
-            <span class="cb ${session.firstTradeSetup===false?'checked':''}"></span><span class="yn-opt">NO</span>
-          </div>
-        </div>
-      </div>
-      <div class="sh">Trade Log</div>
-      ${tradeBlocks}
-    </div>
-
-    <div class="page">
-      <div class="header">
-        <div><div class="eyebrow">Kaizen Trade Autopsy</div><div class="heading">Session Close — ${session.date||''}</div></div>
-        <div class="mantra">The account staying open is the win condition.<br>Profit is the bonus.</div>
-      </div>
-
-      <div class="sh">Trades Avoided</div>
-      <table style="width:100%;border-collapse:collapse;font-size:8pt;margin-bottom:10pt">
-        <thead><tr style="border-bottom:.5pt solid #ccc">
-          <th style="text-align:left;padding:4pt 6pt;font-size:6pt;letter-spacing:.12em;color:#555;font-weight:400">#</th>
-          <th style="text-align:left;padding:4pt 6pt;font-size:6pt;letter-spacing:.12em;color:#555;font-weight:400">SETUP SEEN</th>
-          <th style="text-align:left;padding:4pt 6pt;font-size:6pt;letter-spacing:.12em;color:#555;font-weight:400">PASSED?</th>
-          <th style="text-align:left;padding:4pt 6pt;font-size:6pt;letter-spacing:.12em;color:#555;font-weight:400">OUTCOME IF TRADED</th>
-        </tr></thead>
-        <tbody>${avoidedRows}</tbody>
-      </table>
-      <div style="text-align:right;font-size:8pt;margin-bottom:14pt"><strong>Total correctly avoided: ${avoided.filter(a=>a.passed===true).length||'___'}</strong></div>
-
-      <div class="sh">Session Metrics</div>
-      <div class="grid3" style="margin-bottom:10pt">
-        <div><div class="fl">Re-entry Count</div><div class="val">${session.reentryCount||''}</div></div>
-        <div><div class="fl">Conscious Walk-Aways</div><div class="val">${session.walkAways||''}</div></div>
-        <div><div class="fl">Patience Score (1–5)</div><div class="val">${session.patienceScore||''}</div></div>
-      </div>
-      <div style="margin-bottom:10pt">
-        <div class="fl">Was Environment Call Correct?</div>
-        <div class="yn-pair" style="margin-top:4pt">
-          <span class="cb ${session.environmentCorrect===true?'checked':''}"></span><span class="yn-opt">YES</span>
-          <span class="cb ${session.environmentCorrect===false?'checked':''}"></span><span class="yn-opt">NO</span>
-          <span class="cb ${session.environmentCorrect==='unknown'?'checked':''}"></span><span class="yn-opt">UNKNOWN</span>
-        </div>
-      </div>
-      <div style="margin-bottom:12pt"><div class="fl">Session Notes / Key Takeaway</div><div class="val">${session.sessionNotes||''}</div><div class="rl"></div><div class="rl"></div></div>
-
-      <div class="sh">Session Summary</div>
-      <div class="sum-grid" style="margin-bottom:12pt">
-        <div class="sum-cell"><div class="fl" style="text-align:center">NET P&L ($)</div><div class="sum-val ${pnl>=0?'pos':'neg'}">${pnl>=0?'+':''}${pnl.toFixed(0)}</div></div>
-        <div class="sum-cell"><div class="fl" style="text-align:center">TOTAL TRADES</div><div class="sum-val">${withRes.length}</div></div>
-        <div class="sum-cell"><div class="fl" style="text-align:center">WINNERS</div><div class="sum-val pos">${wins}</div></div>
-        <div class="sum-cell"><div class="fl" style="text-align:center">LOSERS</div><div class="sum-val neg">${losses}</div></div>
-      </div>
-      <div class="grid4" style="margin-bottom:14pt">
-        <div class="sum-cell"><div class="fl" style="text-align:center">A GRADES</div><div class="sum-val grade-A">${(session.trades||[]).filter(t=>t.grade==='A').length}</div></div>
-        <div class="sum-cell"><div class="fl" style="text-align:center">B GRADES</div><div class="sum-val grade-B">${(session.trades||[]).filter(t=>t.grade==='B').length}</div></div>
-        <div class="sum-cell"><div class="fl" style="text-align:center">C GRADES</div><div class="sum-val grade-C">${(session.trades||[]).filter(t=>t.grade==='C').length}</div></div>
-        <div class="sum-cell"><div class="fl" style="text-align:center">F GRADES</div><div class="sum-val grade-F">${(session.trades||[]).filter(t=>t.grade==='F').length}</div></div>
-      </div>
-
-      <div class="sh">Post-Session Checklist</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6pt;margin-bottom:14pt">
-        ${[['followedRules','Did I follow rules?'],['protectedAccounts','Did I protect both accounts?'],['recorded','Did I record everything?'],['reviewed','Did I review?'],['survived','Did I survive?'],['_','Locked second account after first failed?']].map(([k,q])=>`<div class="check-row"><span class="cb ${session[k]===true?'checked':''}"></span> ${q}</div>`).join('')}
-      </div>
-
-      <div class="sh">Grand Slams — Running Totals</div>
-      <div class="slam-grid">
-        <div>
-          ${[['Days Account Alive',''],['Consecutive Rule-Following',''],['Consecutive No Revenge',''],['Trades Reviewed (lifetime)',''],['Sessions Reviewed (lifetime)','']].map(([l,v])=>`<div class="slam-cell"><span>${l}</span><span style="font-weight:700">${v||'_____'}</span></div>`).join('')}
-        </div>
-        <div>
-          ${[['Chop Sessions Avoided',''],['Correct Env Calls',''],['Longest Funded Lifespan',''],['A-Grade Streak (current)',''],['F-Grade Free Streak','']].map(([l,v])=>`<div class="slam-cell"><span>${l}</span><span style="font-weight:700">${v||'_____'}</span></div>`).join('')}
-        </div>
-      </div>
-
-      <div style="text-align:center;color:#bbb;font-size:7pt;font-style:italic;margin-top:20pt">
-        The monster does not chase. The monster does not beg the market. The monster survives today so he can dominate later.
-      </div>
-    </div>
-    </body></html>`;
-
-        const w = window.open('','_blank');
-        w.document.write(html);
-        w.document.close();
-        setTimeout(()=>w.print(), 600);
-      };
-
-      const trades   = session.trades || [];
-      const withRes  = trades.filter(t=>t.result!==""&&!isNaN(parseFloat(t.result)));
-      const pnl      = withRes.reduce((s,t)=>s+parseFloat(t.result),0);
-      const avoided  = (session.avoided||[]).filter(a=>a.passed===true).length;
-
-      return (
-        <div>
-          <div style={{ borderLeft:`2px solid ${C.border2}`, paddingLeft:12, marginBottom:20 }}>
-            <div style={{ fontFamily:MONO, color:C.faint, fontSize:10, fontStyle:"italic", lineHeight:1.9 }}>
-              Generates a clean 2-page PDF from the current session in the Logger.<br/>
-              Save your session first, then print.
-            </div>
-          </div>
-
-          <div style={{ border:`1px solid ${C.border2}`, borderRadius:6, padding:18, marginBottom:16, background:C.card }}>
-            <div style={{ fontFamily:MONO, color:C.muted, fontSize:8, letterSpacing:"0.18em", marginBottom:12 }}>CURRENT SESSION PREVIEW</div>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:14 }}>
-              <StatBox label="Date"    value={session.date||"—"} small />
-              <StatBox label="Net P&L" value={withRes.length>0?`${pnl>=0?"+":""}${pnl.toFixed(0)}`:"—"} color={pnl>=0?C.green:C.red} small />
-              <StatBox label="Trades"  value={trades.length} small />
-              <StatBox label="Avoided" value={avoided} color={C.green} small />
-            </div>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8 }}>
-              {["A","B","C","F"].map(g=>(
-                <div key={g} style={{ background:C.surface, border:`1px solid ${C.border3}`, borderRadius:4, padding:"8px 10px", textAlign:"center" }}>
-                  <div style={{ fontFamily:MONO, color:C.muted, fontSize:8 }}>{g} GRADES</div>
-                  <div style={{ fontFamily:MONO, color:{A:C.green,B:C.blue,C:C.amber,F:C.red}[g], fontSize:16, fontWeight:700 }}>{trades.filter(t=>t.grade===g).length}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <button onClick={handlePrint} style={{
-            fontFamily:MONO, width:"100%", background:C.card, border:`1px solid ${C.border3}`,
-            color:C.text, padding:14, borderRadius:6, fontSize:13, fontWeight:700, cursor:"pointer", marginBottom:10,
-          }}>
-            PRINT / SAVE AS PDF →
-          </button>
-          <div style={{ fontFamily:MONO, color:C.faint, fontSize:9, textAlign:"center" }}>
-            Opens a print-ready window. Use your browser's Print dialog → Save as PDF.
-          </div>
-        </div>
-      );
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────────
-    // ROOT APP
-    // ─────────────────────────────────────────────────────────────────────────────
-    function KaizenApp() {
-      const [tab,          setTab]          = useState("logger");
-      const [session,      setSession]      = useState(newSession());
-      const [sessions,     setSessions]     = useState([]);
-      const [sessionCount, setSessionCount] = useState(null);
-      const [saving,       setSaving]       = useState(false);
-      const [saved,        setSaved]        = useState(false);
-
-      useEffect(()=>{
-        loadSessions().then(s=>{ setSessions(s); setSessionCount(s.length); });
-      },[]);
-
-      const handleSave = useCallback(async () => {
-        setSaving(true);
-        const all  = await loadSessions();
-        const idx  = all.findIndex(s=>s.id===session.id);
-        const enriched = { ...session, savedAt:new Date().toISOString() };
-        const updated  = idx>=0 ? all.map((s,i)=>i===idx?enriched:s) : [...all, enriched];
-        const ok = await saveSessions(updated);
-        if (ok) { setSessions(updated); setSessionCount(updated.length); }
-        setSaving(false);
-        if (ok) { setSaved(true); setTimeout(()=>setSaved(false), 2500); }
-      }, [session]);
-
-      const handleNew = () => {
-        if (window.confirm("Start a new session? Unsaved changes will be lost.")) {
-          setSession(newSession());
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --ink: #0a0a0a;
+            --ink2: #2a2a2a;
+            --ink3: #555;
+            --rule: #c8c8c8;
+            --rule2: #e0e0e0;
+            --bg: #ffffff;
         }
-      };
 
-      const TAB = (id, label, badge) => (
-        <button onClick={()=>{ setTab(id); if(id==="dashboard") loadSessions().then(setSessions); }}
-          style={{
-            fontFamily:MONO, background:"none", border:"none",
-            borderBottom:`2px solid ${tab===id?C.blue:"transparent"}`,
-            color:tab===id?C.blueText:C.muted,
-            padding:"10px 18px", fontSize:11, cursor:"pointer", display:"flex", alignItems:"center", gap:6,
-          }}>
-          {label}
-          {badge!=null&&badge>0&&(
-            <span style={{ background:C.blueBg, color:C.blueText, borderRadius:10, padding:"1px 6px", fontSize:9, fontWeight:700 }}>{badge}</span>
-          )}
-        </button>
-      );
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: #08080a;
+            color: #e4e4e7;
+        }
 
-      return (
-        <div style={{ fontFamily:MONO, background:C.bg, minHeight:"100vh", color:C.text }}>
+        /* Pure CSS Custom Scrollbars for Terminal Feel */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0f0f12; }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
 
-          <div style={{ borderBottom:`1px solid ${C.border}`, padding:"12px 20px", display:"flex", justifyContent:"space-between", alignItems:"center", position:"sticky", top:0, background:C.bg, zIndex:20 }}>
-            <div>
-              <div style={{ color:C.muted, fontSize:8, letterSpacing:"0.22em" }}>KAIZEN TRADE AUTOPSY</div>
-              <div style={{ color:C.text, fontSize:15, fontWeight:700, letterSpacing:"0.05em" }}>SYSTEM</div>
-            </div>
-            {tab==="logger" && (
-              <div style={{ display:"flex", gap:7, alignItems:"center" }}>
-                <button onClick={handleNew} style={{ fontFamily:MONO, background:"none", border:`1px solid ${C.border3}`, color:C.muted, padding:"5px 11px", borderRadius:3, fontSize:9, cursor:"pointer" }}>NEW SESSION</button>
-                <button onClick={handleSave} disabled={saving} style={{ fontFamily:MONO, background:saved?C.greenBg:C.blueBg, border:`1px solid ${saved?C.green:C.blue}`, color:saved?C.greenText:C.blueText, padding:"5px 13px", borderRadius:3, fontSize:10, fontWeight:700, cursor:"pointer" }}>
-                  {saving?"SAVING…":saved?"✓ SAVED":"SAVE"}
+        /* Print Autopsy View Layout Context Rules */
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; color: black !important; padding: 0 !important; }
+            .print-page {
+                width: 8.5in;
+                min-height: 11in;
+                margin: 0 auto !important;
+                padding: 0.55in 0.6in !important;
+                background: white !important;
+                color: var(--ink) !important;
+                page-break-after: always;
+            }
+            .print-page:last-child { page-break-after: avoid; }
+            .print-box { border: 0.5pt solid var(--rule) !important; color: var(--ink) !important; }
+            .print-rule { border-bottom: 0.5pt solid var(--rule) !important; }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Cell } = Recharts;
+
+        const SESSIONS_KEY = "kaizen:sessions";
+
+        // Global Structural Constants
+        const ENV_OPTIONS = ["ROTATIONAL", "TRENDING", "CHOP", "EXPANSION", "UNKNOWN"];
+        const GRADE_OPTIONS = ["A", "B", "C", "F"];
+        const SETUP_TAGS = ["BREAKOUT", "PULLBACK", "REVERSAL", "CONTINUATION", "OPENING RANGE", "FAILED AUCTION", "ANTICIPATION", "FOMO", "CHASE", "OTHER"];
+        const LOSS_TAGS = ["EARLY", "CHOP", "REVERSAL", "CHASE", "OVERSIZED", "FOMO", "LOW VOLUME", "COUNTERTREND", "OPENING RANGE NOISE", "EXPANSION"];
+
+        // State Instantiation Initializers
+        const emptyTrade = () => ({
+            id: Date.now() + Math.random(),
+            direction: "", time: "", entry: "", exit: "", result: "", grade: "",
+            immediateFollowThrough: null, negotiable: null, mae: "", mfe: "", why: "",
+            wouldTakeAgain: null, marketDid: null, lossTag: "", setupTag: "", contracts: "", notes: ""
+        });
+
+        const emptySession = () => ({
+            id: Date.now(),
+            date: new Date().toISOString().slice(0, 10),
+            sessionNum: "", environment: "", environmentCorrect: null, firstTradeSetup: null,
+            cheatScore: "", patienceScore: "", walkAways: "", reentryCount: "", sessionNotes: "",
+            trades: [emptyTrade()], avoided: [], survived: true
+        });
+
+        const C = {
+            bg: "#08080a", surface: "#0f0f12", card: "#141417", border: "#27272a", border2: "#3f3f46",
+            text: "#e4e4e7", muted: "#71717a", faint: "#3f3f46", green: "#10b981", greenBg: "#064e3b",
+            greenText: "#6ee7b7", red: "#ef4444", redBg: "#450a0a", redText: "#fca5a5", blue: "#6366f1",
+            blueBg: "#1e1b4b", blueText: "#a5b4fc", yellow: "#eab308", yellowBg: "#422006", yellowText: "#fde047"
+        };
+
+        // UI Core Atomic Elements
+        function Chip({ label, active, onClick, color = "blue" }) {
+            const colors = {
+                blue: active ? "bg-blue-900 text-blue-100 border-blue-500" : "bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-zinc-500",
+                red: active ? "bg-red-900 text-red-100 border-red-500" : "bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-zinc-500",
+                green: active ? "bg-emerald-900 text-emerald-100 border-emerald-500" : "bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-zinc-500",
+                yellow: active ? "bg-yellow-900 text-yellow-100 border-yellow-500" : "bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-zinc-500"
+            };
+            return (
+                <button type="button" onClick={onClick} className={`px-2.5 py-1 text-xs font-mono border rounded transition-all ${colors[color]}`}>
+                    {label}
                 </button>
-              </div>
-            )}
-          </div>
+            );
+        }
 
-          <div style={{ borderBottom:`1px solid ${C.border}`, padding:"0 20px", display:"flex" }}>
-            {TAB("logger","LOGGER")}
-            {TAB("dashboard","DASHBOARD", sessions.length)}
-            {TAB("print","PRINT / PDF")}
-          </div>
+        function YesNo({ value, onChange }) {
+            return (
+                <div className="flex gap-2">
+                    <Chip label="YES" active={value === true} onClick={() => onChange(value === true ? null : true)} color="green" />
+                    <Chip label="NO" active={value === false} onClick={() => onChange(value === false ? null : false)} color="red" />
+                </div>
+            );
+        }
 
-          <div style={{ maxWidth:860, margin:"0 auto", padding:"20px 16px" }}>
-            {tab==="logger"    && <LoggerView session={session} setSession={setSession} onSave={handleSave} saving={saving} saved={saved} sessionCount={sessionCount} />}
-            {tab==="dashboard" && <DashboardView sessions={sessions} />}
-            {tab==="print"     && <PrintView session={session} />}
-          </div>
-        </div>
-      );
-    }
+        function Field({ label, hint, children }) {
+            return (
+                <div className="mb-4">
+                    <div className="text-xs font-mono text-zinc-400 uppercase tracking-widest mb-1">{label}</div>
+                    {hint && <div className="text-[11px] text-zinc-600 mb-1.5 italic">{hint}</div>}
+                    {children}
+                </div>
+            );
+        }
 
-    // Render HTML root point elements
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<KaizenApp />);
-  </script>
+        // --- MASTER APPLICATION ---
+        function App() {
+            const [activeTab, setActiveTab] = useState("logger");
+            const [sessions, setSessions] = useState([]);
+            const [currentSession, setCurrentSession] = useState(emptySession());
+
+            const loadAllData = () => {
+                try {
+                    const saved = localStorage.getItem(SESSIONS_KEY);
+                    if (saved) setSessions(JSON.parse(saved));
+                } catch (e) { console.error("Could not fetch sessions store.", e); }
+            };
+
+            useEffect(() => {
+                loadAllData();
+            }, [activeTab]);
+
+            const handleSave = (sessionToSave) => {
+                const updated = [...sessions.filter(s => s.id !== sessionToSave.id), sessionToSave];
+                localStorage.setItem(SESSIONS_KEY, JSON.stringify(updated));
+                setSessions(updated);
+                alert("Session metrics securely pinned to localStorage database array.");
+            };
+
+            const handleLoadToLogger = (session) => {
+                setCurrentSession(session);
+                setActiveTab("logger");
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col bg-[#08080a]">
+                    {/* Persistent Global Application Control Matrix */}
+                    <header className="no-print bg-[#0f0f12] border-b border-zinc-800 sticky top-0 z-50 px-6 py-4 flex flex-wrap justify-between items-center gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse"></div>
+                            <span className="font-bold tracking-wider text-sm font-mono text-white">KAIZEN TRADING CORE OPERATING SUITE</span>
+                        </div>
+                        <nav className="flex gap-2">
+                            <button onClick={() => setActiveTab("logger")} className={`px-4 py-2 font-mono text-xs border rounded transition ${activeTab === 'logger' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-zinc-900 text-zinc-400 border-zinc-700'}`}>
+                                📝 LOGGER TERMINAL
+                            </button>
+                            <button onClick={() => setActiveTab("dashboard")} className={`px-4 py-2 font-mono text-xs border rounded transition ${activeTab === 'dashboard' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-zinc-900 text-zinc-400 border-zinc-700'}`}>
+                                📊 METRICS & PROGRESSION
+                            </button>
+                            <button onClick={() => setActiveTab("autopsy")} className={`px-4 py-2 font-mono text-xs border rounded transition ${activeTab === 'autopsy' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-zinc-900 text-zinc-400 border-zinc-700'}`}>
+                                🖨️ PRINT SHEET AUTOPSY
+                            </button>
+                        </nav>
+                    </header>
+
+                    <main className={`flex-grow ${activeTab === 'autopsy' ? 'p-0 bg-white' : 'p-6'}`}>
+                        {activeTab === "logger" && (
+                            <LoggerView session={currentSession} setSession={setCurrentSession} onSave={handleSave} />
+                        )}
+                        {activeTab === "dashboard" && (
+                            <DashboardView sessions={sessions} onLoadSession={handleLoadToLogger} />
+                        )}
+                        {activeTab === "autopsy" && (
+                            <AutopsyPrintView session={currentSession} />
+                        )}
+                    </main>
+                </div>
+            );
+        }
+
+        // --- VIEW 1: LOGGER TERMINAL MODULE ---
+        function LoggerView({ session, setSession, onSave }) {
+            const updateSession = (k, v) => setSession({ ...session, [k]: v });
+            
+            const updateTrade = (id, k, v) => {
+                setSession({
+                    ...session,
+                    trades: session.trades.map(t => t.id === id ? { ...t, [k]: v } : t)
+                });
+            };
+
+            const addTradeRow = () => {
+                setSession({ ...session, trades: [...session.trades, emptyTrade()] });
+            };
+
+            const removeTradeRow = (id) => {
+                if (session.trades.length === 1) return;
+                setSession({ ...session, trades: session.trades.filter(t => t.id !== id) });
+            };
+
+            return (
+                <div className="max-w-4xl mx-auto space-y-6">
+                    {/* Pre-Session Setup Box */}
+                    <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-6">
+                        <div className="text-xs font-bold tracking-widest text-indigo-400 mb-4 uppercase font-mono">PRE-SESSION DISCIPLINE CONTEXT</div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <Field label="Session Calendar Date">
+                                <input type="date" value={session.date} onChange={e => updateSession("date", e.target.value)} className="bg-zinc-900 border border-zinc-700 text-white font-mono text-sm rounded p-2 w-full outline-none focus:border-zinc-500" />
+                            </Field>
+                            <Field label="Session Custom ID / Number">
+                                <input type="text" value={session.sessionNum || ""} onChange={e => updateSession("sessionNum", e.target.value)} placeholder="e.g. 104" className="bg-zinc-900 border border-zinc-700 text-white font-mono text-sm rounded p-2 w-full outline-none focus:border-zinc-500" />
+                            </Field>
+                            <Field label="First Trade Followed Setup Rule?">
+                                <YesNo value={session.firstTradeSetup} onChange={v => updateSession("firstTradeSetup", v)} />
+                            </Field>
+                        </div>
+                        <div className="mt-4">
+                            <Field label="Pre-Classified Market Environment Pattern" hint="ROTATIONAL = levels respected · TRENDING = clean direction · CHOP = whipsaws · EXPANSION = violent, kills choice · UNKNOWN = watch longer">
+                                <div className="flex flex-wrap gap-2 mt-1">
+                                    {ENV_OPTIONS.map(env => (
+                                        <Chip key={env} label={env} active={session.environment === env} onClick={() => updateSession("environment", env)} color="blue" />
+                                    ))}
+                                </div>
+                            </Field>
+                        </div>
+                    </div>
+
+                    {/* Trades Logging Block Array */}
+                    <div className="space-y-4">
+                        <div className="text-xs font-bold tracking-widest text-indigo-400 uppercase font-mono px-1">ACTIVE SYSTEM ACTION LOGS</div>
+                        {session.trades.map((trade, idx) => {
+                            const resultNum = parseFloat(trade.result);
+                            return (
+                                <div key={trade.id} className="bg-zinc-950 border border-zinc-800 rounded-lg p-6 space-y-4 relative">
+                                    <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
+                                        <div className="flex items-center gap-4">
+                                            <span className="font-bold font-mono text-sm text-zinc-400">TRADE MATCH POSITION</span>
+                                            <span className="text-xl font-bold font-mono text-white bg-zinc-900 px-2.5 py-0.5 rounded border border-zinc-700">#{idx + 1}</span>
+                                            {!isNaN(resultNum) && (
+                                                <span className={`font-mono text-base font-bold px-2 py-0.5 rounded ${resultNum >= 0 ? 'bg-emerald-950/50 text-emerald-400' : 'bg-red-950/50 text-red-400'}`}>
+                                                    {resultNum >= 0 ? "+" : ""}${resultNum.toFixed(2)}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {session.trades.length > 1 && (
+                                            <button type="button" onClick={() => removeTradeRow(trade.id)} className="text-xs text-red-400 font-mono border border-red-900/40 hover:bg-red-950/40 px-2.5 py-1 rounded transition">
+                                                ELIMINATE LOG ENTRY
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Primary Core Fields */}
+                                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                                        <Field label="Execution Time"><input type="text" value={trade.time} onChange={e => updateTrade(trade.id, "time", e.target.value)} placeholder="09:42" className="bg-zinc-900 border border-zinc-700 text-white text-xs font-mono rounded p-2 w-full outline-none" /></Field>
+                                        <Field label="Entry Handle"><input type="text" value={trade.entry} onChange={e => updateTrade(trade.id, "entry", e.target.value)} placeholder="5422.25" className="bg-zinc-900 border border-zinc-700 text-white text-xs font-mono rounded p-2 w-full outline-none" /></Field>
+                                        <Field label="Terminal Exit"><input type="text" value={trade.exit} onChange={e => updateTrade(trade.id, "exit", e.target.value)} placeholder="5430.50" className="bg-zinc-900 border border-zinc-700 text-white text-xs font-mono rounded p-2 w-full outline-none" /></Field>
+                                        <Field label="Net Return ($)"><input type="text" value={trade.result} onChange={e => updateTrade(trade.id, "result", e.target.value)} placeholder="-120.00" className="bg-zinc-900 border border-zinc-700 text-white text-xs font-mono rounded p-2 w-full outline-none" /></Field>
+                                        <Field label="Size / Units"><input type="text" value={trade.contracts || ""} onChange={e => updateTrade(trade.id, "contracts", e.target.value)} placeholder="2" className="bg-zinc-900 border border-zinc-700 text-white text-xs font-mono rounded p-2 w-full outline-none" /></Field>
+                                    </div>
+
+                                    {/* Excursion Context Matrices */}
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                        <Field label="MAE Excursion (pts)" hint="Tier 1 Max Adverse Excursion against you.">
+                                            <input type="text" value={trade.mae} onChange={e => updateTrade(trade.id, "mae", e.target.value)} placeholder="3.5" className="bg-zinc-900 border border-zinc-700 text-white text-xs font-mono rounded p-2 w-full outline-none" />
+                                        </Field>
+                                        <Field label="MFE Excursion (pts)" hint="Max Favorable Excursion path peak.">
+                                            <input type="text" value={trade.mfe} onChange={e => updateTrade(trade.id, "mfe", e.target.value)} placeholder="11.25" className="bg-zinc-900 border border-zinc-700 text-white text-xs font-mono rounded p-2 w-full outline-none" />
+                                        </Field>
+                                        <Field label="Immediate Follow Through?">
+                                            <YesNo value={trade.immediateFollowThrough} onChange={v => updateTrade(trade.id, "immediateFollowThrough", v)} />
+                                        </Field>
+                                        <Field label="Discretion Negotiable?">
+                                            <YesNo value={trade.negotiable} onChange={v => updateTrade(trade.id, "negotiable", v)} />
+                                        </Field>
+                                    </div>
+
+                                    {/* Qualitative Fields */}
+                                    <Field label="Single Sentence Entry Thesis Strategy Core Reason">
+                                        <input type="text" value={trade.why} onChange={e => updateTrade(trade.id, "why", e.target.value)} placeholder="Failed auction configuration setting at yesterday evening high mark level structure..." className="bg-zinc-900 border border-zinc-700 text-white text-xs font-mono rounded p-2 w-full outline-none focus:border-zinc-500" />
+                                    </Field>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <Field label="Did Market Follow Intended Forecast?">
+                                            <YesNo value={trade.marketDid} onChange={v => updateTrade(trade.id, "marketDid", v)} />
+                                        </Field>
+                                        <Field label="Would You Execute This Exact Setup Parameter Again?">
+                                            <div className="flex gap-2">
+                                                <Chip label="YES" active={trade.wouldTakeAgain === "yes"} onClick={() => updateTrade(trade.id, "wouldTakeAgain", "yes")} color="green" />
+                                                <Chip label="MAYBE" active={trade.wouldTakeAgain === "maybe"} onClick={() => updateTrade(trade.id, "wouldTakeAgain", "maybe")} color="yellow" />
+                                                <Chip label="NO" active={trade.wouldTakeAgain === "no"} onClick={() => updateTrade(trade.id, "wouldTakeAgain", "no")} color="red" />
+                                            </div>
+                                        </Field>
+                                    </div>
+
+                                    {/* Classification Tags Framework */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                                        <Field label="Applied System Setup Core Tag">
+                                            <div className="flex flex-wrap gap-1.5 mt-1">
+                                                {SETUP_TAGS.map(t => <Chip key={t} label={t} active={trade.setupTag === t} onClick={() => updateTrade(trade.id, "setupTag", trade.setupTag === t ? "" : t)} color="blue" />)}
+                                            </div>
+                                        </Field>
+                                        {!isNaN(resultNum) && resultNum < 0 && (
+                                            <Field label="Red Result Loss Attribution Category Root Cause">
+                                                <div className="flex flex-wrap gap-1.5 mt-1">
+                                                    {LOSS_TAGS.map(t => <Chip key={t} label={t} active={trade.lossTag === t} onClick={() => updateTrade(trade.id, "lossTag", trade.lossTag === t ? "" : t)} color="red" />)}
+                                                </div>
+                                            </Field>
+                                        )}
+                                    </div>
+
+                                    {/* Execution Grading Section */}
+                                    <div className="pt-2 border-t border-zinc-900">
+                                        <Field label="Rules Execution Grade Assessment Assessment" hint="Grade the tactical execution sequence path, not the dollar outcome!">
+                                            <div className="flex gap-2.5 mt-1">
+                                                {GRADE_OPTIONS.map(g => {
+                                                    const isActive = trade.grade === g;
+                                                    const themes = {
+                                                        A: isActive ? "bg-emerald-900 border-emerald-400 text-emerald-100" : "bg-zinc-900 text-zinc-400 border-zinc-800",
+                                                        B: isActive ? "bg-blue-900 border-blue-400 text-blue-100" : "bg-zinc-900 text-zinc-400 border-zinc-800",
+                                                        C: isActive ? "bg-yellow-900 border-yellow-400 text-yellow-100" : "bg-zinc-900 text-zinc-400 border-zinc-800",
+                                                        F: isActive ? "bg-red-900 border-red-400 text-red-100" : "bg-zinc-900 text-zinc-400 border-zinc-800"
+                                                    };
+                                                    return (
+                                                        <button key={g} type="button" onClick={() => updateTrade(trade.id, "grade", isActive ? "" : g)} className={`px-4 py-2 text-xs font-mono font-bold border rounded transition-all ${themes[g]}`}>
+                                                            GRADE {g}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </Field>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Operational Core Metrics & Notes Forms Component */}
+                    <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-6 space-y-4">
+                        <div className="text-xs font-bold tracking-widest text-indigo-400 uppercase font-mono">POST-SESSION ANALYSIS PERFORMANCE RATINGS</div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <Field label="Patience Score (1-10)"><input type="text" value={session.patienceScore || ""} onChange={e => updateSession("patienceScore", e.target.value)} placeholder="9" className="bg-zinc-900 border border-zinc-700 text-white font-mono text-sm rounded p-2 w-full outline-none" /></Field>
+                            <Field label="Cheat Rules Score (1-10)"><input type="text" value={session.cheatScore || ""} onChange={e => updateSession("cheatScore", e.target.value)} placeholder="10" className="bg-zinc-900 border border-zinc-700 text-white font-mono text-sm rounded p-2 w-full outline-none" /></Field>
+                            <Field label="Walk Aways Executed"><input type="text" value={session.walkAways || ""} onChange={e => updateSession("walkAways", e.target.value)} placeholder="2" className="bg-zinc-900 border border-zinc-700 text-white font-mono text-sm rounded p-2 w-full outline-none" /></Field>
+                            <Field label="Re-entry Double Triggers"><input type="text" value={session.reentryCount || ""} onChange={e => updateSession("reentryCount", e.target.value)} placeholder="0" className="bg-zinc-900 border border-zinc-700 text-white font-mono text-sm rounded p-2 w-full outline-none" /></Field>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                            <Field label="Session Complete Notes / Core Lesson Learnt">
+                                <textarea value={session.sessionNotes || ""} onChange={e => updateSession("sessionNotes", e.target.value)} rows="3" placeholder="What foundational market variable pattern structural behavior did this explicit session reveal to your thesis framework?" className="bg-zinc-900 border border-zinc-700 text-white font-mono text-xs rounded p-2 w-full outline-none resize-none focus:border-zinc-500" />
+                            </Field>
+                            <Field label="Session Risk Lifecycle Accountability Check">
+                                <div className="bg-zinc-900 border border-zinc-800 rounded p-4 flex flex-col justify-center space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-zinc-400 font-mono">Did You Survive Account Loss Plan Guidelines?</span>
+                                        <button type="button" onClick={() => updateSession("survived", !session.survived)} className={`px-3 py-1 font-mono text-xs rounded font-bold border transition ${session.survived ? 'bg-emerald-950 border-emerald-500 text-emerald-400' : 'bg-red-950 border-red-500 text-red-400'}`}>
+                                            {session.survived ? "SURVIVED" : "FAILED PLAN"}
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-zinc-400 font-mono">Environment Pre-Classification Accurate?</span>
+                                        <YesNo value={session.environmentCorrect} onChange={v => updateSession("environmentCorrect", v)} />
+                                    </div>
+                                </div>
+                            </Field>
+                        </div>
+                    </div>
+
+                    {/* Master Actions Buttons Execution Grid Row */}
+                    <div className="flex gap-4 pb-12 font-mono">
+                        <button type="button" onClick={addTradeRow} className="flex-1 py-3 text-xs font-bold border-2 border-dashed border-zinc-700 hover:border-zinc-500 rounded-lg text-zinc-300 hover:bg-zinc-900/40 transition">
+                            + ADD NEW SEPARATE TRADE LOGGER LAYER
+                        </button>
+                        <button type="button" onClick={() => onSave(session)} className="flex-1 py-3 text-xs font-bold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition tracking-wide font-mono shadow-xl shadow-indigo-950/20">
+                            💾 PIN COMPLETED LOG SESSION TO REGISTER
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- VIEW 2: STATISTICAL METRICS & GRAND SLAMS DASHBOARD ---
+        function DashboardView({ sessions, onLoadSession }) {
+            const [activeSubView, setActiveSubView] = useState("overview");
+
+            if (!sessions || sessions.length === 0) {
+                return (
+                    <div className="h-96 flex flex-col items-center justify-center gap-2 font-mono border border-zinc-800 rounded-xl bg-zinc-950 max-w-4xl mx-auto">
+                        <div className="text-sm text-zinc-500 uppercase tracking-widest">Database Store Registries Currently Empty</div>
+                        <div className="text-xs text-zinc-700">Save structured tracking logs inside the terminal frame to compile calculations visualization grids.</div>
+                    </div>
+                );
+            }
+
+            // Calculation Core Computations Base Framework Engines
+            const allTrades = sessions.flatMap(s => (s.trades || []).map(t => ({ ...t, sessionDate: s.date, env: s.environment })));
+            const withRes = allTrades.filter(t => t.result !== "" && !isNaN(parseFloat(t.result)));
+            const winners = withRes.filter(t => parseFloat(t.result) >= 0);
+            const losers = withRes.filter(t => parseFloat(t.result) < 0);
+            
+            const totalPnL = withRes.reduce((s, t) => s + parseFloat(t.result), 0);
+            const winRate = withRes.length > 0 ? ((winners.length / withRes.length) * 100).toFixed(1) : "0.0";
+            
+            const avgWin = winners.length > 0 ? (winners.reduce((s, t) => s + parseFloat(t.result), 0) / winners.length) : 0;
+            const avgLoss = losers.length > 0 ? (losers.reduce((s, t) => s + parseFloat(t.result), 0) / losers.length) : 0;
+            
+            const winMAE = winners.filter(t => t.mae && t.mae !== "").length > 0 ? (winners.filter(t => t.mae && t.mae !== "").reduce((s, t) => s + parseFloat(t.mae), 0) / winners.filter(t => t.mae && t.mae !== "").length).toFixed(2) : "0.00";
+            const lossMAE = losers.filter(t => t.mae && t.mae !== "").length > 0 ? (losers.filter(t => t.mae && t.mae !== "").reduce((s, t) => s + parseFloat(t.mae), 0) / losers.filter(t => t.mae && t.mae !== "").length).toFixed(2) : "0.00";
+
+            // Chart Compilation Vector Engines
+            const equityCurve = withRes.map((t, idx) => ({
+                tradeIndex: idx + 1,
+                equity: withRes.slice(0, idx + 1).reduce((sum, x) => sum + parseFloat(x.result), 0),
+                date: t.sessionDate
+            }));
+
+            const dateAggregateMap = {};
+            withRes.forEach(t => { dateAggregateMap[t.sessionDate] = (dateAggregateMap[t.sessionDate] || 0) + parseFloat(t.result); });
+            const sessionBarsData = Object.entries(dateAggregateMap).sort().map(([date, pnl]) => ({ date: date.slice(5), pnl }));
+
+            // Qualitative Attribute Reductions Calculations Matrix Elements
+            const lossTagsMap = {}; losers.forEach(t => { if(t.lossTag) lossTagsMap[t.lossTag] = (lossTagsMap[t.lossTag] || 0) + 1; });
+            const sortedLossTags = Object.entries(lossTagsMap).sort((a, b) => b[1] - a[1]);
+            const maxLossTagCount = sortedLossTags.length > 0 ? sortedLossTags[0][1] : 1;
+
+            const setupWRMap = {};
+            withRes.forEach(t => {
+                if (!t.setupTag) return;
+                if (!setupWRMap[t.setupTag]) setupWRMap[t.setupTag] = { win: 0, total: 0 };
+                setupWRMap[t.setupTag].total++;
+                if (parseFloat(t.result) >= 0) setupWRMap[t.setupTag].win++;
+            });
+
+            const gradeCounts = { A: 0, B: 0, C: 0, F: 0 };
+            allTrades.forEach(t => { if (t.grade && gradeCounts[t.grade] !== undefined) gradeCounts[t.grade]++; });
+
+            // Grand Slams Milestone Calculation Metrics Data Object
+            let computedFStreak = 0;
+            for (let i = allTrades.length - 1; i >= 0; i--) {
+                if (allTrades[i].grade === "F") break;
+                if (allTrades[i].grade) computedFStreak++;
+            }
+
+            const statsObj = {
+                totalTrades: allTrades.length,
+                totalSessions: sessions.length,
+                currentStreak: sessions.length,
+                totalAvoided: sessions.reduce((acc, curr) => acc + (curr.avoided ? curr.avoided.filter(a => a.passed === true).length : 0), 0),
+                correctEnvCalls: sessions.filter(s => s.environmentCorrect === true).length,
+                aGrades: gradeCounts.A,
+                freeStreak: computedFStreak,
+                nonExpansionSessions: sessions.filter(s => s.environment !== "EXPANSION").length
+            };
+
+            const milestonesArray = [
+                { label: "Trades Reviewed", val: statsObj.totalTrades, targets: [100, 500, 1000] },
+                { label: "Sessions Logged", val: statsObj.totalSessions, targets: [30, 100, 250] },
+                { label: "Consecutive Logged", val: statsObj.currentStreak, targets: [5, 10, 20, 50] },
+                { label: "Correct Env Calls", val: statsObj.correctEnvCalls, targets: [10, 30, 75] },
+                { label: "A-Grade Trades Captured", val: statsObj.aGrades, targets: [25, 100, 250] },
+                { label: "F-Grade Free Execution Streak", val: statsObj.freeStreak, targets: [10, 25, 50] }
+            ];
+
+            return (
+                <div className="max-w-5xl mx-auto space-y-6 font-mono">
+                    {/* View Context Nav Row Header Elements */}
+                    <div className="flex gap-2 border-b border-zinc-800 pb-2">
+                        <button onClick={() => setActiveSubView("overview")} className={`px-4 py-1.5 uppercase font-bold text-xs tracking-wider rounded transition ${activeSubView === 'overview' ? 'bg-zinc-900 text-white border border-zinc-700' : 'text-zinc-500 hover:text-zinc-300'}`}>
+                            GLOBAL OVERVIEW MATRIX
+                        </button>
+                        <button onClick={() => setActiveSubView("setups")} className={`px-4 py-1.5 uppercase font-bold text-xs tracking-wider rounded transition ${activeSubView === 'setups' ? 'bg-zinc-900 text-white border border-zinc-700' : 'text-zinc-500 hover:text-zinc-300'}`}>
+                            SETUP STRATEGIC ATTRIBUTIONS
+                        </button>
+                        <button onClick={() => setActiveSubView("milestones")} className={`px-4 py-1.5 uppercase font-bold text-xs tracking-wider rounded transition ${activeSubView === 'milestones' ? 'bg-zinc-900 text-white border border-zinc-700' : 'text-zinc-500 hover:text-zinc-300'}`}>
+                            🏆 GRAND SLAMS MILESTONES
+                        </button>
+                        <button onClick={() => setActiveSubView("history")} className={`px-4 py-1.5 uppercase font-bold text-xs tracking-wider rounded transition ${activeSubView === 'history' ? 'bg-zinc-900 text-white border border-zinc-700' : 'text-zinc-500 hover:text-zinc-300'}`}>
+                            SESSION LOG HISTORY LIST
+                        </button>
+                    </div>
+
+                    {/* SUBVIEW 1: PRIMARY ACCOUNT BASES DATA OVERVIEW OVERLAY FRAME */}
+                    {activeSubView === "overview" && (
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
+                                    <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 font-bold">NET TOTAL FINANCIAL RETURN</div>
+                                    <div className={`text-2xl font-bold ${totalPnL >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>${totalPnL.toFixed(2)}</div>
+                                </div>
+                                <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
+                                    <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 font-bold">TACTICAL COMPLIANCE WIN RATE</div>
+                                    <div className="text-2xl font-bold text-indigo-400">{winRate}%</div>
+                                    <div className="text-[10px] text-zinc-600 mt-1">{winners.length}W — {losers.length}L Positions</div>
+                                </div>
+                                <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
+                                    <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 font-bold">AVERAGE PROFILE MATH MATRIX</div>
+                                    <div className="text-sm font-bold text-emerald-400">Avg W: +${avgWin.toFixed(0)}</div>
+                                    <div className="text-sm font-bold text-red-400 mt-0.5">Avg L: -${Math.abs(avgLoss).toFixed(0)}</div>
+                                </div>
+                                <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
+                                    <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 font-bold">EXCURSION TIER 1 MAE MEDIANS</div>
+                                    <div className="text-xs text-zinc-400 font-bold">Win MAE: {winMAE} pts</div>
+                                    <div className="text-xs text-zinc-400 font-bold mt-1">Loss MAE: {lossMAE} pts</div>
+                                </div>
+                            </div>
+
+                            {/* Equity Cumulative Curve Data Module Panel Frame */}
+                            <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
+                                <div className="text-xs text-zinc-400 uppercase tracking-wider font-bold mb-4">CUMULATIVE NET LOGGED RETURN PERFORMANCE CURVE</div>
+                                <div className="h-64 w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart data={equityCurve} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                                            <XAxis dataKey="tradeIndex" stroke="#3f3f46" style={{ fontSize: 10 }} tickLine={false} />
+                                            <YAxis stroke="#3f3f46" style={{ fontSize: 10 }} tickLine={false} />
+                                            <Tooltip content={<TT />} />
+                                            <ReferenceLine y={0} stroke="#27272a" strokeDasharray="3 3" />
+                                            <Line type="monotone" dataKey="equity" name="Net Equity Run" stroke={totalPnL >= 0 ? "#10b981" : "#ef4444"} strokeWidth={2.5} dot={{ r: 2 }} activeDot={{ r: 4 }} />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+
+                            {/* Periodic Bars Performance Data Panels Frameworks */}
+                            <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
+                                <div className="text-xs text-zinc-400 uppercase tracking-wider font-bold mb-4">PERIODIC REGISTERED DAILY RETURN SESSION BAR RUNS</div>
+                                <div className="h-48 w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={sessionBarsData} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
+                                            <XAxis dataKey="date" stroke="#3f3f46" style={{ fontSize: 9 }} tickLine={false} />
+                                            <YAxis stroke="#3f3f46" style={{ fontSize: 9 }} tickLine={false} />
+                                            <Tooltip content={<TT />} />
+                                            <ReferenceLine y={0} stroke="#3f3f46" />
+                                            <Bar dataKey="pnl" name="Session PnL">
+                                                {sessionBarsData.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.pnl >= 0 ? "#064e3b" : "#450a0a"} stroke={entry.pnl >= 0 ? "#10b981" : "#ef4444"} strokeWidth={1} />
+                                                ))}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* SUBVIEW 2: SETUP ATTR PERFORMANCE SPECIFICS BREAKDOWN MODULES GRID */}
+                    {activeSubView === "setups" && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Setup Strategy Analytics Framework */}
+                            <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5 space-y-4">
+                                <div className="text-xs text-zinc-400 uppercase tracking-wider font-bold border-b border-zinc-800 pb-2">STRATEGY EXECUTION WIN ATTRIBUTION SCORES</div>
+                                <div className="space-y-3">
+                                    {Object.entries(setupWRMap).map(([tag, stats]) => {
+                                        const rate = ((stats.win / stats.total) * 100).toFixed(1);
+                                        return (
+                                            <div key={tag} className="space-y-1">
+                                                <div className="flex justify-between text-xs">
+                                                    <span className="text-zinc-300 font-bold font-mono">{tag}</span>
+                                                    <span className="text-zinc-400 font-mono">{rate}% ({stats.win}/{stats.total})</span>
+                                                </div>
+                                                <div className="h-2 w-full bg-zinc-900 border border-zinc-800 rounded-sm overflow-hidden">
+                                                    <div style={{ width: `${rate}%` }} className="h-full bg-indigo-600 transition-all duration-500"></div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    {Object.keys(setupWRMap).length === 0 && <div className="text-xs text-zinc-600 italic">No setup attributes tagged yet.</div>}
+                                </div>
+                            </div>
+
+                            {/* Red Root Causes Allocation Breakdown Elements Components */}
+                            <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5 space-y-4">
+                                <div className="text-xs text-zinc-400 uppercase tracking-wider font-bold border-b border-zinc-800 pb-2">RED ATTRIBUTION ROOT CAUSE ALLOCATION COUNTS</div>
+                                <div className="space-y-3">
+                                    {sortedLossTags.map(([tag, count]) => {
+                                        const percentageOfMax = ((count / maxLossTagCount) * 100).toFixed(0);
+                                        return (
+                                            <div key={tag} className="space-y-1">
+                                                <div className="flex justify-between text-xs">
+                                                    <span className="text-red-400 font-bold font-mono">{tag}</span>
+                                                    <span className="text-zinc-400 font-mono">{count} incidents</span>
+                                                </div>
+                                                <div className="h-2 w-full bg-zinc-900 border border-zinc-800 rounded-sm overflow-hidden">
+                                                    <div style={{ width: `${percentageOfMax}%` }} className="h-full bg-red-800 transition-all duration-500"></div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    {sortedLossTags.length === 0 && <div className="text-xs text-zinc-600 italic">No losing trade category breakdowns detected in tracking sets.</div>}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* SUBVIEW 3: GRAND SLAMS EXECUTIVE PROGRESS TRACKING INTERFACE PANEL */}
+                    {activeSubView === "milestones" && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {milestonesArray.map(m => {
+                                const nextTarget = m.targets.find(t => t > m.val) || m.targets[m.targets.length - 1];
+                                const prevTarget = m.targets[m.targets.indexOf(nextTarget) - 1] || 0;
+                                const completionPercentage = nextTarget > prevTarget ? Math.min(100, ((m.val - prevTarget) / (nextTarget - prevTarget)) * 100) : 100;
+                                const milestoneAchieved = m.val >= nextTarget;
+
+                                return (
+                                    <div key={m.label} className={`bg-zinc-950 border rounded-xl p-5 flex flex-col justify-between space-y-3 transition ${milestoneAchieved ? 'border-emerald-600 bg-emerald-950/10' : 'border-zinc-800'}`}>
+                                        <div className="flex justify-between items-start">
+                                            <span className={`text-xs font-bold uppercase tracking-wider ${milestoneAchieved ? 'text-emerald-400' : 'text-zinc-500'}`}>{m.label}</span>
+                                            {milestoneAchieved && <span className="text-[10px] font-bold bg-emerald-900 text-emerald-100 px-2 py-0.5 rounded border border-emerald-500">MAX CEILING HIT</span>}
+                                        </div>
+                                        <div className="flex items-baseline gap-2">
+                                            <span className={`text-2xl font-bold ${milestoneAchieved ? 'text-emerald-400' : 'text-zinc-100'}`}>{m.val}</span>
+                                            <span className="text-xs text-zinc-600 font-bold">/ target {nextTarget}</span>
+                                        </div>
+                                        <div className="w-full bg-zinc-900 border border-zinc-800 h-2 rounded-full overflow-hidden">
+                                            <div style={{ width: `${completionPercentage}%` }} className={`h-full transition-all duration-700 ${milestoneAchieved ? 'bg-emerald-500' : 'bg-indigo-600'}`}></div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {/* SUBVIEW 4: HISTORICAL REGISTER ENTRIES DATA SELECTION LISTS INTERFACES */}
+                    {activeSubView === "history" && (
+                        <div className="bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden">
+                            <div className="text-xs text-zinc-400 font-bold tracking-widest bg-zinc-900/50 p-4 border-b border-zinc-800 uppercase">ARCHIVED COMPLETED TRADING TRACK RECORD LIFECYCLES</div>
+                            <div className="divide-y divide-zinc-900 font-mono">
+                                {[...sessions].reverse().map(s => {
+                                    const sessionTradesArray = s.trades || [];
+                                    const formattedPnL = sessionTradesArray.filter(t => t.result !== "" && !isNaN(parseFloat(t.result))).reduce((sum, t) => sum + parseFloat(t.result), 0);
+                                    return (
+                                        <div key={s.id} className="p-4 flex items-center justify-between hover:bg-zinc-900/20 transition gap-4">
+                                            <div className="space-y-1">
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-sm font-bold text-white">{s.date}</span>
+                                                    <span className="text-xs bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800 text-zinc-400">Session ID: #{s.sessionNum || "U"}</span>
+                                                    <span className="text-xs text-zinc-500">{s.environment || "ENV NOT SET"}</span>
+                                                </div>
+                                                {s.sessionNotes && <div className="text-xs text-zinc-500 italic max-w-xl truncate">{s.sessionNotes}</div>}
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <span className={`text-base font-bold font-mono ${formattedPnL >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                    {formattedPnL >= 0 ? "+" : ""}${formattedPnL.toFixed(2)}
+                                                </span>
+                                                <button type="button" onClick={() => onLoadSession(s)} className="px-3 py-1 text-xs border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 hover:text-white rounded transition text-zinc-300">
+                                                    MOUNT TO LOGGER
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // --- VIEW 3: HIGH-FIDELITY PRINT SHEET REPORT TIMEFRAME ---
+        function AutopsyPrintView({ session }) {
+            return (
+                <div className="bg-white min-h-screen p-0 md:p-8">
+                    {/* Top Non Printable Guidance Prompt Notification Control Elements */}
+                    <div className="no-print max-w-3xl mx-auto mb-6 p-4 bg-zinc-100 border border-zinc-200 text-zinc-800 text-xs text-center rounded-lg font-mono">
+                        💡 <strong>SYSTEM PRINTOUT BASES TRIPPED:</strong> Command your terminal browser profile layer straight via keyboard combinations <strong>Ctrl + P</strong> or <strong>Cmd + P</strong> to pipeline this exact structured blueprint layout matrix flawlessly onto standard letter physical paper format sheets cleanly!
+                    </div>
+
+                    {/* Standard Target Printable Physical Canvas Profile Structure Block Layout */}
+                    <div className="print-page mx-auto">
+                        
+                        {/* Autopsy Printable Sheet Page Form Header Elements Block */}
+                        <div className="header print-rule pb-2 flex justify-between items-end mb-4">
+                            <div>
+                                <div className="eyebrow tracking-widest font-bold">KAIZEN TRADING SYSTEM FORENSICS</div>
+                                <div className="heading font-bold uppercase tracking-tight text-xl text-black">SESSION AUTOPSY LOG SHEET</div>
+                            </div>
+                            <div className="mantra text-[10px] text-zinc-500 italic text-right leading-relaxed max-w-sm font-mono">
+                                I protect the account. I stack clean days. I become impossible to kill.<br />
+                                <strong>Has the market explicitly earned my participation profile metrics?</strong>
+                            </div>
+                        </div>
+
+                        {/* Pre Session Metric Canvas Grid Columns */}
+                        <div className="section-head font-bold tracking-widest text-zinc-600 print-rule border-b pb-1 text-xs uppercase mb-3">Pre-Session Variables Setup</div>
+                        <div className="grid grid-cols-4 gap-4 text-xs mb-4 text-black font-mono">
+                            <div><strong>Target Slate Date:</strong> <div className="print-rule border-b h-5 pt-0.5">{session.date}</div></div>
+                            <div><strong>Session Custom Index:</strong> <div className="print-rule border-b h-5 pt-0.5">#{session.sessionNum || "—"}</div></div>
+                            <div><strong>First Position Compliant:</strong> <div className="print-rule border-b h-5 pt-0.5">{session.firstTradeSetup === true ? "YES [TRUE]" : session.firstTradeSetup === false ? "NO [PLAN BREACH]" : "—"}</div></div>
+                            <div><strong>State Context Mapping:</strong> <div className="print-rule border-b h-5 pt-0.5">{session.environment || "NOT CLASSIFIED"}</div></div>
+                        </div>
+
+                        {/* Interactive Dynamic Map Array Loop Grid System */}
+                        <div className="section-head font-bold tracking-widest text-zinc-600 print-rule border-b pb-1 text-xs uppercase mb-3">Forensics Strategy Action Tracks Records</div>
+                        <div className="space-y-4">
+                            {session.trades.map((trade, index) => {
+                                const internalPnL = parseFloat(trade.result);
+                                return (
+                                    <div key={trade.id} className="print-box border border-zinc-300 rounded p-4 text-xs text-black font-mono space-y-3 break-inside-avoid bg-zinc-50/40">
+                                        <div className="flex justify-between items-center border-b border-zinc-200 pb-1.5 font-bold">
+                                            <span className="text-sm tracking-wide">LOG ENTRY IDENTIFIER SEQUENCE PROFILE: #{index + 1}</span>
+                                            <span className="bg-white border px-2 py-0.5 rounded text-xs uppercase">GRADE: {trade.grade || "UNSPECIFIED"}</span>
+                                        </div>
+
+                                        <div className="grid grid-cols-5 gap-2 text-[11px]">
+                                            <div><span className="text-zinc-500 text-[10px] block font-bold uppercase tracking-wider">TIME STAMP</span><div className="border-b h-4 font-bold">{trade.time || "—"}</div></div>
+                                            <div><span className="text-zinc-500 text-[10px] block font-bold uppercase tracking-wider">DIRECTION</span><div className="border-b h-4 font-bold">{trade.direction || "—"}</div></div>
+                                            <div><span className="text-zinc-500 text-[10px] block font-bold uppercase tracking-wider">ENTRY PRICE</span><div className="border-b h-4 font-bold">{trade.entry || "—"}</div></div>
+                                            <div><span className="text-zinc-500 text-[10px] block font-bold uppercase tracking-wider">TERMINAL EXIT</span><div className="border-b h-4 font-bold">{trade.exit || "—"}</div></div>
+                                            <div><span className="text-zinc-500 text-[10px] block font-bold uppercase tracking-wider">RESULT RETURN</span><div className={`border-b h-4 font-bold ${internalPnL >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>{trade.result ? `${internalPnL >= 0 ? '+' : ''}$${internalPnL.toFixed(2)}` : '—'}</div></div>
+                                        </div>
+
+                                        <div className="grid grid-cols-4 gap-2 text-[10px] bg-white p-2 border rounded border-zinc-200">
+                                            <div><strong>MAE Excursion:</strong> {trade.mae || "—"} pts</div>
+                                            <div><strong>MFE Excursion:</strong> {trade.mfe || "—"} pts</div>
+                                            <div><strong>Follow Through:</strong> {trade.immediateFollowThrough === true ? "YES" : trade.immediateFollowThrough === false ? "NO" : "—"}</div>
+                                            <div><strong>Negotiable Handle:</strong> {trade.negotiable === true ? "YES" : trade.negotiable === false ? "NO" : "—"}</div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4 text-[11px] pt-1">
+                                            <div><strong>Strategic Applied Setup Pattern Tag:</strong> <span className="underline ml-1 font-bold">{trade.setupTag || "—"}</span></div>
+                                            {internalPnL < 0 && <div><strong>Root Cause Loss Attribution Variable:</strong> <span className="underline ml-1 font-bold text-red-700">{trade.lossTag || "—"}</span></div>}
+                                        </div>
+
+                                        <div className="text-[11px] pt-1">
+                                            <strong className="text-[10px] text-zinc-500 block uppercase tracking-wider">Technical Thesis Structural Context Rationale Note:</strong>
+                                            <div className="italic text-zinc-800 bg-white border border-dashed p-1.5 rounded mt-1 min-h-[24px]">{trade.why || "No tactical qualitative record comments appended to index node matching parameters."}</div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Bottom Summary Framework Box Container Rows */}
+                        <div className="section-head font-bold tracking-widest text-zinc-600 print-rule border-b pb-1 text-xs uppercase mb-3 mt-6">Post Session Forensic Accountability Scores</div>
+                        <div className="grid grid-cols-4 gap-2 text-center text-xs text-black font-mono mb-4">
+                            <div className="print-box border border-zinc-300 p-2 rounded"><strong>Patience Discipline:</strong> <div className="text-base font-bold mt-1">{session.patienceScore || "—"} / 10</div></div>
+                            <div className="print-box border border-zinc-300 p-2 rounded"><strong>Cheat Rules Deviation:</strong> <div className="text-base font-bold mt-1">{session.cheatScore || "—"} / 10</div></div>
+                            <div className="print-box border border-zinc-300 p-2 rounded"><strong>Walk Away Triggers:</strong> <div className="text-base font-bold mt-1">{session.walkAways || "—"} units</div></div>
+                            <div className="print-box border border-zinc-300 p-2 rounded"><strong>Account Risk Lifecycle:</strong> <div className="text-base font-bold mt-1 text-emerald-700">{session.survived ? "SURVIVED DISCIPLINE" : "FAILED CONTROL BOUNDS"}</div></div>
+                        </div>
+
+                        <div className="print-box border border-zinc-300 rounded p-3 text-xs text-black font-mono bg-zinc-50/50">
+                            <strong>Global Session Notes / Final Analytical Key Takeaway:</strong>
+                            <div className="italic text-zinc-700 mt-1 min-h-[48px] bg-white border p-2 rounded">{session.sessionNotes || "No summary post mortem evaluation registered to temporary cache structures."}</div>
+                        </div>
+
+                        <div className="mt-8 text-center text-[9px] text-zinc-400 italic font-mono border-t pt-2">
+                            The monster does not chase. The monster does not beg the market. The monster survives today so he can dominate later.
+                        </div>
+
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>
