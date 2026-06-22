@@ -28,7 +28,7 @@
     .flex-wrap     { display: flex; flex-wrap: wrap; }
     .grid          { display: grid; }
     .items-center  { align-items: center; }
-    .justify-between { justify-content: justify-between; }
+    .justify-between { justify-content: space-between; }
     .text-center   { text-align: center; }
     .text-right    { text-align: right; }
 
@@ -158,19 +158,10 @@
     .field-input.small { font-size: 11px; padding: 4px 8px; }
     textarea.field-input { resize: none; }
 
-    /* print */
-    @media print {
-      body { background: #fff !important; color: #111 !important; }
-      #print-btn { display: none !important; }
-      .bg-zinc-950, .bg-zinc-900 { background: #f5f5f5 !important; }
-      .border-zinc-700, .border-zinc-800 { border-color: #ccc !important; }
-      .text-emerald-400 { color: #065f46 !important; }
-      .text-red-400     { color: #991b1b !important; }
-      .chip-base        { color: #333 !important; background: #eee !important; border-color: #ccc !important; }
-      .field-input      { color: #111 !important; background: #fff !important; border-color: #bbb !important; }
-    }
-/* ─────────────────────────────────────────────
-   PRIMARY COLOR READABILITY OVERRIDE — REACT VERSION
+/*─────────────────────────────────────────────
+
+   PRIMARY COLOR READABILITY OVERRIDE — REACT VERSION v2
+   Better readability + fixed print banner
 ───────────────────────────────────────────── */
 
 :root{
@@ -182,17 +173,18 @@
   --kk-black:#050505;
 }
 
+/* SCREEN BACKGROUND */
 body,
 #root > div{
   background:
     radial-gradient(circle at top left, rgba(37,99,255,.22), transparent 34%),
-    radial-gradient(circle at top right, rgba(255,212,0,.16), transparent 34%),
+    radial-gradient(circle at top right, rgba(255,212,0,.14), transparent 34%),
     #050505 !important;
-  color:var(--kk-white);
-  line-height:1.45;
+  color:var(--kk-white) !important;
+  line-height:1.5;
 }
 
-/* Header */
+/* HEADER */
 #root > div > div:first-child{
   background:#050505ee !important;
   border-bottom:4px solid var(--kk-yellow) !important;
@@ -203,7 +195,7 @@ body,
 
 #root > div > div:first-child div div:first-child{
   color:var(--kk-yellow) !important;
-  font-weight:900;
+  font-weight:900 !important;
 }
 
 #root > div > div:first-child div div:nth-child(2){
@@ -213,44 +205,65 @@ body,
   text-shadow:2px 2px 0 var(--kk-blue);
 }
 
-/* Main width */
+/* MAIN */
 #root > div > div:nth-child(2){
   max-width:980px !important;
 }
 
-/* Cards */
+/* CARDS */
 .bg-zinc-950,
-.bg-zinc-900{
-  background:linear-gradient(180deg,#1a1a1a,#101010) !important;
+.bg-zinc-900,
+#root > div > div:nth-child(2) > div[style*="background"]{
+  background:#151515 !important;
 }
 
 .border-zinc-700,
 .border-zinc-800{
-  border:2px solid #333 !important;
+  border:2px solid #444 !important;
   border-top:6px solid var(--kk-blue) !important;
   border-radius:14px !important;
   box-shadow:0 8px 0 #000;
 }
 
-/* Section labels */
+/* INLINE CARDS */
+#root > div > div:nth-child(2) > div[style*="border"]{
+  border-color:#444 !important;
+}
+
+/* LABELS — brighter */
 .text-zinc-500,
-.text-zinc-400{
+.text-zinc-400,
+div[style*="color:#71717a"],
+div[style*="color: #71717a"]{
   color:var(--kk-yellow) !important;
-  font-weight:900;
+  font-weight:900 !important;
+  opacity:1 !important;
 }
 
-.text-zinc-600{
-  color:#b7b7b7 !important;
+.text-zinc-600,
+div[style*="color:#52525b"],
+div[style*="color: #52525b"]{
+  color:#d4d4d4 !important;
+  opacity:1 !important;
 }
 
-/* Inputs */
+.text-zinc-700{
+  color:#9ca3af !important;
+}
+
+/* INPUTS */
 .field-input{
   background:#fff !important;
   color:#050505 !important;
   border:3px solid #000 !important;
   border-radius:8px !important;
   box-shadow:4px 4px 0 #000;
-  font-size:14px !important;
+  font-size:15px !important;
+  min-height:44px;
+}
+
+textarea.field-input{
+  min-height:70px;
 }
 
 .field-input:focus{
@@ -262,7 +275,7 @@ body,
   color:#777 !important;
 }
 
-/* Buttons / chips */
+/* BUTTONS */
 .chip-base,
 button{
   border:2px solid #000 !important;
@@ -307,14 +320,10 @@ button{
   border-color:#000 !important;
 }
 
-/* Header buttons, including inline-styled buttons */
+/* Header buttons */
 #root > div > div:first-child button{
   background:var(--kk-yellow) !important;
   color:#000 !important;
-  border:2px solid #000 !important;
-  border-radius:8px !important;
-  font-weight:900 !important;
-  box-shadow:3px 3px 0 #000;
 }
 
 #print-btn{
@@ -335,43 +344,20 @@ button{
 
 #root > div > div:nth-child(2) > div:first-child div{
   color:#000 !important;
-  font-size:14px !important;
+  font-size:15px !important;
   font-weight:900 !important;
 }
 
-/* Trade number / result */
-.text-white{
-  color:#fff !important;
-}
+/* Trade result colors */
+.text-white{ color:#fff !important; }
+.text-xl{ font-size:26px !important; font-weight:900 !important; }
+.text-2xl{ font-size:30px !important; font-weight:900 !important; }
+.text-emerald-400{ color:var(--kk-green) !important; }
+.text-red-400{ color:var(--kk-red) !important; }
+.text-blue-400{ color:var(--kk-blue) !important; }
+.text-yellow-400{ color:var(--kk-yellow) !important; }
 
-.text-xl{
-  font-size:26px !important;
-  font-weight:900 !important;
-}
-
-.text-emerald-400{
-  color:var(--kk-green) !important;
-}
-
-.text-red-400{
-  color:var(--kk-red) !important;
-}
-
-.text-blue-400{
-  color:var(--kk-blue) !important;
-}
-
-.text-yellow-400{
-  color:var(--kk-yellow) !important;
-}
-
-/* Summary stat boxes */
-.text-2xl{
-  font-size:30px !important;
-  font-weight:900 !important;
-}
-
-/* Add trade button */
+/* Add trade */
 button[style*="dashed"]{
   background:var(--kk-yellow) !important;
   color:#000 !important;
@@ -382,14 +368,13 @@ button[style*="dashed"]{
   box-shadow:5px 5px 0 #000;
 }
 
-/* Remove button */
+/* Remove */
 button[style*="background: none"][style*="border: none"]{
   background:var(--kk-red) !important;
   color:#fff !important;
   border:2px solid #000 !important;
   border-radius:8px !important;
   padding:7px 10px !important;
-  font-weight:900 !important;
 }
 
 /* Footer */
@@ -398,7 +383,7 @@ button[style*="background: none"][style*="border: none"]{
   font-size:12px !important;
 }
 
-/* Mobile readability */
+/* Mobile */
 @media(max-width:760px){
   .grid-cols-4,
   .grid-cols-3,
@@ -413,6 +398,84 @@ button[style*="background: none"][style*="border: none"]{
 
   #root > div > div:first-child > div:last-child{
     flex-wrap:wrap !important;
+  }
+}
+
+/* PRINT FIX */
+@media print{
+  @page{
+    margin:0.45in;
+  }
+
+  body,
+  #root > div{
+    background:#fff !important;
+    color:#000 !important;
+  }
+
+  /* This fixes the banner appearing mid-page */
+  #root > div > div:first-child{
+    position:static !important;
+    top:auto !important;
+    z-index:auto !important;
+    background:#fff !important;
+    border-bottom:2px solid #000 !important;
+    page-break-after:avoid !important;
+    break-after:avoid !important;
+  }
+
+  #print-btn,
+  #root > div > div:first-child button{
+    display:none !important;
+  }
+
+  #root > div > div:nth-child(2){
+    max-width:100% !important;
+    padding:12px 0 !important;
+  }
+
+  .bg-zinc-950,
+  .bg-zinc-900,
+  .border-zinc-700,
+  .border-zinc-800,
+  #root > div > div:nth-child(2) > div[style*="border"]{
+    background:#fff !important;
+    color:#000 !important;
+    border:1px solid #999 !important;
+    border-top:1px solid #999 !important;
+    box-shadow:none !important;
+    page-break-inside:avoid !important;
+    break-inside:avoid !important;
+  }
+
+  .field-input{
+    background:#fff !important;
+    color:#000 !important;
+    border:1px solid #999 !important;
+    box-shadow:none !important;
+  }
+
+  .chip-base,
+  button{
+    background:#eee !important;
+    color:#000 !important;
+    border:1px solid #999 !important;
+    box-shadow:none !important;
+  }
+
+  .text-zinc-500,
+  .text-zinc-400,
+  .text-zinc-600,
+  div[style*="color:#71717a"],
+  div[style*="color:#52525b"]{
+    color:#000 !important;
+  }
+
+  #root > div > div:nth-child(2) > div:first-child{
+    box-shadow:none !important;
+    border:1px solid #000 !important;
+    page-break-inside:avoid !important;
+    break-inside:avoid !important;
   }
 }
   </style>
