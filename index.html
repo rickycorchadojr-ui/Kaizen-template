@@ -1,375 +1,611 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Kaizen Trade Autopsy</title>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body{
-      margin:0;
-      background:#0a0a0a;
-      color:#e4e4e7;
-      font-family:"Courier New", monospace;
-      padding:24px;
-    }
+  <title>Kaizen Trade Template</title>
 
-    @media print{
-      body{
-        background:white;
-        color:black;
-      }
-      .page{
-        border:none;
-      }
-      button{
-        display:none;
-      }
-    }
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    .page{
-      max-width:900px;
-      margin:0 auto;
-      border:1px solid #3f3f46;
-      padding:24px;
-      background:#09090b;
-    }
-
-    h1{
-      font-size:22px;
-      letter-spacing:.08em;
-      margin:0;
-    }
-
-    h2{
-      font-size:13px;
-      letter-spacing:.2em;
-      color:#71717a;
-      border-bottom:1px solid #27272a;
-      padding-bottom:8px;
-      margin-top:28px;
-    }
-
-    label{
-      display:block;
-      font-size:11px;
-      color:#71717a;
-      margin-bottom:5px;
-      text-transform:uppercase;
-    }
-
-    input, textarea, select{
-      width:100%;
-      box-sizing:border-box;
-      background:#18181b;
-      border:1px solid #3f3f46;
-      color:#e4e4e7;
-      padding:8px;
-      border-radius:4px;
-      font-family:inherit;
-      margin-bottom:14px;
-    }
-
-    textarea{
-      min-height:60px;
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:14px;
-    }
-
-    .grid-3{
-      display:grid;
-      grid-template-columns:1fr 1fr 1fr;
-      gap:14px;
-    }
-
-    .trade{
-      border:1px solid #3f3f46;
-      padding:16px;
-      border-radius:8px;
-      margin-bottom:18px;
-      page-break-inside:avoid;
-    }
-
-    .small{
-      font-size:11px;
-      color:#71717a;
-      font-style:italic;
-    }
-
-    .chips{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-bottom:14px;
-    }
-
-    .chip{
-      border:1px solid #3f3f46;
-      padding:6px 10px;
-      border-radius:4px;
-      color:#a1a1aa;
-      font-size:11px;
-    }
-
-    .print-btn{
-      margin-bottom:20px;
-      padding:10px 14px;
-      border:1px solid #3f3f46;
-      background:#18181b;
-      color:#e4e4e7;
-      border-radius:4px;
-      font-family:inherit;
-    }
-  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-
 <body>
-  <button class="print-btn" onclick="window.print()">PRINT / SAVE AS PDF</button>
+  <div id="root"></div>
 
-  <div class="page">
-    <h1>KAIZEN TRADE AUTOPSY</h1>
-    <p class="small">
-      I protect the account. I stack clean days. I become impossible to kill.<br>
-      Has the market earned my participation?
-    </p>
+  <script type="text/babel">
 
-    <h2>PRE-SESSION</h2>
+    // PASTE YOUR ENTIRE REACT CODE HERE
+    import { useState } from "react";
 
-    <div class="grid">
-      <div>
-        <label>Date</label>
-        <input type="date">
+const ENV_OPTIONS = ["ROTATIONAL", "TRENDING", "CHOP", "EXPANSION", "UNKNOWN"];
+const GRADE_OPTIONS = ["A", "B", "C", "F"];
+const SETUP_TAGS = ["BREAKOUT", "PULLBACK", "REVERSAL", "CONTINUATION", "OPENING RANGE", "FAILED AUCTION", "ANTICIPATION", "FOMO", "CHASE", "OTHER"];
+const LOSS_TAGS = ["EARLY", "CHOP", "REVERSAL", "CHASE", "OVERSIZED", "FOMO", "LOW VOLUME", "COUNTERTREND", "OPENING RANGE NOISE", "EXPANSION"];
+
+const emptyTrade = () => ({
+  id: Date.now(),
+  direction: "",
+  time: "",
+  entry: "",
+  exit: "",
+  result: "",
+  grade: "",
+  immediateFollowThrough: null,
+  negotiable: null,
+  mae: "",
+  mfe: "",
+  why: "",
+  wouldTakeAgain: null,
+  marketDid: null,
+  lossTag: "",
+  setupTag: "",
+  doNothingOutcome: "",
+  notes: "",
+});
+
+const emptySession = () => ({
+  date: new Date().toISOString().slice(0, 10),
+  environment: "",
+  environmentCorrect: null,
+  firstTradeSetup: null,
+  cheatScore: "",
+  patienceScore: "",
+  walkAways: "",
+  reentryCount: "",
+  sessionNotes: "",
+  trades: [emptyTrade()],
+});
+
+function Chip({ label, active, onClick, color = "blue" }) {
+  const colors = {
+    blue: active ? "bg-blue-900 text-blue-100 border-blue-500" : "bg-zinc-900 text-zinc-400 border-zinc-700",
+    red: active ? "bg-red-900 text-red-100 border-red-500" : "bg-zinc-900 text-zinc-400 border-zinc-700",
+    green: active ? "bg-emerald-900 text-emerald-100 border-emerald-500" : "bg-zinc-900 text-zinc-400 border-zinc-700",
+    yellow: active ? "bg-yellow-900 text-yellow-100 border-yellow-500" : "bg-zinc-900 text-zinc-400 border-zinc-700",
+    purple: active ? "bg-purple-900 text-purple-100 border-purple-500" : "bg-zinc-900 text-zinc-400 border-zinc-700",
+  };
+  return (
+    <button
+      onClick={onClick}
+      className={`px-3 py-1 text-xs font-mono border rounded cursor-pointer transition-all ${colors[color]}`}
+    >
+      {label}
+    </button>
+  );
+}
+
+function YesNo({ value, onChange, yesLabel = "YES", noLabel = "NO" }) {
+  return (
+    <div className="flex gap-2">
+      <Chip label={yesLabel} active={value === true} onClick={() => onChange(value === true ? null : true)} color="green" />
+      <Chip label={noLabel} active={value === false} onClick={() => onChange(value === false ? null : false)} color="red" />
+    </div>
+  );
+}
+
+function Field({ label, hint, children }) {
+  return (
+    <div className="mb-4">
+      <div className="text-xs font-mono text-zinc-400 uppercase tracking-widest mb-1">{label}</div>
+      {hint && <div className="text-xs text-zinc-600 mb-2 italic">{hint}</div>}
+      {children}
+    </div>
+  );
+}
+
+function Input({ value, onChange, placeholder, type = "text", small }) {
+  return (
+    <input
+      type={type}
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      placeholder={placeholder}
+      className={`bg-zinc-900 border border-zinc-700 text-zinc-100 rounded px-3 py-2 font-mono text-sm w-full focus:outline-none focus:border-zinc-400 placeholder-zinc-700 ${small ? "text-xs py-1" : ""}`}
+    />
+  );
+}
+
+function TextArea({ value, onChange, placeholder, rows = 2 }) {
+  return (
+    <textarea
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      placeholder={placeholder}
+      rows={rows}
+      className="bg-zinc-900 border border-zinc-700 text-zinc-100 rounded px-3 py-2 font-mono text-sm w-full focus:outline-none focus:border-zinc-400 placeholder-zinc-700 resize-none"
+    />
+  );
+}
+
+function GradeButton({ grade, active, onClick }) {
+  const colors = {
+    A: active ? "bg-emerald-800 text-emerald-100 border-emerald-400" : "bg-zinc-900 text-zinc-400 border-zinc-700",
+    B: active ? "bg-blue-800 text-blue-100 border-blue-400" : "bg-zinc-900 text-zinc-400 border-zinc-700",
+    C: active ? "bg-yellow-800 text-yellow-100 border-yellow-400" : "bg-zinc-900 text-zinc-400 border-zinc-700",
+    F: active ? "bg-red-800 text-red-100 border-red-400" : "bg-zinc-900 text-zinc-400 border-zinc-700",
+  };
+  const desc = { A: "Take again tomorrow", B: "Good, minor flaw", C: "Questionable", F: "Never should happen" };
+  return (
+    <button
+      onClick={onClick}
+      className={`px-4 py-2 border rounded font-mono text-sm transition-all cursor-pointer ${colors[grade]}`}
+      title={desc[grade]}
+    >
+      {grade}
+    </button>
+  );
+}
+
+function TradeCard({ trade, index, onChange, onRemove }) {
+  const update = (key, val) => onChange({ ...trade, [key]: val });
+  const resultNum = parseFloat(trade.result);
+  const resultColor = isNaN(resultNum) ? "text-zinc-400" : resultNum >= 0 ? "text-emerald-400" : "text-red-400";
+
+  return (
+    <div className="border border-zinc-700 rounded-lg p-5 mb-4 bg-zinc-950">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <span className="text-zinc-500 font-mono text-sm">TRADE</span>
+          <span className="text-white font-mono text-xl font-bold">#{index + 1}</span>
+          {trade.result !== "" && (
+            <span className={`font-mono text-lg font-bold ${resultColor}`}>
+              {resultNum >= 0 ? "+" : ""}{trade.result}
+            </span>
+          )}
+        </div>
+        <button onClick={onRemove} className="text-zinc-700 hover:text-zinc-400 font-mono text-xs cursor-pointer">REMOVE</button>
       </div>
-      <div>
-        <label>First Trade Followed Setup?</label>
-        <select>
-          <option></option>
-          <option>YES</option>
-          <option>NO</option>
-        </select>
+
+      {/* Row 1: Time, Direction, Entry, Exit */}
+      <div className="grid grid-cols-4 gap-3 mb-4">
+        <Field label="Time">
+          <Input value={trade.time} onChange={v => update("time", v)} placeholder="8:32" />
+        </Field>
+        <Field label="Direction">
+          <div className="flex gap-2 mt-1">
+            <Chip label="LONG" active={trade.direction === "LONG"} onClick={() => update("direction", trade.direction === "LONG" ? "" : "LONG")} color="green" />
+            <Chip label="SHORT" active={trade.direction === "SHORT"} onClick={() => update("direction", trade.direction === "SHORT" ? "" : "SHORT")} color="red" />
+          </div>
+        </Field>
+        <Field label="Entry">
+          <Input value={trade.entry} onChange={v => update("entry", v)} placeholder="21,450" />
+        </Field>
+        <Field label="Exit">
+          <Input value={trade.exit} onChange={v => update("exit", v)} placeholder="21,460" />
+        </Field>
+      </div>
+
+      {/* Result + MAE + MFE */}
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        <Field label="Result ($)" hint="Actual P&L in dollars">
+          <Input value={trade.result} onChange={v => update("result", v)} placeholder="+50" />
+        </Field>
+        <Field label="MAE (pts)" hint="How far against you before resolution — TIER 1">
+          <Input value={trade.mae} onChange={v => update("mae", v)} placeholder="8" />
+        </Field>
+        <Field label="MFE (pts)" hint="How far in your favor before exit">
+          <Input value={trade.mfe} onChange={v => update("mfe", v)} placeholder="12" />
+        </Field>
+      </div>
+
+      {/* Immediate Follow Through + Negotiable */}
+      <div className="grid grid-cols-2 gap-6 mb-4">
+        <Field label="Immediate Follow Through?" hint="Did price move your way almost immediately?">
+          <YesNo value={trade.immediateFollowThrough} onChange={v => update("immediateFollowThrough", v)} />
+        </Field>
+        <Field label="Market Negotiable?" hint="Did you have time to manage discretion, or did it move too fast?">
+          <YesNo value={trade.negotiable} onChange={v => update("negotiable", v)} />
+        </Field>
+      </div>
+
+      {/* Why + What would've proven wrong */}
+      <Field label="Why Did I Take It?" hint="One sentence only. e.g. 'Failed auction at prior high' or 'Breakout above opening range'">
+        <TextArea value={trade.why} onChange={v => update("why", v)} placeholder="One sentence." rows={1} />
+      </Field>
+
+      {/* Setup Tag */}
+      <Field label="Setup Tag">
+        <div className="flex flex-wrap gap-2">
+          {SETUP_TAGS.map(t => (
+            <Chip key={t} label={t} active={trade.setupTag === t} onClick={() => update("setupTag", trade.setupTag === t ? "" : t)} color="blue" />
+          ))}
+        </div>
+      </Field>
+
+      {/* Loss Tag (only if red) */}
+      {!isNaN(resultNum) && resultNum < 0 && (
+        <Field label="Loss Category" hint="Tag every losing trade">
+          <div className="flex flex-wrap gap-2">
+            {LOSS_TAGS.map(t => (
+              <Chip key={t} label={t} active={trade.lossTag === t} onClick={() => update("lossTag", trade.lossTag === t ? "" : t)} color="red" />
+            ))}
+          </div>
+        </Field>
+      )}
+
+      {/* Did market do what I expected + Would take again */}
+      <div className="grid grid-cols-2 gap-6 mb-4">
+        <Field label="Did Market Do What I Expected?">
+          <YesNo value={trade.marketDid} onChange={v => update("marketDid", v)} />
+        </Field>
+        <Field label="Would Take Again?">
+          <div className="flex gap-2">
+            <Chip label="YES" active={trade.wouldTakeAgain === "yes"} onClick={() => update("wouldTakeAgain", trade.wouldTakeAgain === "yes" ? null : "yes")} color="green" />
+            <Chip label="MAYBE" active={trade.wouldTakeAgain === "maybe"} onClick={() => update("wouldTakeAgain", trade.wouldTakeAgain === "maybe" ? null : "maybe")} color="yellow" />
+            <Chip label="NO" active={trade.wouldTakeAgain === "no"} onClick={() => update("wouldTakeAgain", trade.wouldTakeAgain === "no" ? null : "no")} color="red" />
+          </div>
+        </Field>
+      </div>
+
+      {/* Grade */}
+      <Field label="Trade Grade" hint="Grade the TRADE, not the result. A losing trade can be an A.">
+        <div className="flex gap-3">
+          {GRADE_OPTIONS.map(g => (
+            <GradeButton key={g} grade={g} active={trade.grade === g} onClick={() => update("grade", trade.grade === g ? "" : g)} />
+          ))}
+        </div>
+      </Field>
+
+      {/* What would've happened if I did nothing */}
+      <Field label="What Would've Happened If I Did Nothing?" hint="Forces comparison vs. the monster move: no trade.">
+        <TextArea value={trade.doNothingOutcome} onChange={v => update("doNothingOutcome", v)} placeholder="e.g. 'Better entry appeared 4 min later' / 'Saved $80' / 'Missed winner'" rows={1} />
+      </Field>
+
+      {/* Notes */}
+      <Field label="Notes / Lesson">
+        <TextArea value={trade.notes} onChange={v => update("notes", v)} placeholder="One sentence lesson." rows={1} />
+      </Field>
+    </div>
+  );
+}
+
+function SummaryPanel({ session }) {
+  const trades = session.trades;
+  const withResult = trades.filter(t => t.result !== "" && !isNaN(parseFloat(t.result)));
+  const totalPnL = withResult.reduce((s, t) => s + parseFloat(t.result), 0);
+  const winners = withResult.filter(t => parseFloat(t.result) >= 0);
+  const losers = withResult.filter(t => parseFloat(t.result) < 0);
+  const winRate = withResult.length > 0 ? Math.round((winners.length / withResult.length) * 100) : null;
+  const avgMAE = trades.filter(t => t.mae !== "").length > 0
+    ? (trades.filter(t => t.mae !== "").reduce((s, t) => s + parseFloat(t.mae || 0), 0) / trades.filter(t => t.mae !== "").length).toFixed(1)
+    : null;
+  const winMAE = winners.filter(t => t.mae !== "").length > 0
+    ? (winners.filter(t => t.mae !== "").reduce((s, t) => s + parseFloat(t.mae || 0), 0) / winners.filter(t => t.mae !== "").length).toFixed(1)
+    : null;
+  const lossMAE = losers.filter(t => t.mae !== "").length > 0
+    ? (losers.filter(t => t.mae !== "").reduce((s, t) => s + parseFloat(t.mae || 0), 0) / losers.filter(t => t.mae !== "").length).toFixed(1)
+    : null;
+
+  const iftYes = trades.filter(t => t.immediateFollowThrough === true).length;
+  const iftNo = trades.filter(t => t.immediateFollowThrough === false).length;
+  const negYes = trades.filter(t => t.negotiable === true).length;
+  const negNo = trades.filter(t => t.negotiable === false).length;
+
+  const gradeCounts = { A: 0, B: 0, C: 0, F: 0 };
+  trades.forEach(t => { if (t.grade) gradeCounts[t.grade]++; });
+
+  const lossTags = {};
+  losers.forEach(t => { if (t.lossTag) lossTags[t.lossTag] = (lossTags[t.lossTag] || 0) + 1; });
+
+  const fiveQ = [
+    { q: "Did I follow rules?", key: "followedRules" },
+    { q: "Did I protect both accounts?", key: "protectedAccounts" },
+    { q: "Did I record everything?", key: "recorded" },
+    { q: "Did I review?", key: "reviewed" },
+    { q: "Did I survive?", key: "survived" },
+  ];
+  const [checklist, setChecklist] = useState({ followedRules: null, protectedAccounts: null, recorded: null, reviewed: null, survived: null });
+
+  return (
+    <div className="border border-zinc-700 rounded-lg p-5 bg-zinc-950 mb-6">
+      <div className="text-xs font-mono text-zinc-500 uppercase tracking-widest mb-4">Session Summary</div>
+
+      {/* P&L Row */}
+      <div className="grid grid-cols-4 gap-4 mb-4">
+        <div className="bg-zinc-900 rounded p-3 text-center">
+          <div className="text-xs text-zinc-500 font-mono mb-1">NET P&L</div>
+          <div className={`text-2xl font-mono font-bold ${totalPnL >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+            {totalPnL >= 0 ? "+" : ""}{totalPnL.toFixed(0)}
+          </div>
+        </div>
+        <div className="bg-zinc-900 rounded p-3 text-center">
+          <div className="text-xs text-zinc-500 font-mono mb-1">WIN RATE</div>
+          <div className="text-2xl font-mono font-bold text-zinc-100">{winRate !== null ? `${winRate}%` : "—"}</div>
+        </div>
+        <div className="bg-zinc-900 rounded p-3 text-center">
+          <div className="text-xs text-zinc-500 font-mono mb-1">AVG MAE (W)</div>
+          <div className="text-2xl font-mono font-bold text-emerald-400">{winMAE !== null ? winMAE : "—"}</div>
+        </div>
+        <div className="bg-zinc-900 rounded p-3 text-center">
+          <div className="text-xs text-zinc-500 font-mono mb-1">AVG MAE (L)</div>
+          <div className="text-2xl font-mono font-bold text-red-400">{lossMAE !== null ? lossMAE : "—"}</div>
+        </div>
+      </div>
+
+      {/* Grades + Tags */}
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="bg-zinc-900 rounded p-3">
+          <div className="text-xs text-zinc-500 font-mono mb-2">TRADE GRADES</div>
+          <div className="flex gap-3">
+            {["A","B","C","F"].map(g => (
+              <div key={g} className="text-center">
+                <div className={`text-xl font-mono font-bold ${g === "A" ? "text-emerald-400" : g === "B" ? "text-blue-400" : g === "C" ? "text-yellow-400" : "text-red-400"}`}>{gradeCounts[g]}</div>
+                <div className="text-xs text-zinc-500 font-mono">{g}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="bg-zinc-900 rounded p-3">
+          <div className="text-xs text-zinc-500 font-mono mb-2">FOLLOW THROUGH / NEGOTIABLE</div>
+          <div className="flex gap-4 text-xs font-mono">
+            <div><span className="text-emerald-400">{iftYes}</span> IFT Yes / <span className="text-red-400">{iftNo}</span> No</div>
+            <div><span className="text-emerald-400">{negYes}</span> Neg Yes / <span className="text-red-400">{negNo}</span> No</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Loss tag breakdown */}
+      {Object.keys(lossTags).length > 0 && (
+        <div className="bg-zinc-900 rounded p-3 mb-4">
+          <div className="text-xs text-zinc-500 font-mono mb-2">LOSS BREAKDOWN</div>
+          <div className="flex flex-wrap gap-3">
+            {Object.entries(lossTags).sort((a, b) => b[1] - a[1]).map(([tag, count]) => (
+              <div key={tag} className="flex items-center gap-1">
+                <span className="text-red-400 font-mono font-bold text-sm">{count}</span>
+                <span className="text-zinc-400 font-mono text-xs">{tag}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* End of session checklist */}
+      <div className="bg-zinc-900 rounded p-3">
+        <div className="text-xs text-zinc-500 font-mono mb-3">POST-SESSION CHECKLIST</div>
+        <div className="space-y-2">
+          {fiveQ.map(({ q, key }) => (
+            <div key={key} className="flex items-center justify-between">
+              <span className="text-zinc-300 font-mono text-xs">{q}</span>
+              <YesNo value={checklist[key]} onChange={v => setChecklist(prev => ({ ...prev, [key]: v }))} />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
+  );
+}
 
-    <label>Market Environment</label>
-    <div class="chips">
-      <span class="chip">ROTATIONAL</span>
-      <span class="chip">TRENDING</span>
-      <span class="chip">CHOP</span>
-      <span class="chip">EXPANSION</span>
-      <span class="chip">UNKNOWN</span>
+function TradesAvoided({ avoided, setAvoided }) {
+  const addAvoided = () => setAvoided(prev => [...prev, { id: Date.now(), setup: "", passed: null, outcome: "" }]);
+  const update = (id, key, val) => setAvoided(prev => prev.map(a => a.id === id ? { ...a, [key]: val } : a));
+  const remove = (id) => setAvoided(prev => prev.filter(a => a.id !== id));
+
+  return (
+    <div className="border border-zinc-700 rounded-lg p-5 mb-6 bg-zinc-950">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <div className="text-xs font-mono text-zinc-500 uppercase tracking-widest">Trades Avoided</div>
+          <div className="text-xs text-zinc-600 italic mt-1">Every correctly avoided garbage setup = +1 point. This is a skill.</div>
+        </div>
+        <button onClick={addAvoided} className="text-xs font-mono text-zinc-400 border border-zinc-700 px-3 py-1 rounded hover:border-zinc-500 cursor-pointer">+ ADD</button>
+      </div>
+      {avoided.length === 0 && <div className="text-zinc-700 font-mono text-xs text-center py-4">No avoided setups logged yet.</div>}
+      {avoided.map((a, i) => (
+        <div key={a.id} className="border border-zinc-800 rounded p-3 mb-2 grid grid-cols-3 gap-3 items-end">
+          <div>
+            <div className="text-xs text-zinc-500 font-mono mb-1">Setup Seen</div>
+            <Input value={a.setup} onChange={v => update(a.id, "setup", v)} placeholder="Chop reversal" small />
+          </div>
+          <div>
+            <div className="text-xs text-zinc-500 font-mono mb-1">Passed?</div>
+            <YesNo value={a.passed} onChange={v => update(a.id, "passed", v)} />
+          </div>
+          <div>
+            <div className="text-xs text-zinc-500 font-mono mb-1">Outcome (if traded)</div>
+            <Input value={a.outcome} onChange={v => update(a.id, "outcome", v)} placeholder="Would've lost" small />
+          </div>
+        </div>
+      ))}
+      {avoided.length > 0 && (
+        <div className="mt-2 text-right">
+          <span className="font-mono text-emerald-400 text-sm font-bold">{avoided.filter(a => a.passed === true).length}</span>
+          <span className="font-mono text-zinc-500 text-xs"> setups correctly avoided</span>
+        </div>
+      )}
     </div>
+  );
+}
 
-    <p class="small">
-      ROTATIONAL = levels respected, discretion works · CHOP = whipsaws, avoid · EXPANSION = violent, fast, kills discretion
-    </p>
+export default function KaizenTradeTemplate() {
+  const [session, setSession] = useState(emptySession());
+  const [avoided, setAvoided] = useState([]);
+  const [view, setView] = useState("session"); // session | summary
 
-    <h2>TRADE LOG</h2>
+  const updateSession = (key, val) => setSession(prev => ({ ...prev, [key]: val }));
 
-    <div class="trade">
-      <h2>TRADE #1</h2>
+  const addTrade = () => setSession(prev => ({ ...prev, trades: [...prev.trades, emptyTrade()] }));
+  const updateTrade = (id, updated) => setSession(prev => ({ ...prev, trades: prev.trades.map(t => t.id === id ? updated : t) }));
+  const removeTrade = (id) => setSession(prev => ({ ...prev, trades: prev.trades.filter(t => t.id !== id) }));
 
-      <div class="grid">
-        <div>
-          <label>Time</label>
-          <input placeholder="8:32">
-        </div>
-        <div>
-          <label>Direction</label>
-          <select>
-            <option></option>
-            <option>LONG</option>
-            <option>SHORT</option>
-          </select>
-        </div>
-      </div>
+  const resetSession = () => {
+    if (window.confirm("Start a new session? Current data will be cleared.")) {
+      setSession(emptySession());
+      setAvoided([]);
+      setView("session");
+    }
+  };
 
-      <div class="grid">
+  return (
+    <div style={{ background: "#0a0a0a", minHeight: "100vh", fontFamily: "'JetBrains Mono', 'Courier New', monospace" }}>
+      {/* Header */}
+      <div style={{ borderBottom: "1px solid #27272a", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div>
-          <label>Entry</label>
-          <input placeholder="21,450">
+          <div style={{ color: "#71717a", fontSize: "10px", letterSpacing: "0.2em", marginBottom: "2px" }}>KAIZEN TRADE AUTOPSY</div>
+          <div style={{ color: "#e4e4e7", fontSize: "18px", fontWeight: "700", letterSpacing: "0.05em" }}>SESSION LOG</div>
         </div>
-        <div>
-          <label>Exit</label>
-          <input placeholder="21,460">
-        </div>
-      </div>
-
-      <div class="grid-3">
-        <div>
-          <label>Result ($)</label>
-          <input placeholder="+50">
-        </div>
-        <div>
-          <label>MAE Points</label>
-          <input placeholder="8">
-        </div>
-        <div>
-          <label>MFE Points</label>
-          <input placeholder="12">
+        <div style={{ display: "flex", gap: "8px" }}>
+          <button
+            onClick={() => setView(view === "session" ? "summary" : "session")}
+            style={{ background: "none", border: "1px solid #3f3f46", color: "#a1a1aa", padding: "6px 14px", borderRadius: "4px", fontSize: "11px", cursor: "pointer", fontFamily: "inherit" }}
+          >
+            {view === "session" ? "VIEW SUMMARY" : "VIEW SESSION"}
+          </button>
+          <button
+            onClick={resetSession}
+            style={{ background: "none", border: "1px solid #3f3f46", color: "#71717a", padding: "6px 14px", borderRadius: "4px", fontSize: "11px", cursor: "pointer", fontFamily: "inherit" }}
+          >
+            NEW SESSION
+          </button>
         </div>
       </div>
 
-      <div class="grid">
-        <div>
-          <label>Immediate Follow Through?</label>
-          <select>
-            <option></option>
-            <option>YES</option>
-            <option>NO</option>
-          </select>
+      <div style={{ maxWidth: "860px", margin: "0 auto", padding: "24px 16px" }}>
+
+        {/* Mantra */}
+        <div style={{ borderLeft: "2px solid #3f3f46", paddingLeft: "16px", marginBottom: "28px" }}>
+          <div style={{ color: "#52525b", fontSize: "11px", fontStyle: "italic", lineHeight: "1.8" }}>
+            I protect the account. I stack clean days. I become impossible to kill.<br />
+            Has the market earned my participation?
+          </div>
         </div>
-        <div>
-          <label>Market Negotiable?</label>
-          <select>
-            <option></option>
-            <option>YES</option>
-            <option>NO</option>
-          </select>
+
+        {/* PRE-SESSION */}
+        <div style={{ border: "1px solid #3f3f46", borderRadius: "8px", padding: "20px", marginBottom: "20px", background: "#09090b" }}>
+          <div style={{ color: "#71717a", fontSize: "10px", letterSpacing: "0.2em", marginBottom: "16px" }}>PRE-SESSION</div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+            <div>
+              <div style={{ color: "#71717a", fontSize: "10px", marginBottom: "6px" }}>DATE</div>
+              <input
+                type="date"
+                value={session.date}
+                onChange={e => updateSession("date", e.target.value)}
+                style={{ background: "#18181b", border: "1px solid #3f3f46", color: "#e4e4e7", borderRadius: "4px", padding: "8px 12px", fontFamily: "inherit", fontSize: "13px", width: "100%" }}
+              />
+            </div>
+            <div>
+              <div style={{ color: "#71717a", fontSize: "10px", marginBottom: "6px" }}>FIRST TRADE FOLLOWED SETUP?</div>
+              <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+                {[true, false].map(v => (
+                  <button key={String(v)} onClick={() => updateSession("firstTradeSetup", session.firstTradeSetup === v ? null : v)}
+                    style={{ padding: "6px 16px", border: `1px solid ${session.firstTradeSetup === v ? (v ? "#10b981" : "#ef4444") : "#3f3f46"}`, borderRadius: "4px", background: session.firstTradeSetup === v ? (v ? "#064e3b" : "#450a0a") : "#18181b", color: session.firstTradeSetup === v ? (v ? "#6ee7b7" : "#fca5a5") : "#71717a", fontSize: "11px", cursor: "pointer", fontFamily: "inherit" }}>
+                    {v ? "YES" : "NO"}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Market Environment */}
+          <div style={{ marginBottom: "12px" }}>
+            <div style={{ color: "#71717a", fontSize: "10px", marginBottom: "6px" }}>MARKET ENVIRONMENT — Classify before first trade</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              {ENV_OPTIONS.map(e => (
+                <button key={e} onClick={() => updateSession("environment", session.environment === e ? "" : e)}
+                  style={{ padding: "6px 14px", border: `1px solid ${session.environment === e ? "#6366f1" : "#3f3f46"}`, borderRadius: "4px", background: session.environment === e ? "#1e1b4b" : "#18181b", color: session.environment === e ? "#a5b4fc" : "#71717a", fontSize: "11px", cursor: "pointer", fontFamily: "inherit" }}>
+                  {e}
+                </button>
+              ))}
+            </div>
+            <div style={{ color: "#52525b", fontSize: "10px", marginTop: "6px", fontStyle: "italic" }}>
+              ROTATIONAL = levels respected, discretion works · CHOP = whipsaws, avoid · EXPANSION = violent, fast, kills discretion
+            </div>
+          </div>
         </div>
-      </div>
 
-      <label>Why Did I Take It?</label>
-      <textarea placeholder="One sentence."></textarea>
+        {view === "summary" ? (
+          <SummaryPanel session={session} />
+        ) : (
+          <>
+            {/* Trades */}
+            <div style={{ marginBottom: "8px", color: "#71717a", fontSize: "10px", letterSpacing: "0.2em" }}>TRADE LOG</div>
+            {session.trades.map((trade, i) => (
+              <TradeCard
+                key={trade.id}
+                trade={trade}
+                index={i}
+                onChange={updated => updateTrade(trade.id, updated)}
+                onRemove={() => removeTrade(trade.id)}
+              />
+            ))}
+            <button
+              onClick={addTrade}
+              style={{ width: "100%", background: "none", border: "1px dashed #3f3f46", color: "#52525b", padding: "12px", borderRadius: "8px", fontSize: "11px", cursor: "pointer", fontFamily: "inherit", marginBottom: "20px" }}
+            >
+              + ADD TRADE
+            </button>
 
-      <label>Setup Tag</label>
-      <div class="chips">
-        <span class="chip">BREAKOUT</span>
-        <span class="chip">PULLBACK</span>
-        <span class="chip">REVERSAL</span>
-        <span class="chip">CONTINUATION</span>
-        <span class="chip">OPENING RANGE</span>
-        <span class="chip">FAILED AUCTION</span>
-        <span class="chip">ANTICIPATION</span>
-        <span class="chip">FOMO</span>
-        <span class="chip">CHASE</span>
-        <span class="chip">OTHER</span>
-      </div>
+            {/* Trades Avoided */}
+            <TradesAvoided avoided={avoided} setAvoided={setAvoided} />
 
-      <label>Loss Category</label>
-      <div class="chips">
-        <span class="chip">EARLY</span>
-        <span class="chip">CHOP</span>
-        <span class="chip">REVERSAL</span>
-        <span class="chip">CHASE</span>
-        <span class="chip">OVERSIZED</span>
-        <span class="chip">FOMO</span>
-        <span class="chip">LOW VOLUME</span>
-        <span class="chip">COUNTERTREND</span>
-        <span class="chip">OPENING RANGE NOISE</span>
-        <span class="chip">EXPANSION</span>
-      </div>
+            {/* Session metrics */}
+            <div style={{ border: "1px solid #3f3f46", borderRadius: "8px", padding: "20px", marginBottom: "20px", background: "#09090b" }}>
+              <div style={{ color: "#71717a", fontSize: "10px", letterSpacing: "0.2em", marginBottom: "16px" }}>SESSION METRICS</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+                {[
+                  { key: "reentryCount", label: "Re-entry Count", hint: "Avg seconds between trades" },
+                  { key: "walkAways", label: "Conscious Walk-Aways", hint: "Times passed on a setup" },
+                  { key: "patienceScore", label: "Patience Score (1–5)", hint: "1=clicked fast, 5=fully let market prove" },
+                ].map(({ key, label, hint }) => (
+                  <div key={key}>
+                    <div style={{ color: "#71717a", fontSize: "10px", marginBottom: "2px" }}>{label}</div>
+                    <div style={{ color: "#52525b", fontSize: "9px", marginBottom: "6px", fontStyle: "italic" }}>{hint}</div>
+                    <input
+                      value={session[key]}
+                      onChange={e => updateSession(key, e.target.value)}
+                      style={{ background: "#18181b", border: "1px solid #3f3f46", color: "#e4e4e7", borderRadius: "4px", padding: "8px 12px", fontFamily: "inherit", fontSize: "13px", width: "100%" }}
+                    />
+                  </div>
+                ))}
+              </div>
 
-      <div class="grid">
-        <div>
-          <label>Did Market Do What I Expected?</label>
-          <select>
-            <option></option>
-            <option>YES</option>
-            <option>NO</option>
-          </select>
+              {/* Environment correct after session */}
+              <div style={{ marginBottom: "12px" }}>
+                <div style={{ color: "#71717a", fontSize: "10px", marginBottom: "6px" }}>WAS ENVIRONMENT CALL CORRECT?</div>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  {[true, false, "unknown"].map(v => (
+                    <button key={String(v)} onClick={() => updateSession("environmentCorrect", session.environmentCorrect === v ? null : v)}
+                      style={{ padding: "6px 16px", border: `1px solid ${session.environmentCorrect === v ? (v === true ? "#10b981" : v === false ? "#ef4444" : "#6366f1") : "#3f3f46"}`, borderRadius: "4px", background: session.environmentCorrect === v ? (v === true ? "#064e3b" : v === false ? "#450a0a" : "#1e1b4b") : "#18181b", color: session.environmentCorrect === v ? (v === true ? "#6ee7b7" : v === false ? "#fca5a5" : "#a5b4fc") : "#71717a", fontSize: "11px", cursor: "pointer", fontFamily: "inherit" }}>
+                      {v === true ? "YES" : v === false ? "NO" : "UNKNOWN"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Session notes */}
+              <div>
+                <div style={{ color: "#71717a", fontSize: "10px", marginBottom: "6px" }}>SESSION NOTES / LESSON</div>
+                <textarea
+                  value={session.sessionNotes}
+                  onChange={e => updateSession("sessionNotes", e.target.value)}
+                  rows={3}
+                  placeholder="What did the session teach you? One key takeaway."
+                  style={{ background: "#18181b", border: "1px solid #3f3f46", color: "#e4e4e7", borderRadius: "4px", padding: "8px 12px", fontFamily: "inherit", fontSize: "12px", width: "100%", resize: "none" }}
+                />
+              </div>
+            </div>
+
+            {/* Post-session checklist */}
+            <div style={{ border: "1px solid #3f3f46", borderRadius: "8px", padding: "20px", background: "#09090b" }}>
+              <div style={{ color: "#71717a", fontSize: "10px", letterSpacing: "0.2em", marginBottom: "12px" }}>POST-SESSION — DAILY CHECK</div>
+              <SummaryPanel session={session} />
+            </div>
+          </>
+        )}
+
+        {/* Footer reminder */}
+        <div style={{ marginTop: "24px", color: "#3f3f46", fontSize: "10px", textAlign: "center", fontStyle: "italic" }}>
+          The account staying open is the win condition. Profit is the bonus.
         </div>
-        <div>
-          <label>Would Take Again?</label>
-          <select>
-            <option></option>
-            <option>YES</option>
-            <option>MAYBE</option>
-            <option>NO</option>
-          </select>
-        </div>
-      </div>
-
-      <label>Trade Grade</label>
-      <select>
-        <option></option>
-        <option>A - Take again tomorrow</option>
-        <option>B - Good, minor flaw</option>
-        <option>C - Questionable</option>
-        <option>F - Never should happen</option>
-      </select>
-
-      <label>What Would've Happened If I Did Nothing?</label>
-      <textarea placeholder="Better entry appeared / saved money / missed winner"></textarea>
-
-      <label>Notes / Lesson</label>
-      <textarea placeholder="One sentence lesson."></textarea>
-    </div>
-
-    <h2>TRADES AVOIDED</h2>
-
-    <div class="trade">
-      <label>Setup Seen</label>
-      <input placeholder="Chop reversal">
-
-      <label>Passed?</label>
-      <select>
-        <option></option>
-        <option>YES</option>
-        <option>NO</option>
-      </select>
-
-      <label>Outcome If Traded</label>
-      <input placeholder="Would've lost">
-    </div>
-
-    <h2>SESSION METRICS</h2>
-
-    <div class="grid-3">
-      <div>
-        <label>Re-entry Count</label>
-        <input>
-      </div>
-      <div>
-        <label>Conscious Walk-Aways</label>
-        <input>
-      </div>
-      <div>
-        <label>Patience Score 1-5</label>
-        <input>
-      </div>
-    </div>
-
-    <label>Was Environment Call Correct?</label>
-    <select>
-      <option></option>
-      <option>YES</option>
-      <option>NO</option>
-      <option>UNKNOWN</option>
-    </select>
-
-    <label>Session Notes / Lesson</label>
-    <textarea placeholder="What did the session teach you? One key takeaway."></textarea>
-
-    <h2>POST-SESSION CHECKLIST</h2>
-
-    <div class="grid">
-      <div>
-        <label>Did I follow rules?</label>
-        <select><option></option><option>YES</option><option>NO</option></select>
-      </div>
-      <div>
-        <label>Did I protect both accounts?</label>
-        <select><option></option><option>YES</option><option>NO</option></select>
-      </div>
-      <div>
-        <label>Did I record everything?</label>
-        <select><option></option><option>YES</option><option>NO</option></select>
-      </div>
-      <div>
-        <label>Did I review?</label>
-        <select><option></option><option>YES</option><option>NO</option></select>
-      </div>
-      <div>
-        <label>Did I survive?</label>
-        <select><option></option><option>YES</option><option>NO</option></select>
       </div>
     </div>
+  );
+}
 
-    <p class="small" style="text-align:center;margin-top:30px;">
-      The account staying open is the win condition. Profit is the bonus.
-    </p>
-  </div>
+
+  </script>
 </body>
 </html>
