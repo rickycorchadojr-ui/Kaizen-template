@@ -4,1410 +4,801 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kaizen Trade Autopsy — Session Log</title>
+
+  <!-- React + ReactDOM + Babel (browser transform) -->
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+
   <style>
-    /* ── Reset & Base ── */
+    /* ── Reset ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background: #0a0a0a;
-      min-height: 100vh;
-      font-family: 'JetBrains Mono', 'Courier New', monospace;
       color: #e4e4e7;
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      min-height: 100vh;
     }
-    input, textarea, button, select {
-      font-family: inherit;
-    }
-    button { cursor: pointer; }
+    button { font-family: inherit; cursor: pointer; }
+    input, textarea, select { font-family: inherit; }
 
-    /* ── Layout ── */
-    #header {
-      border-bottom: 1px solid #27272a;
-      padding: 16px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    #main {
-      max-width: 860px;
-      margin: 0 auto;
-      padding: 24px 16px;
-    }
+    /* ── Tailwind-equivalent utilities used in the JSX ── */
+    /* flex / grid */
+    .flex          { display: flex; }
+    .flex-wrap     { display: flex; flex-wrap: wrap; }
+    .grid          { display: grid; }
+    .items-center  { align-items: center; }
+    .justify-between { justify-content: justify-between; }
+    .text-center   { text-align: center; }
+    .text-right    { text-align: right; }
 
-    /* ── Chips / Toggle Buttons ── */
-    .chip {
+    /* gap */
+    .gap-1 { gap: 4px; }
+    .gap-2 { gap: 8px; }
+    .gap-3 { gap: 12px; }
+    .gap-4 { gap: 16px; }
+
+    /* margin / padding */
+    .mb-1  { margin-bottom: 4px; }
+    .mb-2  { margin-bottom: 8px; }
+    .mb-3  { margin-bottom: 12px; }
+    .mb-4  { margin-bottom: 16px; }
+    .mb-5  { margin-bottom: 20px; }
+    .mb-6  { margin-bottom: 24px; }
+    .mt-1  { margin-top: 4px; }
+    .mt-2  { margin-top: 8px; }
+    .p-3   { padding: 12px; }
+    .p-5   { padding: 20px; }
+    .px-3  { padding-left: 12px; padding-right: 12px; }
+    .px-4  { padding-left: 16px; padding-right: 16px; }
+    .py-1  { padding-top: 4px;  padding-bottom: 4px; }
+    .py-2  { padding-top: 8px;  padding-bottom: 8px; }
+    .py-4  { padding-top: 16px; padding-bottom: 16px; }
+    .space-y-2 > * + * { margin-top: 8px; }
+
+    /* grid cols */
+    .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+    .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+    .gap-3 { gap: 12px; }
+    .gap-4 { gap: 16px; }
+    .gap-6 { gap: 24px; }
+
+    /* rounded */
+    .rounded    { border-radius: 4px; }
+    .rounded-lg { border-radius: 8px; }
+
+    /* border */
+    .border           { border-width: 1px; border-style: solid; }
+    .border-zinc-700  { border-color: #3f3f46; }
+    .border-zinc-800  { border-color: #27272a; }
+
+    /* bg */
+    .bg-zinc-900  { background: #18181b; }
+    .bg-zinc-950  { background: #09090b; }
+
+    /* text sizes */
+    .text-xs   { font-size: 11px; }
+    .text-sm   { font-size: 13px; }
+    .text-xl   { font-size: 20px; }
+    .text-2xl  { font-size: 24px; }
+    .text-lg   { font-size: 18px; }
+
+    /* font */
+    .font-mono  { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    .font-bold  { font-weight: 700; }
+    .italic     { font-style: italic; }
+    .uppercase  { text-transform: uppercase; }
+    .tracking-widest { letter-spacing: 0.2em; }
+    .leading-relaxed { line-height: 1.8; }
+    .resize-none { resize: none; }
+
+    /* colors */
+    .text-white       { color: #ffffff; }
+    .text-zinc-100    { color: #f4f4f5; }
+    .text-zinc-300    { color: #d4d4d8; }
+    .text-zinc-400    { color: #a1a1aa; }
+    .text-zinc-500    { color: #71717a; }
+    .text-zinc-600    { color: #52525b; }
+    .text-zinc-700    { color: #3f3f46; }
+    .text-emerald-400 { color: #34d399; }
+    .text-emerald-100 { color: #d1fae5; }
+    .text-red-400     { color: #f87171; }
+    .text-red-100     { color: #fee2e2; }
+    .text-blue-400    { color: #60a5fa; }
+    .text-blue-100    { color: #dbeafe; }
+    .text-yellow-400  { color: #fbbf24; }
+    .text-yellow-100  { color: #fef3c7; }
+    .text-purple-100  { color: #f3e8ff; }
+
+    /* focus */
+    .focus\:outline-none:focus { outline: none; }
+    .focus\:border-zinc-400:focus { border-color: #a1a1aa; }
+
+    /* placeholder */
+    input::placeholder, textarea::placeholder { color: #3f3f46; }
+
+    /* chip base + active states */
+    .chip-base {
+      display: inline-block;
       padding: 4px 12px;
       font-size: 11px;
-      font-family: inherit;
-      border-radius: 4px;
       border: 1px solid #3f3f46;
+      border-radius: 4px;
       background: #18181b;
       color: #a1a1aa;
       cursor: pointer;
       transition: all 0.15s;
-      white-space: nowrap;
     }
-    .chip.active-blue   { background: #1e1b4b; border-color: #6366f1; color: #a5b4fc; }
-    .chip.active-green  { background: #064e3b; border-color: #10b981; color: #6ee7b7; }
-    .chip.active-red    { background: #450a0a; border-color: #ef4444; color: #fca5a5; }
-    .chip.active-yellow { background: #422006; border-color: #f59e0b; color: #fde68a; }
-    .chip.active-purple { background: #3b0764; border-color: #a855f7; color: #e9d5ff; }
+    /* active colours replicated from JSX Chip component */
+    .chip-active-blue   { background: #1e1b4b !important; border-color: #6366f1 !important; color: #c7d2fe !important; }
+    .chip-active-red    { background: #450a0a !important; border-color: #ef4444 !important; color: #fca5a5 !important; }
+    .chip-active-green  { background: #064e3b !important; border-color: #10b981 !important; color: #6ee7b7 !important; }
+    .chip-active-yellow { background: #422006 !important; border-color: #f59e0b !important; color: #fde68a !important; }
+    .chip-active-purple { background: #3b0764 !important; border-color: #a855f7 !important; color: #e9d5ff !important; }
 
-    /* ── Grade Buttons ── */
-    .grade-btn {
-      padding: 8px 16px;
-      border-radius: 4px;
-      border: 1px solid #3f3f46;
-      background: #18181b;
-      color: #a1a1aa;
-      font-family: inherit;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .grade-btn.active-A { background: #064e3b; border-color: #10b981; color: #6ee7b7; }
-    .grade-btn.active-B { background: #1e3a5f; border-color: #3b82f6; color: #bfdbfe; }
-    .grade-btn.active-C { background: #422006; border-color: #f59e0b; color: #fde68a; }
-    .grade-btn.active-F { background: #450a0a; border-color: #ef4444; color: #fca5a5; }
+    /* grade button active states */
+    .grade-active-A { background: #064e3b !important; border-color: #34d399 !important; color: #d1fae5 !important; }
+    .grade-active-B { background: #1e3a5f !important; border-color: #60a5fa !important; color: #dbeafe !important; }
+    .grade-active-C { background: #422006 !important; border-color: #fbbf24 !important; color: #fef3c7 !important; }
+    .grade-active-F { background: #450a0a !important; border-color: #f87171 !important; color: #fee2e2 !important; }
 
-    /* ── Form Elements ── */
-    input[type="text"], input[type="date"], input[type="number"], textarea {
+    /* input / textarea shared */
+    .field-input {
       background: #18181b;
       border: 1px solid #3f3f46;
-      color: #e4e4e7;
+      color: #f4f4f5;
       border-radius: 4px;
       padding: 8px 12px;
       font-size: 13px;
       width: 100%;
       font-family: inherit;
     }
-    input[type="text"]:focus, input[type="date"]:focus, textarea:focus {
-      outline: none;
-      border-color: #71717a;
-    }
-    input::placeholder, textarea::placeholder { color: #3f3f46; }
-    textarea { resize: none; }
-    input.small { font-size: 11px; padding: 4px 8px; }
+    .field-input:focus { outline: none; border-color: #a1a1aa; }
+    .field-input.small { font-size: 11px; padding: 4px 8px; }
+    textarea.field-input { resize: none; }
 
-    /* ── Field Labels ── */
-    .field { margin-bottom: 16px; }
-    .field-label {
-      font-size: 10px;
-      color: #71717a;
-      text-transform: uppercase;
-      letter-spacing: 0.2em;
-      margin-bottom: 4px;
-    }
-    .field-hint {
-      font-size: 10px;
-      color: #52525b;
-      margin-bottom: 6px;
-      font-style: italic;
-    }
-
-    /* ── Section Cards ── */
-    .card {
-      border: 1px solid #3f3f46;
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 20px;
-      background: #09090b;
-    }
-    .card-title {
-      font-size: 10px;
-      color: #71717a;
-      letter-spacing: 0.2em;
-      margin-bottom: 16px;
-      text-transform: uppercase;
-    }
-
-    /* ── Trade Card ── */
-    .trade-card {
-      border: 1px solid #3f3f46;
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 16px;
-      background: #09090b;
-    }
-    .trade-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-    }
-    .trade-header-left { display: flex; align-items: center; gap: 12px; }
-    .trade-label { color: #71717a; font-size: 13px; }
-    .trade-num  { color: #fff; font-size: 20px; font-weight: 700; }
-    .trade-result-pos { color: #34d399; font-size: 18px; font-weight: 700; }
-    .trade-result-neg { color: #f87171; font-size: 18px; font-weight: 700; }
-    .remove-btn {
-      background: none;
-      border: none;
-      color: #3f3f46;
-      font-size: 11px;
-      cursor: pointer;
-      font-family: inherit;
-    }
-    .remove-btn:hover { color: #a1a1aa; }
-
-    /* ── Grids ── */
-    .grid-4  { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
-    .grid-3  { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
-    .grid-2  { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 16px; }
-    .grid-2s { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-    .grid-2m { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-
-    /* ── Flex helpers ── */
-    .flex      { display: flex; }
-    .flex-wrap { display: flex; flex-wrap: wrap; }
-    .gap-2     { gap: 8px; }
-    .gap-3     { gap: 12px; }
-    .gap-4     { gap: 16px; }
-    .items-center  { align-items: center; }
-    .justify-between { justify-content: space-between; }
-    .mt1 { margin-top: 4px; }
-    .mt2 { margin-top: 8px; }
-    .mb2 { margin-bottom: 8px; }
-    .mb4 { margin-bottom: 16px; }
-
-    /* ── Add Trade Button ── */
-    #add-trade-btn {
-      width: 100%;
-      background: none;
-      border: 1px dashed #3f3f46;
-      color: #52525b;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 11px;
-      cursor: pointer;
-      font-family: inherit;
-      margin-bottom: 20px;
-    }
-    #add-trade-btn:hover { border-color: #71717a; color: #a1a1aa; }
-
-    /* ── Summary Panel ── */
-    .summary-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
-    .summary-stat {
-      background: #18181b;
-      border-radius: 6px;
-      padding: 12px;
-      text-align: center;
-    }
-    .summary-stat .label { font-size: 10px; color: #71717a; margin-bottom: 4px; }
-    .summary-stat .value { font-size: 24px; font-weight: 700; }
-    .val-pos  { color: #34d399; }
-    .val-neg  { color: #f87171; }
-    .val-neut { color: #e4e4e7; }
-    .val-A    { color: #34d399; }
-    .val-B    { color: #60a5fa; }
-    .val-C    { color: #fbbf24; }
-    .val-F    { color: #f87171; }
-
-    .summary-sub-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-    .summary-sub {
-      background: #18181b;
-      border-radius: 6px;
-      padding: 12px;
-    }
-    .summary-sub .label { font-size: 10px; color: #71717a; margin-bottom: 8px; }
-    .grade-row { display: flex; gap: 12px; }
-    .grade-count { text-align: center; }
-    .grade-count .num  { font-size: 20px; font-weight: 700; }
-    .grade-count .lbl  { font-size: 10px; color: #71717a; }
-
-    .ift-row { display: flex; gap: 16px; font-size: 11px; }
-
-    .loss-breakdown {
-      background: #18181b;
-      border-radius: 6px;
-      padding: 12px;
-      margin-bottom: 16px;
-    }
-    .loss-breakdown .label { font-size: 10px; color: #71717a; margin-bottom: 8px; }
-    .loss-tags-row { display: flex; flex-wrap: wrap; gap: 12px; }
-    .loss-tag-item .count { color: #f87171; font-weight: 700; font-size: 13px; }
-    .loss-tag-item .name  { color: #a1a1aa; font-size: 11px; margin-left: 4px; }
-
-    .checklist-box {
-      background: #18181b;
-      border-radius: 6px;
-      padding: 12px;
-    }
-    .checklist-box .label { font-size: 10px; color: #71717a; margin-bottom: 12px; }
-    .checklist-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 8px;
-    }
-    .checklist-q { color: #d4d4d8; font-size: 11px; }
-
-    /* ── Trades Avoided ── */
-    .avoided-card {
-      border: 1px solid #3f3f46;
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 24px;
-      background: #09090b;
-    }
-    .avoided-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-    }
-    .avoided-add-btn {
-      font-size: 11px;
-      color: #a1a1aa;
-      border: 1px solid #3f3f46;
-      padding: 4px 12px;
-      border-radius: 4px;
-      background: none;
-      font-family: inherit;
-      cursor: pointer;
-    }
-    .avoided-add-btn:hover { border-color: #71717a; }
-    .avoided-row {
-      border: 1px solid #27272a;
-      border-radius: 6px;
-      padding: 12px;
-      margin-bottom: 8px;
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 12px;
-      align-items: end;
-    }
-    .avoided-score { text-align: right; margin-top: 8px; font-size: 13px; }
-    .avoided-score .num { color: #34d399; font-weight: 700; }
-    .avoided-score .txt { color: #71717a; font-size: 11px; margin-left: 4px; }
-    .avoided-empty { color: #3f3f46; font-size: 11px; text-align: center; padding: 16px 0; }
-
-    /* ── Header Buttons ── */
-    .hdr-btn {
-      background: none;
-      border: 1px solid #3f3f46;
-      color: #a1a1aa;
-      padding: 6px 14px;
-      border-radius: 4px;
-      font-size: 11px;
-      cursor: pointer;
-      font-family: inherit;
-    }
-    .hdr-btn:hover { border-color: #71717a; }
-    .hdr-btn-dim { color: #71717a; }
-
-    /* ── Print PDF Button ── */
-    #print-btn {
-      background: none;
-      border: 1px solid #6366f1;
-      color: #a5b4fc;
-      padding: 6px 14px;
-      border-radius: 4px;
-      font-size: 11px;
-      cursor: pointer;
-      font-family: inherit;
-    }
-    #print-btn:hover { background: #1e1b4b; }
-
-    /* ── Mantra ── */
-    .mantra {
-      border-left: 2px solid #3f3f46;
-      padding-left: 16px;
-      margin-bottom: 28px;
-    }
-    .mantra p {
-      color: #52525b;
-      font-size: 11px;
-      font-style: italic;
-      line-height: 1.8;
-    }
-
-    /* ── Footer ── */
-    #footer {
-      margin-top: 24px;
-      color: #3f3f46;
-      font-size: 10px;
-      text-align: center;
-      font-style: italic;
-    }
-
-    /* ── Loss tag conditional visibility ── */
-    .loss-tag-section { display: none; }
-
-    /* ── Print Styles ── */
+    /* print */
     @media print {
-      body { background: #fff; color: #000; }
-      #header .hdr-btn, #header #print-btn { display: none; }
-      .trade-card, .card, .avoided-card, .summary-panel {
-        border-color: #ccc;
-        background: #f9f9f9;
-        page-break-inside: avoid;
-      }
-      .chip, .grade-btn { border-color: #ccc; color: #333; background: #eee; }
-      .chip.active-blue, .chip.active-green, .chip.active-red,
-      .chip.active-yellow, .chip.active-purple { background: #ddd; color: #000; }
-      input, textarea { border-color: #ccc; color: #000; background: #fff; }
-      .summary-stat { background: #f0f0f0; }
-      .summary-sub, .loss-breakdown, .checklist-box { background: #f0f0f0; }
-      #footer { color: #999; }
-      .val-pos  { color: #166534; }
-      .val-neg  { color: #991b1b; }
-      .val-A    { color: #166534; }
-      .val-B    { color: #1e40af; }
-      .val-C    { color: #92400e; }
-      .val-F    { color: #991b1b; }
+      body { background: #fff !important; color: #111 !important; }
+      #print-btn { display: none !important; }
+      .bg-zinc-950, .bg-zinc-900 { background: #f5f5f5 !important; }
+      .border-zinc-700, .border-zinc-800 { border-color: #ccc !important; }
+      .text-emerald-400 { color: #065f46 !important; }
+      .text-red-400     { color: #991b1b !important; }
+      .chip-base        { color: #333 !important; background: #eee !important; border-color: #ccc !important; }
+      .field-input      { color: #111 !important; background: #fff !important; border-color: #bbb !important; }
     }
-/* ─────────────────────────────────────────────
-   PRIMARY COLOR READABILITY OVERRIDE
-   Paste this at the VERY BOTTOM of the style block
-───────────────────────────────────────────── */
-
-:root{
-  --kk-red:#ff2b2b;
-  --kk-blue:#2563ff;
-  --kk-yellow:#ffd400;
-  --kk-green:#22c55e;
-  --kk-white:#f8f8f8;
-  --kk-black:#050505;
-}
-
-body{
-  background:
-    radial-gradient(circle at top left, rgba(37,99,255,.22), transparent 34%),
-    radial-gradient(circle at top right, rgba(255,212,0,.16), transparent 34%),
-    #050505;
-  color:var(--kk-white);
-  line-height:1.45;
-}
-
-#header{
-  background:#050505ee;
-  border-bottom:4px solid var(--kk-yellow);
-  position:sticky;
-  top:0;
-  z-index:20;
-}
-
-#main{
-  max-width:980px;
-}
-
-.card,
-.trade-card,
-.avoided-card{
-  background:linear-gradient(180deg,#1a1a1a,#101010);
-  border:2px solid #333;
-  border-top:6px solid var(--kk-blue);
-  border-radius:14px;
-  box-shadow:0 8px 0 #000;
-}
-
-.trade-card:nth-child(odd){
-  border-top-color:var(--kk-blue);
-}
-
-.trade-card:nth-child(even){
-  border-top-color:var(--kk-red);
-}
-
-.avoided-card{
-  border-top-color:var(--kk-green);
-}
-
-.card-title,
-.field-label{
-  color:var(--kk-yellow);
-  font-weight:900;
-}
-
-.field-hint{
-  color:#b7b7b7;
-}
-
-input[type="text"],
-input[type="date"],
-input[type="number"],
-textarea{
-  background:#fff;
-  color:#050505;
-  border:3px solid #000;
-  border-radius:8px;
-  box-shadow:4px 4px 0 #000;
-  font-size:14px;
-}
-
-input:focus,
-textarea:focus{
-  border-color:var(--kk-yellow);
-  box-shadow:4px 4px 0 var(--kk-blue);
-}
-
-input::placeholder,
-textarea::placeholder{
-  color:#777;
-}
-
-.chip,
-.grade-btn,
-.hdr-btn,
-#print-btn,
-.avoided-add-btn{
-  background:#fff;
-  color:#000;
-  border:2px solid #000;
-  border-radius:8px;
-  font-weight:900;
-  box-shadow:3px 3px 0 #000;
-}
-
-.chip{
-  padding:7px 12px;
-  font-size:12px;
-}
-
-.grade-btn{
-  padding:10px 18px;
-  font-size:15px;
-}
-
-.chip.active-blue,
-.grade-btn.active-B{
-  background:var(--kk-blue);
-  color:#fff;
-}
-
-.chip.active-green,
-.grade-btn.active-A{
-  background:var(--kk-green);
-  color:#000;
-}
-
-.chip.active-red,
-.grade-btn.active-F{
-  background:var(--kk-red);
-  color:#fff;
-}
-
-.chip.active-yellow,
-.grade-btn.active-C{
-  background:var(--kk-yellow);
-  color:#000;
-}
-
-#print-btn{
-  background:var(--kk-blue);
-  color:#fff;
-}
-
-.hdr-btn{
-  background:var(--kk-yellow);
-  color:#000;
-}
-
-.hdr-btn-dim{
-  background:#fff;
-  color:#000;
-}
-
-.mantra{
-  background:#fff;
-  color:#000;
-  border:3px solid #000;
-  border-left:12px solid var(--kk-red);
-  border-radius:12px;
-  box-shadow:6px 6px 0 var(--kk-blue);
-}
-
-.mantra p{
-  color:#000;
-  font-size:14px;
-  font-weight:900;
-}
-
-.trade-num{
-  color:#fff;
-  font-size:26px;
-  font-weight:900;
-}
-
-.trade-label{
-  color:var(--kk-yellow);
-  font-weight:900;
-}
-
-.trade-result-pos,
-.trade-result-neg{
-  border:2px solid #000;
-  border-radius:8px;
-  padding:4px 10px;
-  box-shadow:3px 3px 0 #000;
-}
-
-.trade-result-pos{
-  background:var(--kk-green);
-  color:#000;
-}
-
-.trade-result-neg{
-  background:var(--kk-red);
-  color:#fff;
-}
-
-.remove-btn{
-  background:var(--kk-red);
-  color:#fff;
-  border:2px solid #000;
-  border-radius:8px;
-  padding:7px 10px;
-  font-weight:900;
-}
-
-.summary-stat,
-.summary-sub,
-.loss-breakdown,
-.checklist-box{
-  background:#fff;
-  color:#000;
-  border:3px solid #000;
-  border-radius:12px;
-  box-shadow:4px 4px 0 #000;
-}
-
-.summary-stat .label,
-.summary-sub .label,
-.loss-breakdown .label,
-.checklist-box .label,
-.checklist-q{
-  color:#000;
-  font-weight:900;
-}
-
-.summary-stat .value{
-  font-size:30px;
-  font-weight:900;
-}
-
-.val-pos,
-.val-A{
-  color:#047a2f;
-}
-
-.val-neg,
-.val-F{
-  color:#d00000;
-}
-
-.val-B{
-  color:#004dff;
-}
-
-.val-C{
-  color:#b88700;
-}
-
-.avoided-row{
-  background:#fff;
-  color:#000;
-  border:3px solid #000;
-  border-radius:12px;
-  box-shadow:4px 4px 0 #000;
-}
-
-#add-trade-btn{
-  background:var(--kk-yellow);
-  color:#000;
-  border:3px dashed #000;
-  border-radius:12px;
-  font-size:14px;
-  font-weight:900;
-  box-shadow:5px 5px 0 #000;
-}
-
-#footer{
-  color:var(--kk-yellow);
-  font-size:12px;
-}
-
-@media(max-width:760px){
-  .grid-4,
-  .grid-3,
-  .grid-2,
-  .grid-2s,
-  .grid-2m,
-  .summary-stat-grid,
-  .summary-sub-grid,
-  .avoided-row{
-    grid-template-columns:1fr;
-  }
-
-  #header{
-    flex-direction:column;
-    align-items:flex-start;
-  }
-
-  #header .flex{
-    flex-wrap:wrap;
-  }
-}
   </style>
 </head>
 <body>
-
-<!-- ══════════════ HEADER ══════════════ -->
-<div id="header">
-  <div>
-    <div style="color:#71717a;font-size:10px;letter-spacing:0.2em;margin-bottom:2px;">KAIZEN TRADE AUTOPSY</div>
-    <div style="color:#e4e4e7;font-size:18px;font-weight:700;letter-spacing:0.05em;">SESSION LOG</div>
-  </div>
-  <div class="flex gap-2">
-    <button id="print-btn" onclick="window.print()">⬇ PRINT / SAVE PDF</button>
-    <button class="hdr-btn" id="toggle-view-btn" onclick="toggleView()">VIEW SUMMARY</button>
-    <button class="hdr-btn hdr-btn-dim" onclick="newSession()">NEW SESSION</button>
-  </div>
-</div>
-
-<!-- ══════════════ MAIN ══════════════ -->
-<div id="main">
-
-  <!-- Mantra -->
-  <div class="mantra">
-    <p>I protect the account. I stack clean days. I become impossible to kill.<br>
-    Has the market earned my participation?</p>
-  </div>
-
-  <!-- ── PRE-SESSION ── -->
-  <div class="card">
-    <div class="card-title">PRE-SESSION</div>
-    <div class="grid-2s mb4">
-      <div class="field">
-        <div class="field-label">Date</div>
-        <input type="date" id="session-date" />
-      </div>
-      <div class="field">
-        <div class="field-label">First Trade Followed Setup?</div>
-        <div class="flex gap-2 mt2" id="first-trade-btns">
-          <button class="chip" data-group="firstTrade" data-val="true"  onclick="toggleTriState('firstTrade','true',this)">YES</button>
-          <button class="chip" data-group="firstTrade" data-val="false" onclick="toggleTriState('firstTrade','false',this)">NO</button>
-        </div>
-      </div>
-    </div>
-    <div class="field">
-      <div class="field-label">Market Environment — Classify before first trade</div>
-      <div class="flex-wrap gap-2" id="env-chips">
-        <!-- populated by JS -->
-      </div>
-      <div class="field-hint" style="margin-top:6px;">
-        ROTATIONAL = levels respected, discretion works · CHOP = whipsaws, avoid · EXPANSION = violent, fast, kills discretion
-      </div>
-    </div>
-  </div>
-
-  <!-- ── SESSION VIEW ── -->
-  <div id="session-view">
-
-    <!-- Trade Log header -->
-    <div style="margin-bottom:8px;color:#71717a;font-size:10px;letter-spacing:0.2em;">TRADE LOG</div>
-
-    <!-- Trade Cards container -->
-    <div id="trades-container"></div>
-
-    <!-- Add Trade -->
-    <button id="add-trade-btn" onclick="addTrade()">+ ADD TRADE</button>
-
-    <!-- Trades Avoided -->
-    <div class="avoided-card">
-      <div class="avoided-header">
-        <div>
-          <div style="font-size:10px;color:#71717a;text-transform:uppercase;letter-spacing:0.2em;">Trades Avoided</div>
-          <div style="font-size:10px;color:#52525b;font-style:italic;margin-top:4px;">Every correctly avoided garbage setup = +1 point. This is a skill.</div>
-        </div>
-        <button class="avoided-add-btn" onclick="addAvoided()">+ ADD</button>
-      </div>
-      <div id="avoided-container">
-        <div class="avoided-empty" id="avoided-empty">No avoided setups logged yet.</div>
-      </div>
-      <div class="avoided-score" id="avoided-score" style="display:none;">
-        <span class="num" id="avoided-count">0</span>
-        <span class="txt">setups correctly avoided</span>
-      </div>
-    </div>
-
-    <!-- Session Metrics -->
-    <div class="card">
-      <div class="card-title">SESSION METRICS</div>
-      <div class="grid-3">
-        <div class="field">
-          <div class="field-label">Re-entry Count</div>
-          <div class="field-hint">Avg seconds between trades</div>
-          <input type="text" id="reentryCount" placeholder="" />
-        </div>
-        <div class="field">
-          <div class="field-label">Conscious Walk-Aways</div>
-          <div class="field-hint">Times passed on a setup</div>
-          <input type="text" id="walkAways" placeholder="" />
-        </div>
-        <div class="field">
-          <div class="field-label">Patience Score (1–5)</div>
-          <div class="field-hint">1=clicked fast, 5=fully let market prove</div>
-          <input type="text" id="patienceScore" placeholder="" />
-        </div>
-      </div>
-
-      <!-- Environment correct? -->
-      <div class="field">
-        <div class="field-label">Was Environment Call Correct?</div>
-        <div class="flex gap-2" id="env-correct-btns">
-          <button class="chip" data-group="envCorrect" data-val="true"    onclick="toggleTriState('envCorrect','true',this)">YES</button>
-          <button class="chip" data-group="envCorrect" data-val="false"   onclick="toggleTriState('envCorrect','false',this)">NO</button>
-          <button class="chip" data-group="envCorrect" data-val="unknown" onclick="toggleTriState('envCorrect','unknown',this)">UNKNOWN</button>
-        </div>
-      </div>
-
-      <!-- Session notes -->
-      <div class="field">
-        <div class="field-label">Session Notes / Lesson</div>
-        <textarea id="sessionNotes" rows="3" placeholder="What did the session teach you? One key takeaway."></textarea>
-      </div>
-    </div>
-
-    <!-- Post-session inline summary -->
-    <div class="card">
-      <div class="card-title">POST-SESSION — DAILY CHECK</div>
-      <div id="inline-summary"></div>
-    </div>
-
-  </div><!-- /session-view -->
-
-  <!-- ── SUMMARY VIEW ── -->
-  <div id="summary-view" style="display:none;">
-    <div id="summary-panel"></div>
-  </div>
-
-  <div id="footer">The account staying open is the win condition. Profit is the bonus.</div>
-</div>
-
-<!-- ════════════════════════════════════════════════════════ -->
-<script>
-// ── Constants ──────────────────────────────────────────────
-const ENV_OPTIONS    = ["ROTATIONAL","TRENDING","CHOP","EXPANSION","UNKNOWN"];
-const GRADE_OPTIONS  = ["A","B","C","F"];
-const SETUP_TAGS     = ["BREAKOUT","PULLBACK","REVERSAL","CONTINUATION","OPENING RANGE","FAILED AUCTION","ANTICIPATION","FOMO","CHASE","OTHER"];
-const LOSS_TAGS      = ["EARLY","CHOP","REVERSAL","CHASE","OVERSIZED","FOMO","LOW VOLUME","COUNTERTREND","OPENING RANGE NOISE","EXPANSION"];
-
-// ── State ──────────────────────────────────────────────────
-let tradeCounter = 1;
-let trades  = [];   // array of trade objects (id, fields…)
-let avoided = [];   // array of avoided objects
-let triState = { firstTrade: null, envCorrect: null }; // null | 'true' | 'false' | 'unknown'
-let checklistState = { followedRules: null, protectedAccounts: null, recorded: null, reviewed: null, survived: null };
-
-// ── Init ───────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  // Set today's date
-  document.getElementById('session-date').value = new Date().toISOString().slice(0, 10);
-  buildEnvChips();
-  addTrade();
-  renderSummary();
-});
-
-// ── Environment Chips ──────────────────────────────────────
-let selectedEnv = '';
-function buildEnvChips() {
-  const c = document.getElementById('env-chips');
-  c.innerHTML = '';
-  ENV_OPTIONS.forEach(e => {
-    const btn = document.createElement('button');
-    btn.className = 'chip' + (selectedEnv === e ? ' active-blue' : '');
-    btn.textContent = e;
-    btn.onclick = () => {
-      selectedEnv = selectedEnv === e ? '' : e;
-      buildEnvChips();
-      renderSummary();
-    };
-    c.appendChild(btn);
-  });
-}
-
-// ── Tri-state toggle (YES / NO / UNKNOWN) ──────────────────
-function toggleTriState(group, val, btn) {
-  const current = triState[group];
-  triState[group] = (current === val) ? null : val;
-  const container = btn.parentElement;
-  container.querySelectorAll('.chip').forEach(b => {
-    b.className = 'chip';
-    const bv = b.dataset.val;
-    if (triState[group] === bv) {
-      b.classList.add(bv === 'true' ? 'active-green' : bv === 'false' ? 'active-red' : 'active-blue');
-    }
-  });
-  renderSummary();
-}
-
-// ── Trades ─────────────────────────────────────────────────
-function emptyTrade() {
-  return {
-    id: ++tradeCounter,
-    direction: '', time: '', entry: '', exit: '', result: '',
-    grade: '', immediateFollowThrough: null, negotiable: null,
-    mae: '', mfe: '', why: '', wouldTakeAgain: null,
-    marketDid: null, lossTag: '', setupTag: '',
-    doNothingOutcome: '', notes: ''
-  };
-}
-
-function addTrade() {
-  const t = emptyTrade();
-  trades.push(t);
-  renderTrades();
-}
-
-function removeTrade(id) {
-  trades = trades.filter(t => t.id !== id);
-  renderTrades();
-  renderSummary();
-}
-
-function updateTrade(id, key, val) {
-  const t = trades.find(t => t.id === id);
-  if (t) { t[key] = val; renderSummary(); }
-}
-
-// ── Render Trades ──────────────────────────────────────────
-function renderTrades() {
-  const container = document.getElementById('trades-container');
-  container.innerHTML = '';
-  trades.forEach((trade, i) => {
-    container.appendChild(buildTradeCard(trade, i));
-  });
-  renderSummary();
-}
-
-function buildTradeCard(trade, index) {
-  const div = document.createElement('div');
-  div.className = 'trade-card';
-  div.id = 'trade-' + trade.id;
-
-  const resultNum = parseFloat(trade.result);
-  const hasResult = trade.result !== '' && !isNaN(resultNum);
-  const resultClass = hasResult ? (resultNum >= 0 ? 'trade-result-pos' : 'trade-result-neg') : '';
-  const resultDisplay = hasResult ? `<span class="${resultClass}">${resultNum >= 0 ? '+' : ''}${trade.result}</span>` : '';
-
-  div.innerHTML = `
-    <!-- Header -->
-    <div class="trade-header">
-      <div class="trade-header-left">
-        <span class="trade-label">TRADE</span>
-        <span class="trade-num">#${index + 1}</span>
-        ${resultDisplay}
-      </div>
-      <button class="remove-btn" onclick="removeTrade(${trade.id})">REMOVE</button>
-    </div>
-
-    <!-- Row 1: Time, Direction, Entry, Exit -->
-    <div class="grid-4">
-      <div class="field">
-        <div class="field-label">Time</div>
-        <input type="text" class="trade-input" placeholder="8:32" value="${trade.time}" onchange="updateTrade(${trade.id},'time',this.value)" oninput="updateTrade(${trade.id},'time',this.value)" />
-      </div>
-      <div class="field">
-        <div class="field-label">Direction</div>
-        <div class="flex gap-2 mt1" id="dir-${trade.id}">
-          <button class="chip ${trade.direction==='LONG'?'active-green':''}" onclick="setDirection(${trade.id},'LONG',this)">LONG</button>
-          <button class="chip ${trade.direction==='SHORT'?'active-red':''}"  onclick="setDirection(${trade.id},'SHORT',this)">SHORT</button>
-        </div>
-      </div>
-      <div class="field">
-        <div class="field-label">Entry</div>
-        <input type="text" placeholder="21,450" value="${trade.entry}" onchange="updateTrade(${trade.id},'entry',this.value)" oninput="updateTrade(${trade.id},'entry',this.value)" />
-      </div>
-      <div class="field">
-        <div class="field-label">Exit</div>
-        <input type="text" placeholder="21,460" value="${trade.exit}" onchange="updateTrade(${trade.id},'exit',this.value)" oninput="updateTrade(${trade.id},'exit',this.value)" />
-      </div>
-    </div>
-
-    <!-- Result, MAE, MFE -->
-    <div class="grid-3">
-      <div class="field">
-        <div class="field-label">Result ($)</div>
-        <div class="field-hint">Actual P&amp;L in dollars</div>
-        <input type="text" placeholder="+50" value="${trade.result}" onchange="updateTradeResult(${trade.id},this.value)" oninput="updateTradeResult(${trade.id},this.value)" />
-      </div>
-      <div class="field">
-        <div class="field-label">MAE (pts)</div>
-        <div class="field-hint">How far against you before resolution — TIER 1</div>
-        <input type="text" placeholder="8" value="${trade.mae}" onchange="updateTrade(${trade.id},'mae',this.value)" oninput="updateTrade(${trade.id},'mae',this.value)" />
-      </div>
-      <div class="field">
-        <div class="field-label">MFE (pts)</div>
-        <div class="field-hint">How far in your favor before exit</div>
-        <input type="text" placeholder="12" value="${trade.mfe}" onchange="updateTrade(${trade.id},'mfe',this.value)" oninput="updateTrade(${trade.id},'mfe',this.value)" />
-      </div>
-    </div>
-
-    <!-- IFT + Negotiable -->
-    <div class="grid-2">
-      <div class="field">
-        <div class="field-label">Immediate Follow Through?</div>
-        <div class="field-hint">Did price move your way almost immediately?</div>
-        <div class="flex gap-2" id="ift-${trade.id}">
-          <button class="chip ${trade.immediateFollowThrough===true?'active-green':''}"  onclick="toggleYesNo(${trade.id},'immediateFollowThrough',true,this)">YES</button>
-          <button class="chip ${trade.immediateFollowThrough===false?'active-red':''}"   onclick="toggleYesNo(${trade.id},'immediateFollowThrough',false,this)">NO</button>
-        </div>
-      </div>
-      <div class="field">
-        <div class="field-label">Market Negotiable?</div>
-        <div class="field-hint">Did you have time to manage discretion, or did it move too fast?</div>
-        <div class="flex gap-2" id="neg-${trade.id}">
-          <button class="chip ${trade.negotiable===true?'active-green':''}"  onclick="toggleYesNo(${trade.id},'negotiable',true,this)">YES</button>
-          <button class="chip ${trade.negotiable===false?'active-red':''}"   onclick="toggleYesNo(${trade.id},'negotiable',false,this)">NO</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Why -->
-    <div class="field">
-      <div class="field-label">Why Did I Take It?</div>
-      <div class="field-hint">One sentence only. e.g. 'Failed auction at prior high' or 'Breakout above opening range'</div>
-      <textarea rows="1" placeholder="One sentence.">${trade.why}</textarea>
-    </div>
-
-    <!-- Setup Tag -->
-    <div class="field">
-      <div class="field-label">Setup Tag</div>
-      <div class="flex-wrap gap-2" id="setup-tags-${trade.id}"></div>
-    </div>
-
-    <!-- Loss Tag (shown when result is negative) -->
-    <div class="field loss-tag-section" id="loss-section-${trade.id}">
-      <div class="field-label">Loss Category</div>
-      <div class="field-hint">Tag every losing trade</div>
-      <div class="flex-wrap gap-2" id="loss-tags-${trade.id}"></div>
-    </div>
-
-    <!-- Market Did + Would Take Again -->
-    <div class="grid-2">
-      <div class="field">
-        <div class="field-label">Did Market Do What I Expected?</div>
-        <div class="flex gap-2" id="mktdid-${trade.id}">
-          <button class="chip ${trade.marketDid===true?'active-green':''}"  onclick="toggleYesNo(${trade.id},'marketDid',true,this)">YES</button>
-          <button class="chip ${trade.marketDid===false?'active-red':''}"   onclick="toggleYesNo(${trade.id},'marketDid',false,this)">NO</button>
-        </div>
-      </div>
-      <div class="field">
-        <div class="field-label">Would Take Again?</div>
-        <div class="flex gap-2" id="wta-${trade.id}">
-          <button class="chip ${trade.wouldTakeAgain==='yes'?'active-green':''}"   onclick="setWTA(${trade.id},'yes',this)">YES</button>
-          <button class="chip ${trade.wouldTakeAgain==='maybe'?'active-yellow':''}" onclick="setWTA(${trade.id},'maybe',this)">MAYBE</button>
-          <button class="chip ${trade.wouldTakeAgain==='no'?'active-red':''}"      onclick="setWTA(${trade.id},'no',this)">NO</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Grade -->
-    <div class="field">
-      <div class="field-label">Trade Grade</div>
-      <div class="field-hint">Grade the TRADE, not the result. A losing trade can be an A.</div>
-      <div class="flex gap-3" id="grade-${trade.id}"></div>
-    </div>
-
-    <!-- Do Nothing Outcome -->
-    <div class="field">
-      <div class="field-label">What Would've Happened If I Did Nothing?</div>
-      <div class="field-hint">Forces comparison vs. the monster move: no trade.</div>
-      <textarea rows="1" placeholder="e.g. 'Better entry appeared 4 min later' / 'Saved $80' / 'Missed winner'">${trade.doNothingOutcome}</textarea>
-    </div>
-
-    <!-- Notes -->
-    <div class="field">
-      <div class="field-label">Notes / Lesson</div>
-      <textarea rows="1" placeholder="One sentence lesson.">${trade.notes}</textarea>
-    </div>
-  `;
-
-  // Wire textarea onchange events (can't inline template literals cleanly for multiline)
-  const textareas = div.querySelectorAll('textarea');
-  // why, doNothingOutcome, notes in order
-  const taFields = ['why','doNothingOutcome','notes'];
-  textareas.forEach((ta, i) => {
-    ta.addEventListener('input', () => updateTrade(trade.id, taFields[i], ta.value));
-  });
-
-  // Build setup tags
-  buildTagChips('setup-tags-' + trade.id, SETUP_TAGS, trade.setupTag, 'blue', (val) => {
-    trade.setupTag = val;
-    renderSummary();
-  });
-
-  // Build loss tags + toggle visibility
-  buildTagChips('loss-tags-' + trade.id, LOSS_TAGS, trade.lossTag, 'red', (val) => {
-    trade.lossTag = val;
-    renderSummary();
-  });
-  updateLossTagVisibility(div, trade);
-
-  // Build grade buttons
-  buildGradeButtons('grade-' + trade.id, trade.grade, (g) => {
-    trade.grade = g;
-    renderSummary();
-  });
-
-  return div;
-}
-
-function buildTagChips(containerId, tags, activeVal, color, onSelect) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  container.innerHTML = '';
-  tags.forEach(tag => {
-    const btn = document.createElement('button');
-    btn.className = 'chip' + (activeVal === tag ? ` active-${color}` : '');
-    btn.textContent = tag;
-    btn.onclick = () => {
-      const newVal = activeVal === tag ? '' : tag;
-      activeVal = newVal;
-      onSelect(newVal);
-      container.querySelectorAll('.chip').forEach(b => {
-        b.className = 'chip' + (b.textContent === newVal ? ` active-${color}` : '');
-      });
-    };
-    container.appendChild(btn);
-  });
-}
-
-function buildGradeButtons(containerId, activeGrade, onSelect) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  container.innerHTML = '';
-  const descs = { A:'Take again tomorrow', B:'Good, minor flaw', C:'Questionable', F:'Never should happen' };
-  GRADE_OPTIONS.forEach(g => {
-    const btn = document.createElement('button');
-    btn.className = 'grade-btn' + (activeGrade === g ? ` active-${g}` : '');
-    btn.textContent = g;
-    btn.title = descs[g];
-    btn.onclick = () => {
-      const newG = activeGrade === g ? '' : g;
-      activeGrade = newG;
-      onSelect(newG);
-      container.querySelectorAll('.grade-btn').forEach(b => {
-        b.className = 'grade-btn' + (b.textContent === newG ? ` active-${b.textContent}` : '');
-      });
-    };
-    container.appendChild(btn);
-  });
-}
-
-function updateLossTagVisibility(cardDiv, trade) {
-  const resultNum = parseFloat(trade.result);
-  const isLoss = trade.result !== '' && !isNaN(resultNum) && resultNum < 0;
-  const lossSection = cardDiv.querySelector('.loss-tag-section');
-  if (lossSection) lossSection.style.display = isLoss ? 'block' : 'none';
-}
-
-function updateTradeResult(id, val) {
-  updateTrade(id, 'result', val);
-  // Refresh result display and loss section
-  const card = document.getElementById('trade-' + id);
-  if (!card) return;
-  const trade = trades.find(t => t.id === id);
-  if (!trade) return;
-  // Update result badge in header
-  const headerLeft = card.querySelector('.trade-header-left');
-  const existing = headerLeft.querySelector('.trade-result-pos, .trade-result-neg');
-  if (existing) existing.remove();
-  const resultNum = parseFloat(val);
-  if (val !== '' && !isNaN(resultNum)) {
-    const span = document.createElement('span');
-    span.className = resultNum >= 0 ? 'trade-result-pos' : 'trade-result-neg';
-    span.textContent = (resultNum >= 0 ? '+' : '') + val;
-    headerLeft.appendChild(span);
-  }
-  updateLossTagVisibility(card, trade);
-}
-
-// ── Direction toggle ───────────────────────────────────────
-function setDirection(id, dir, btn) {
-  const trade = trades.find(t => t.id === id);
-  if (!trade) return;
-  trade.direction = trade.direction === dir ? '' : dir;
-  const container = document.getElementById('dir-' + id);
-  container.querySelectorAll('.chip').forEach(b => {
-    const isLong = b.textContent === 'LONG';
-    b.className = 'chip';
-    if (trade.direction === b.textContent) b.classList.add(isLong ? 'active-green' : 'active-red');
-  });
-  renderSummary();
-}
-
-// ── Yes/No toggles on trade fields ────────────────────────
-function toggleYesNo(id, key, val, btn) {
-  const trade = trades.find(t => t.id === id);
-  if (!trade) return;
-  trade[key] = trade[key] === val ? null : val;
-  const container = btn.parentElement;
-  container.querySelectorAll('.chip').forEach(b => {
-    b.className = 'chip';
-    const boolVal = b.textContent === 'YES' ? true : false;
-    if (trade[key] === boolVal) b.classList.add(boolVal ? 'active-green' : 'active-red');
-  });
-  renderSummary();
-}
-
-// ── Would Take Again ───────────────────────────────────────
-function setWTA(id, val, btn) {
-  const trade = trades.find(t => t.id === id);
-  if (!trade) return;
-  trade.wouldTakeAgain = trade.wouldTakeAgain === val ? null : val;
-  const colorMap = { yes:'active-green', maybe:'active-yellow', no:'active-red' };
-  const valMap   = { YES:'yes', MAYBE:'maybe', NO:'no' };
-  const container = document.getElementById('wta-' + id);
-  container.querySelectorAll('.chip').forEach(b => {
-    b.className = 'chip';
-    const bv = valMap[b.textContent];
-    if (trade.wouldTakeAgain === bv) b.classList.add(colorMap[bv]);
-  });
-  renderSummary();
-}
-
-// ── Trades Avoided ─────────────────────────────────────────
-function addAvoided() {
-  const entry = { id: Date.now(), setup: '', passed: null, outcome: '' };
-  avoided.push(entry);
-  renderAvoided();
-}
-
-function removeAvoided(id) {
-  avoided = avoided.filter(a => a.id !== id);
-  renderAvoided();
-}
-
-function renderAvoided() {
-  const container = document.getElementById('avoided-container');
-  const empty     = document.getElementById('avoided-empty');
-  const scoreDiv  = document.getElementById('avoided-score');
-  const countEl   = document.getElementById('avoided-count');
-
-  if (avoided.length === 0) {
-    container.innerHTML = '';
-    container.appendChild(Object.assign(document.createElement('div'), { className:'avoided-empty', textContent:'No avoided setups logged yet.' }));
-    scoreDiv.style.display = 'none';
-    return;
-  }
-
-  container.innerHTML = '';
-  avoided.forEach((a, i) => {
-    const row = document.createElement('div');
-    row.className = 'avoided-row';
-    row.innerHTML = `
-      <div>
-        <div class="field-label" style="font-size:10px;">Setup Seen</div>
-        <input type="text" class="small" placeholder="Chop reversal" value="${a.setup}" />
-      </div>
-      <div>
-        <div class="field-label" style="font-size:10px;">Passed?</div>
-        <div class="flex gap-2 mt1">
-          <button class="chip ${a.passed===true?'active-green':''}"  onclick="setAvoidedPassed(${a.id},true,this)">YES</button>
-          <button class="chip ${a.passed===false?'active-red':''}"   onclick="setAvoidedPassed(${a.id},false,this)">NO</button>
-        </div>
-      </div>
-      <div>
-        <div class="field-label" style="font-size:10px;">Outcome (if traded)</div>
-        <input type="text" class="small" placeholder="Would've lost" value="${a.outcome}" />
-      </div>
-    `;
-    row.querySelectorAll('input')[0].addEventListener('input', e => { a.setup = e.target.value; });
-    row.querySelectorAll('input')[1].addEventListener('input', e => { a.outcome = e.target.value; });
-    container.appendChild(row);
-  });
-
-  const correctCount = avoided.filter(a => a.passed === true).length;
-  countEl.textContent = correctCount;
-  scoreDiv.style.display = 'block';
-}
-
-function setAvoidedPassed(id, val, btn) {
-  const a = avoided.find(a => a.id === id);
-  if (!a) return;
-  a.passed = a.passed === val ? null : val;
-  const container = btn.parentElement;
-  container.querySelectorAll('.chip').forEach(b => {
-    b.className = 'chip';
-    const bv = b.textContent === 'YES' ? true : false;
-    if (a.passed === bv) b.classList.add(bv ? 'active-green' : 'active-red');
-  });
-  renderAvoided();
-}
-
-// ── Summary Panel ──────────────────────────────────────────
-function renderSummary() {
-  const html = buildSummaryHTML();
-  document.getElementById('inline-summary').innerHTML = html;
-  document.getElementById('summary-panel').innerHTML  = html;
-  wireChecklist('inline-summary');
-  wireChecklist('summary-panel');
-}
-
-function buildSummaryHTML() {
-  const withResult = trades.filter(t => t.result !== '' && !isNaN(parseFloat(t.result)));
-  const totalPnL   = withResult.reduce((s, t) => s + parseFloat(t.result), 0);
-  const winners    = withResult.filter(t => parseFloat(t.result) >= 0);
-  const losers     = withResult.filter(t => parseFloat(t.result) < 0);
-  const winRate    = withResult.length > 0 ? Math.round((winners.length / withResult.length) * 100) : null;
-
-  const maeOf = arr => arr.filter(t => t.mae !== '' && !isNaN(parseFloat(t.mae)));
-  const avgMAE = arr => maeOf(arr).length > 0
-    ? (maeOf(arr).reduce((s,t) => s + parseFloat(t.mae), 0) / maeOf(arr).length).toFixed(1)
-    : null;
-
-  const winMAE  = avgMAE(winners);
-  const lossMAE = avgMAE(losers);
-
-  const iftYes = trades.filter(t => t.immediateFollowThrough === true).length;
-  const iftNo  = trades.filter(t => t.immediateFollowThrough === false).length;
-  const negYes = trades.filter(t => t.negotiable === true).length;
-  const negNo  = trades.filter(t => t.negotiable === false).length;
-
-  const gradeCounts = { A:0, B:0, C:0, F:0 };
-  trades.forEach(t => { if (t.grade) gradeCounts[t.grade]++; });
-
-  const lossTags = {};
-  losers.forEach(t => { if (t.lossTag) lossTags[t.lossTag] = (lossTags[t.lossTag] || 0) + 1; });
-
-  const pnlClass  = totalPnL >= 0 ? 'val-pos' : 'val-neg';
-  const pnlDisplay = (totalPnL >= 0 ? '+' : '') + totalPnL.toFixed(0);
-
-  const lossTagRows = Object.entries(lossTags)
-    .sort((a,b) => b[1] - a[1])
-    .map(([tag, count]) => `<span class="loss-tag-item"><span class="count">${count}</span><span class="name">${tag}</span></span>`)
-    .join('');
-
-  const lossSection = Object.keys(lossTags).length > 0 ? `
-    <div class="loss-breakdown">
-      <div class="label">LOSS BREAKDOWN</div>
-      <div class="loss-tags-row">${lossTagRows}</div>
-    </div>` : '';
-
-  // Checklist (5 questions)
-  const fiveQ = [
-    { q: 'Did I follow rules?',        key: 'followedRules' },
-    { q: 'Did I protect both accounts?', key: 'protectedAccounts' },
-    { q: 'Did I record everything?',   key: 'recorded' },
-    { q: 'Did I review?',              key: 'reviewed' },
-    { q: 'Did I survive?',             key: 'survived' },
-  ];
-  const checklistRows = fiveQ.map(({q, key}) => {
-    const v = checklistState[key];
-    return `<div class="checklist-row">
-      <span class="checklist-q">${q}</span>
-      <div class="flex gap-2">
-        <button class="chip ${v===true?'active-green':''}"  data-cl-key="${key}" data-cl-val="true">YES</button>
-        <button class="chip ${v===false?'active-red':''}"   data-cl-key="${key}" data-cl-val="false">NO</button>
-      </div>
-    </div>`;
-  }).join('');
-
-  return `
-    <div class="summary-stat-grid">
-      <div class="summary-stat">
-        <div class="label">NET P&amp;L</div>
-        <div class="value ${pnlClass}">${pnlDisplay}</div>
-      </div>
-      <div class="summary-stat">
-        <div class="label">WIN RATE</div>
-        <div class="value val-neut">${winRate !== null ? winRate + '%' : '—'}</div>
-      </div>
-      <div class="summary-stat">
-        <div class="label">AVG MAE (W)</div>
-        <div class="value val-A">${winMAE !== null ? winMAE : '—'}</div>
-      </div>
-      <div class="summary-stat">
-        <div class="label">AVG MAE (L)</div>
-        <div class="value val-F">${lossMAE !== null ? lossMAE : '—'}</div>
-      </div>
-    </div>
-
-    <div class="summary-sub-grid">
-      <div class="summary-sub">
-        <div class="label">TRADE GRADES</div>
-        <div class="grade-row">
-          ${['A','B','C','F'].map(g => `
-            <div class="grade-count">
-              <div class="num val-${g}">${gradeCounts[g]}</div>
-              <div class="lbl">${g}</div>
-            </div>`).join('')}
-        </div>
-      </div>
-      <div class="summary-sub">
-        <div class="label">FOLLOW THROUGH / NEGOTIABLE</div>
-        <div class="ift-row">
-          <div><span style="color:#34d399">${iftYes}</span> IFT Yes / <span style="color:#f87171">${iftNo}</span> No</div>
-          <div><span style="color:#34d399">${negYes}</span> Neg Yes / <span style="color:#f87171">${negNo}</span> No</div>
-        </div>
-      </div>
-    </div>
-
-    ${lossSection}
-
-    <div class="checklist-box">
-      <div class="label">POST-SESSION CHECKLIST</div>
-      ${checklistRows}
-    </div>
-  `;
-}
-
-function wireChecklist(containerId) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  container.querySelectorAll('[data-cl-key]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const key = btn.dataset.clKey;
-      const val = btn.dataset.clVal === 'true' ? true : false;
-      checklistState[key] = checklistState[key] === val ? null : val;
-      renderSummary();
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    /* ── Constants (identical to JSX) ── */
+    const ENV_OPTIONS   = ["ROTATIONAL","TRENDING","CHOP","EXPANSION","UNKNOWN"];
+    const GRADE_OPTIONS = ["A","B","C","F"];
+    const SETUP_TAGS    = ["BREAKOUT","PULLBACK","REVERSAL","CONTINUATION","OPENING RANGE","FAILED AUCTION","ANTICIPATION","FOMO","CHASE","OTHER"];
+    const LOSS_TAGS     = ["EARLY","CHOP","REVERSAL","CHASE","OVERSIZED","FOMO","LOW VOLUME","COUNTERTREND","OPENING RANGE NOISE","EXPANSION"];
+
+    const emptyTrade = () => ({
+      id: Date.now() + Math.random(),
+      direction: "", time: "", entry: "", exit: "", result: "",
+      grade: "", immediateFollowThrough: null, negotiable: null,
+      mae: "", mfe: "", why: "", wouldTakeAgain: null,
+      marketDid: null, lossTag: "", setupTag: "",
+      doNothingOutcome: "", notes: "",
     });
-  });
-}
 
-// ── View Toggle ────────────────────────────────────────────
-let currentView = 'session';
-function toggleView() {
-  currentView = currentView === 'session' ? 'summary' : 'session';
-  document.getElementById('session-view').style.display = currentView === 'session' ? 'block' : 'none';
-  document.getElementById('summary-view').style.display = currentView === 'summary' ? 'block' : 'none';
-  document.getElementById('toggle-view-btn').textContent = currentView === 'session' ? 'VIEW SUMMARY' : 'VIEW SESSION';
-  if (currentView === 'summary') renderSummary();
-}
+    const emptySession = () => ({
+      date: new Date().toISOString().slice(0, 10),
+      environment: "", environmentCorrect: null, firstTradeSetup: null,
+      cheatScore: "", patienceScore: "", walkAways: "", reentryCount: "",
+      sessionNotes: "", trades: [emptyTrade()],
+    });
 
-// ── New Session ────────────────────────────────────────────
-function newSession() {
-  if (!window.confirm('Start a new session? Current data will be cleared.')) return;
-  trades  = [];
-  avoided = [];
-  tradeCounter = 1;
-  triState = { firstTrade: null, envCorrect: null };
-  checklistState = { followedRules: null, protectedAccounts: null, recorded: null, reviewed: null, survived: null };
-  selectedEnv = '';
-  currentView = 'session';
+    /* ── Chip ── */
+    function Chip({ label, active, onClick, color = "blue" }) {
+      const activeClass = active ? `chip-active-${color}` : "";
+      return (
+        <button onClick={onClick} className={`chip-base ${activeClass}`}>
+          {label}
+        </button>
+      );
+    }
 
-  document.getElementById('session-date').value = new Date().toISOString().slice(0,10);
-  document.getElementById('reentryCount').value  = '';
-  document.getElementById('walkAways').value      = '';
-  document.getElementById('patienceScore').value  = '';
-  document.getElementById('sessionNotes').value   = '';
-  document.getElementById('session-view').style.display = 'block';
-  document.getElementById('summary-view').style.display = 'none';
-  document.getElementById('toggle-view-btn').textContent = 'VIEW SUMMARY';
+    /* ── YesNo ── */
+    function YesNo({ value, onChange, yesLabel = "YES", noLabel = "NO" }) {
+      return (
+        <div className="flex gap-2">
+          <Chip label={yesLabel} active={value === true}  onClick={() => onChange(value === true  ? null : true)}  color="green" />
+          <Chip label={noLabel}  active={value === false} onClick={() => onChange(value === false ? null : false)} color="red"   />
+        </div>
+      );
+    }
 
-  buildEnvChips();
-  // Reset tri-state button groups
-  ['first-trade-btns','env-correct-btns'].forEach(gid => {
-    const g = document.getElementById(gid);
-    if (g) g.querySelectorAll('.chip').forEach(b => b.className = 'chip');
-  });
-  document.getElementById('avoided-container').innerHTML = '<div class="avoided-empty">No avoided setups logged yet.</div>';
-  document.getElementById('avoided-score').style.display = 'none';
+    /* ── Field ── */
+    function Field({ label, hint, children }) {
+      return (
+        <div className="mb-4">
+          <div className="text-xs font-mono text-zinc-400 uppercase tracking-widest mb-1">{label}</div>
+          {hint && <div className="text-xs text-zinc-600 mb-2 italic">{hint}</div>}
+          {children}
+        </div>
+      );
+    }
 
-  addTrade();
-  renderSummary();
-}
-</script>
+    /* ── Input ── */
+    function Input({ value, onChange, placeholder, type = "text", small }) {
+      return (
+        <input
+          type={type}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder={placeholder}
+          className={`field-input${small ? " small" : ""}`}
+        />
+      );
+    }
+
+    /* ── TextArea ── */
+    function TextArea({ value, onChange, placeholder, rows = 2 }) {
+      return (
+        <textarea
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder={placeholder}
+          rows={rows}
+          className="field-input"
+        />
+      );
+    }
+
+    /* ── GradeButton ── */
+    function GradeButton({ grade, active, onClick }) {
+      const desc = { A: "Take again tomorrow", B: "Good, minor flaw", C: "Questionable", F: "Never should happen" };
+      const activeClass = active ? `grade-active-${grade}` : "";
+      return (
+        <button
+          onClick={onClick}
+          title={desc[grade]}
+          className={`chip-base px-4 py-2 text-sm ${activeClass}`}
+          style={{ padding: "8px 16px", fontSize: "13px" }}
+        >
+          {grade}
+        </button>
+      );
+    }
+
+    /* ── TradeCard ── */
+    function TradeCard({ trade, index, onChange, onRemove }) {
+      const update = (key, val) => onChange({ ...trade, [key]: val });
+      const resultNum = parseFloat(trade.result);
+      const resultColor = isNaN(resultNum) ? "text-zinc-400" : resultNum >= 0 ? "text-emerald-400" : "text-red-400";
+
+      return (
+        <div className="border border-zinc-700 rounded-lg p-5 mb-4 bg-zinc-950">
+
+          {/* Header */}
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"16px" }}>
+            <div className="flex items-center gap-3">
+              <span className="text-zinc-500 font-mono text-sm">TRADE</span>
+              <span className="text-white font-mono text-xl font-bold">#{index + 1}</span>
+              {trade.result !== "" && (
+                <span className={`font-mono text-lg font-bold ${resultColor}`}>
+                  {resultNum >= 0 ? "+" : ""}{trade.result}
+                </span>
+              )}
+            </div>
+            <button
+              onClick={onRemove}
+              style={{ background:"none", border:"none", color:"#3f3f46", fontSize:"11px", cursor:"pointer" }}
+              onMouseOver={e => e.target.style.color="#a1a1aa"}
+              onMouseOut={e  => e.target.style.color="#3f3f46"}
+            >
+              REMOVE
+            </button>
+          </div>
+
+          {/* Row 1: Time · Direction · Entry · Exit */}
+          <div className="grid grid-cols-4 gap-3 mb-4">
+            <Field label="Time">
+              <Input value={trade.time} onChange={v => update("time", v)} placeholder="8:32" />
+            </Field>
+            <Field label="Direction">
+              <div className="flex gap-2 mt-1">
+                <Chip label="LONG"  active={trade.direction === "LONG"}  onClick={() => update("direction", trade.direction === "LONG"  ? "" : "LONG")}  color="green" />
+                <Chip label="SHORT" active={trade.direction === "SHORT"} onClick={() => update("direction", trade.direction === "SHORT" ? "" : "SHORT")} color="red"   />
+              </div>
+            </Field>
+            <Field label="Entry">
+              <Input value={trade.entry} onChange={v => update("entry", v)} placeholder="21,450" />
+            </Field>
+            <Field label="Exit">
+              <Input value={trade.exit} onChange={v => update("exit", v)} placeholder="21,460" />
+            </Field>
+          </div>
+
+          {/* Result · MAE · MFE */}
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <Field label="Result ($)" hint="Actual P&L in dollars">
+              <Input value={trade.result} onChange={v => update("result", v)} placeholder="+50" />
+            </Field>
+            <Field label="MAE (pts)" hint="How far against you before resolution — TIER 1">
+              <Input value={trade.mae} onChange={v => update("mae", v)} placeholder="8" />
+            </Field>
+            <Field label="MFE (pts)" hint="How far in your favor before exit">
+              <Input value={trade.mfe} onChange={v => update("mfe", v)} placeholder="12" />
+            </Field>
+          </div>
+
+          {/* IFT · Negotiable */}
+          <div className="grid grid-cols-2 gap-6 mb-4">
+            <Field label="Immediate Follow Through?" hint="Did price move your way almost immediately?">
+              <YesNo value={trade.immediateFollowThrough} onChange={v => update("immediateFollowThrough", v)} />
+            </Field>
+            <Field label="Market Negotiable?" hint="Did you have time to manage discretion, or did it move too fast?">
+              <YesNo value={trade.negotiable} onChange={v => update("negotiable", v)} />
+            </Field>
+          </div>
+
+          {/* Why */}
+          <Field label="Why Did I Take It?" hint="One sentence only. e.g. 'Failed auction at prior high' or 'Breakout above opening range'">
+            <TextArea value={trade.why} onChange={v => update("why", v)} placeholder="One sentence." rows={1} />
+          </Field>
+
+          {/* Setup Tag */}
+          <Field label="Setup Tag">
+            <div className="flex flex-wrap gap-2">
+              {SETUP_TAGS.map(t => (
+                <Chip key={t} label={t} active={trade.setupTag === t} onClick={() => update("setupTag", trade.setupTag === t ? "" : t)} color="blue" />
+              ))}
+            </div>
+          </Field>
+
+          {/* Loss Tag — only when result is negative */}
+          {!isNaN(resultNum) && resultNum < 0 && (
+            <Field label="Loss Category" hint="Tag every losing trade">
+              <div className="flex flex-wrap gap-2">
+                {LOSS_TAGS.map(t => (
+                  <Chip key={t} label={t} active={trade.lossTag === t} onClick={() => update("lossTag", trade.lossTag === t ? "" : t)} color="red" />
+                ))}
+              </div>
+            </Field>
+          )}
+
+          {/* Market Did + Would Take Again */}
+          <div className="grid grid-cols-2 gap-6 mb-4">
+            <Field label="Did Market Do What I Expected?">
+              <YesNo value={trade.marketDid} onChange={v => update("marketDid", v)} />
+            </Field>
+            <Field label="Would Take Again?">
+              <div className="flex gap-2">
+                <Chip label="YES"   active={trade.wouldTakeAgain === "yes"}   onClick={() => update("wouldTakeAgain", trade.wouldTakeAgain === "yes"   ? null : "yes")}   color="green"  />
+                <Chip label="MAYBE" active={trade.wouldTakeAgain === "maybe"} onClick={() => update("wouldTakeAgain", trade.wouldTakeAgain === "maybe" ? null : "maybe")} color="yellow" />
+                <Chip label="NO"    active={trade.wouldTakeAgain === "no"}    onClick={() => update("wouldTakeAgain", trade.wouldTakeAgain === "no"    ? null : "no")}    color="red"    />
+              </div>
+            </Field>
+          </div>
+
+          {/* Grade */}
+          <Field label="Trade Grade" hint="Grade the TRADE, not the result. A losing trade can be an A.">
+            <div className="flex gap-3">
+              {GRADE_OPTIONS.map(g => (
+                <GradeButton key={g} grade={g} active={trade.grade === g} onClick={() => update("grade", trade.grade === g ? "" : g)} />
+              ))}
+            </div>
+          </Field>
+
+          {/* Do Nothing */}
+          <Field label="What Would've Happened If I Did Nothing?" hint="Forces comparison vs. the monster move: no trade.">
+            <TextArea value={trade.doNothingOutcome} onChange={v => update("doNothingOutcome", v)} placeholder="e.g. 'Better entry appeared 4 min later' / 'Saved $80' / 'Missed winner'" rows={1} />
+          </Field>
+
+          {/* Notes */}
+          <Field label="Notes / Lesson">
+            <TextArea value={trade.notes} onChange={v => update("notes", v)} placeholder="One sentence lesson." rows={1} />
+          </Field>
+        </div>
+      );
+    }
+
+    /* ── SummaryPanel ── */
+    function SummaryPanel({ session }) {
+      const trades     = session.trades;
+      const withResult = trades.filter(t => t.result !== "" && !isNaN(parseFloat(t.result)));
+      const totalPnL   = withResult.reduce((s, t) => s + parseFloat(t.result), 0);
+      const winners    = withResult.filter(t => parseFloat(t.result) >= 0);
+      const losers     = withResult.filter(t => parseFloat(t.result) <  0);
+      const winRate    = withResult.length > 0 ? Math.round((winners.length / withResult.length) * 100) : null;
+
+      const winMAE  = winners.filter(t => t.mae !== "").length > 0
+        ? (winners.filter(t => t.mae !== "").reduce((s,t) => s + parseFloat(t.mae||0), 0) / winners.filter(t => t.mae !== "").length).toFixed(1) : null;
+      const lossMAE = losers.filter(t => t.mae !== "").length > 0
+        ? (losers.filter(t => t.mae !== "").reduce((s,t) => s + parseFloat(t.mae||0), 0) / losers.filter(t => t.mae !== "").length).toFixed(1) : null;
+
+      const iftYes = trades.filter(t => t.immediateFollowThrough === true).length;
+      const iftNo  = trades.filter(t => t.immediateFollowThrough === false).length;
+      const negYes = trades.filter(t => t.negotiable === true).length;
+      const negNo  = trades.filter(t => t.negotiable === false).length;
+
+      const gradeCounts = { A:0, B:0, C:0, F:0 };
+      trades.forEach(t => { if (t.grade) gradeCounts[t.grade]++; });
+
+      const lossTags = {};
+      losers.forEach(t => { if (t.lossTag) lossTags[t.lossTag] = (lossTags[t.lossTag]||0) + 1; });
+
+      const fiveQ = [
+        { q: "Did I follow rules?",          key: "followedRules"      },
+        { q: "Did I protect both accounts?", key: "protectedAccounts"  },
+        { q: "Did I record everything?",     key: "recorded"           },
+        { q: "Did I review?",                key: "reviewed"           },
+        { q: "Did I survive?",               key: "survived"           },
+      ];
+      const [checklist, setChecklist] = useState({
+        followedRules: null, protectedAccounts: null,
+        recorded: null, reviewed: null, survived: null,
+      });
+
+      const gradeColors = { A:"text-emerald-400", B:"text-blue-400", C:"text-yellow-400", F:"text-red-400" };
+
+      return (
+        <div className="border border-zinc-700 rounded-lg p-5 bg-zinc-950 mb-6">
+          <div className="text-xs font-mono text-zinc-500 uppercase tracking-widest mb-4">Session Summary</div>
+
+          {/* P&L row */}
+          <div className="grid grid-cols-4 gap-4 mb-4">
+            {[
+              { label:"NET P&L",    value: (totalPnL >= 0 ? "+" : "") + totalPnL.toFixed(0), color: totalPnL >= 0 ? "text-emerald-400" : "text-red-400" },
+              { label:"WIN RATE",   value: winRate !== null ? `${winRate}%` : "—", color:"text-zinc-100" },
+              { label:"AVG MAE (W)",value: winMAE  !== null ? winMAE  : "—", color:"text-emerald-400" },
+              { label:"AVG MAE (L)",value: lossMAE !== null ? lossMAE : "—", color:"text-red-400"     },
+            ].map(({ label, value, color }) => (
+              <div key={label} className="bg-zinc-900 rounded p-3 text-center">
+                <div className="text-xs text-zinc-500 font-mono mb-1">{label}</div>
+                <div className={`text-2xl font-mono font-bold ${color}`}>{value}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Grades + IFT */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="bg-zinc-900 rounded p-3">
+              <div className="text-xs text-zinc-500 font-mono mb-2">TRADE GRADES</div>
+              <div className="flex gap-3">
+                {["A","B","C","F"].map(g => (
+                  <div key={g} className="text-center">
+                    <div className={`text-xl font-mono font-bold ${gradeColors[g]}`}>{gradeCounts[g]}</div>
+                    <div className="text-xs text-zinc-500 font-mono">{g}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="bg-zinc-900 rounded p-3">
+              <div className="text-xs text-zinc-500 font-mono mb-2">FOLLOW THROUGH / NEGOTIABLE</div>
+              <div className="flex gap-4 text-xs font-mono">
+                <div><span className="text-emerald-400">{iftYes}</span> IFT Yes / <span className="text-red-400">{iftNo}</span> No</div>
+                <div><span className="text-emerald-400">{negYes}</span> Neg Yes / <span className="text-red-400">{negNo}</span> No</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Loss tag breakdown */}
+          {Object.keys(lossTags).length > 0 && (
+            <div className="bg-zinc-900 rounded p-3 mb-4">
+              <div className="text-xs text-zinc-500 font-mono mb-2">LOSS BREAKDOWN</div>
+              <div className="flex flex-wrap gap-3">
+                {Object.entries(lossTags).sort((a,b) => b[1]-a[1]).map(([tag, count]) => (
+                  <div key={tag} className="flex items-center gap-1">
+                    <span className="text-red-400 font-mono font-bold text-sm">{count}</span>
+                    <span className="text-zinc-400 font-mono text-xs">{tag}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Post-session checklist */}
+          <div className="bg-zinc-900 rounded p-3">
+            <div className="text-xs text-zinc-500 font-mono mb-3">POST-SESSION CHECKLIST</div>
+            <div className="space-y-2">
+              {fiveQ.map(({ q, key }) => (
+                <div key={key} style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                  <span className="text-zinc-300 font-mono text-xs">{q}</span>
+                  <YesNo value={checklist[key]} onChange={v => setChecklist(prev => ({ ...prev, [key]: v }))} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ── TradesAvoided ── */
+    function TradesAvoided({ avoided, setAvoided }) {
+      const addAvoided = () => setAvoided(prev => [...prev, { id: Date.now() + Math.random(), setup:"", passed:null, outcome:"" }]);
+      const update     = (id, key, val) => setAvoided(prev => prev.map(a => a.id === id ? { ...a, [key]: val } : a));
+      const remove     = (id)           => setAvoided(prev => prev.filter(a => a.id !== id));
+
+      return (
+        <div className="border border-zinc-700 rounded-lg p-5 mb-6 bg-zinc-950">
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"16px" }}>
+            <div>
+              <div className="text-xs font-mono text-zinc-500 uppercase tracking-widest">Trades Avoided</div>
+              <div className="text-xs text-zinc-600 italic mt-1">Every correctly avoided garbage setup = +1 point. This is a skill.</div>
+            </div>
+            <button
+              onClick={addAvoided}
+              className="chip-base"
+              style={{ fontSize:"11px" }}
+            >
+              + ADD
+            </button>
+          </div>
+
+          {avoided.length === 0 && (
+            <div className="text-zinc-700 font-mono text-xs text-center py-4">No avoided setups logged yet.</div>
+          )}
+
+          {avoided.map((a) => (
+            <div key={a.id} className="border border-zinc-800 rounded p-3 mb-2 grid grid-cols-3 gap-3" style={{ alignItems:"end" }}>
+              <div>
+                <div className="text-xs text-zinc-500 font-mono mb-1">Setup Seen</div>
+                <Input value={a.setup} onChange={v => update(a.id, "setup", v)} placeholder="Chop reversal" small />
+              </div>
+              <div>
+                <div className="text-xs text-zinc-500 font-mono mb-1">Passed?</div>
+                <YesNo value={a.passed} onChange={v => update(a.id, "passed", v)} />
+              </div>
+              <div>
+                <div className="text-xs text-zinc-500 font-mono mb-1">Outcome (if traded)</div>
+                <Input value={a.outcome} onChange={v => update(a.id, "outcome", v)} placeholder="Would've lost" small />
+              </div>
+            </div>
+          ))}
+
+          {avoided.length > 0 && (
+            <div className="mt-2 text-right">
+              <span className="font-mono text-emerald-400 text-sm font-bold">{avoided.filter(a => a.passed === true).length}</span>
+              <span className="font-mono text-zinc-500 text-xs"> setups correctly avoided</span>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    /* ── Main App ── */
+    function KaizenTradeTemplate() {
+      const [session, setSession] = useState(emptySession());
+      const [avoided, setAvoided] = useState([]);
+      const [view,    setView]    = useState("session"); // "session" | "summary"
+
+      const updateSession = (key, val) => setSession(prev => ({ ...prev, [key]: val }));
+      const addTrade      = ()         => setSession(prev => ({ ...prev, trades: [...prev.trades, emptyTrade()] }));
+      const updateTrade   = (id, upd)  => setSession(prev => ({ ...prev, trades: prev.trades.map(t => t.id === id ? upd : t) }));
+      const removeTrade   = (id)       => setSession(prev => ({ ...prev, trades: prev.trades.filter(t => t.id !== id) }));
+
+      const resetSession = () => {
+        if (window.confirm("Start a new session? Current data will be cleared.")) {
+          setSession(emptySession());
+          setAvoided([]);
+          setView("session");
+        }
+      };
+
+      /* shared button style used in header / pre-session / metrics */
+      const hdrBtn = {
+        background:"none", border:"1px solid #3f3f46", color:"#a1a1aa",
+        padding:"6px 14px", borderRadius:"4px", fontSize:"11px", cursor:"pointer",
+      };
+      const envBtn = (active) => ({
+        padding:"6px 14px",
+        border:`1px solid ${active ? "#6366f1" : "#3f3f46"}`,
+        borderRadius:"4px",
+        background: active ? "#1e1b4b" : "#18181b",
+        color: active ? "#a5b4fc" : "#71717a",
+        fontSize:"11px", cursor:"pointer",
+      });
+      const yesNoBtn = (active, isYes) => ({
+        padding:"6px 16px",
+        border:`1px solid ${active ? (isYes ? "#10b981" : "#ef4444") : "#3f3f46"}`,
+        borderRadius:"4px",
+        background: active ? (isYes ? "#064e3b" : "#450a0a") : "#18181b",
+        color: active ? (isYes ? "#6ee7b7" : "#fca5a5") : "#71717a",
+        fontSize:"11px", cursor:"pointer",
+      });
+      const envCorrectBtn = (val, active) => ({
+        padding:"6px 16px",
+        border:`1px solid ${active ? (val===true ? "#10b981" : val===false ? "#ef4444" : "#6366f1") : "#3f3f46"}`,
+        borderRadius:"4px",
+        background: active ? (val===true ? "#064e3b" : val===false ? "#450a0a" : "#1e1b4b") : "#18181b",
+        color: active ? (val===true ? "#6ee7b7" : val===false ? "#fca5a5" : "#a5b4fc") : "#71717a",
+        fontSize:"11px", cursor:"pointer",
+      });
+
+      return (
+        <div style={{ background:"#0a0a0a", minHeight:"100vh", fontFamily:"'JetBrains Mono','Courier New',monospace" }}>
+
+          {/* ── Header ── */}
+          <div style={{ borderBottom:"1px solid #27272a", padding:"16px 24px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+            <div>
+              <div style={{ color:"#71717a", fontSize:"10px", letterSpacing:"0.2em", marginBottom:"2px" }}>KAIZEN TRADE AUTOPSY</div>
+              <div style={{ color:"#e4e4e7", fontSize:"18px", fontWeight:"700", letterSpacing:"0.05em" }}>SESSION LOG</div>
+            </div>
+            <div style={{ display:"flex", gap:"8px" }}>
+              {/* ── NEW: Print / Save PDF ── */}
+              <button
+                id="print-btn"
+                onClick={() => window.print()}
+                style={{ ...hdrBtn, borderColor:"#6366f1", color:"#a5b4fc" }}
+              >
+                ⬇ PRINT / SAVE PDF
+              </button>
+              <button onClick={() => setView(view === "session" ? "summary" : "session")} style={hdrBtn}>
+                {view === "session" ? "VIEW SUMMARY" : "VIEW SESSION"}
+              </button>
+              <button onClick={resetSession} style={{ ...hdrBtn, color:"#71717a" }}>
+                NEW SESSION
+              </button>
+            </div>
+          </div>
+
+          <div style={{ maxWidth:"860px", margin:"0 auto", padding:"24px 16px" }}>
+
+            {/* ── Mantra ── */}
+            <div style={{ borderLeft:"2px solid #3f3f46", paddingLeft:"16px", marginBottom:"28px" }}>
+              <div style={{ color:"#52525b", fontSize:"11px", fontStyle:"italic", lineHeight:"1.8" }}>
+                I protect the account. I stack clean days. I become impossible to kill.<br />
+                Has the market earned my participation?
+              </div>
+            </div>
+
+            {/* ── PRE-SESSION ── */}
+            <div style={{ border:"1px solid #3f3f46", borderRadius:"8px", padding:"20px", marginBottom:"20px", background:"#09090b" }}>
+              <div style={{ color:"#71717a", fontSize:"10px", letterSpacing:"0.2em", marginBottom:"16px" }}>PRE-SESSION</div>
+
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"16px", marginBottom:"16px" }}>
+                {/* Date */}
+                <div>
+                  <div style={{ color:"#71717a", fontSize:"10px", marginBottom:"6px" }}>DATE</div>
+                  <input
+                    type="date"
+                    value={session.date}
+                    onChange={e => updateSession("date", e.target.value)}
+                    className="field-input"
+                  />
+                </div>
+                {/* First trade setup */}
+                <div>
+                  <div style={{ color:"#71717a", fontSize:"10px", marginBottom:"6px" }}>FIRST TRADE FOLLOWED SETUP?</div>
+                  <div style={{ display:"flex", gap:"8px", marginTop:"8px" }}>
+                    {[true, false].map(v => (
+                      <button
+                        key={String(v)}
+                        onClick={() => updateSession("firstTradeSetup", session.firstTradeSetup === v ? null : v)}
+                        style={yesNoBtn(session.firstTradeSetup === v, v)}
+                      >
+                        {v ? "YES" : "NO"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Market Environment */}
+              <div style={{ marginBottom:"12px" }}>
+                <div style={{ color:"#71717a", fontSize:"10px", marginBottom:"6px" }}>MARKET ENVIRONMENT — Classify before first trade</div>
+                <div style={{ display:"flex", flexWrap:"wrap", gap:"8px" }}>
+                  {ENV_OPTIONS.map(e => (
+                    <button key={e} onClick={() => updateSession("environment", session.environment === e ? "" : e)} style={envBtn(session.environment === e)}>
+                      {e}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ color:"#52525b", fontSize:"10px", marginTop:"6px", fontStyle:"italic" }}>
+                  ROTATIONAL = levels respected, discretion works · CHOP = whipsaws, avoid · EXPANSION = violent, fast, kills discretion
+                </div>
+              </div>
+            </div>
+
+            {/* ── SUMMARY or SESSION view ── */}
+            {view === "summary" ? (
+              <SummaryPanel session={session} />
+            ) : (
+              <>
+                {/* Trade Log */}
+                <div style={{ marginBottom:"8px", color:"#71717a", fontSize:"10px", letterSpacing:"0.2em" }}>TRADE LOG</div>
+                {session.trades.map((trade, i) => (
+                  <TradeCard
+                    key={trade.id}
+                    trade={trade}
+                    index={i}
+                    onChange={updated => updateTrade(trade.id, updated)}
+                    onRemove={() => removeTrade(trade.id)}
+                  />
+                ))}
+                <button
+                  onClick={addTrade}
+                  style={{ width:"100%", background:"none", border:"1px dashed #3f3f46", color:"#52525b", padding:"12px", borderRadius:"8px", fontSize:"11px", cursor:"pointer", marginBottom:"20px" }}
+                >
+                  + ADD TRADE
+                </button>
+
+                {/* Trades Avoided */}
+                <TradesAvoided avoided={avoided} setAvoided={setAvoided} />
+
+                {/* Session Metrics */}
+                <div style={{ border:"1px solid #3f3f46", borderRadius:"8px", padding:"20px", marginBottom:"20px", background:"#09090b" }}>
+                  <div style={{ color:"#71717a", fontSize:"10px", letterSpacing:"0.2em", marginBottom:"16px" }}>SESSION METRICS</div>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:"12px", marginBottom:"16px" }}>
+                    {[
+                      { key:"reentryCount",  label:"Re-entry Count",        hint:"Avg seconds between trades" },
+                      { key:"walkAways",     label:"Conscious Walk-Aways",   hint:"Times passed on a setup" },
+                      { key:"patienceScore", label:"Patience Score (1–5)",   hint:"1=clicked fast, 5=fully let market prove" },
+                    ].map(({ key, label, hint }) => (
+                      <div key={key}>
+                        <div style={{ color:"#71717a", fontSize:"10px", marginBottom:"2px" }}>{label}</div>
+                        <div style={{ color:"#52525b", fontSize:"9px", marginBottom:"6px", fontStyle:"italic" }}>{hint}</div>
+                        <input
+                          value={session[key]}
+                          onChange={e => updateSession(key, e.target.value)}
+                          className="field-input"
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Was environment call correct? */}
+                  <div style={{ marginBottom:"12px" }}>
+                    <div style={{ color:"#71717a", fontSize:"10px", marginBottom:"6px" }}>WAS ENVIRONMENT CALL CORRECT?</div>
+                    <div style={{ display:"flex", gap:"8px" }}>
+                      {[true, false, "unknown"].map(v => (
+                        <button
+                          key={String(v)}
+                          onClick={() => updateSession("environmentCorrect", session.environmentCorrect === v ? null : v)}
+                          style={envCorrectBtn(v, session.environmentCorrect === v)}
+                        >
+                          {v === true ? "YES" : v === false ? "NO" : "UNKNOWN"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Session notes */}
+                  <div>
+                    <div style={{ color:"#71717a", fontSize:"10px", marginBottom:"6px" }}>SESSION NOTES / LESSON</div>
+                    <textarea
+                      value={session.sessionNotes}
+                      onChange={e => updateSession("sessionNotes", e.target.value)}
+                      rows={3}
+                      placeholder="What did the session teach you? One key takeaway."
+                      className="field-input"
+                    />
+                  </div>
+                </div>
+
+                {/* Post-session daily check */}
+                <div style={{ border:"1px solid #3f3f46", borderRadius:"8px", padding:"20px", background:"#09090b" }}>
+                  <div style={{ color:"#71717a", fontSize:"10px", letterSpacing:"0.2em", marginBottom:"12px" }}>POST-SESSION — DAILY CHECK</div>
+                  <SummaryPanel session={session} />
+                </div>
+              </>
+            )}
+
+            {/* Footer */}
+            <div style={{ marginTop:"24px", color:"#3f3f46", fontSize:"10px", textAlign:"center", fontStyle:"italic" }}>
+              The account staying open is the win condition. Profit is the bonus.
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ── Mount ── */
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<KaizenTradeTemplate />);
+  </script>
 </body>
 </html>
