@@ -4,9 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kaizen Trade Autopsy — Session Log</title>
+
+  <!-- React + ReactDOM + Babel (browser transform) -->
   <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+
   <style>
     /* ── Reset ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -19,78 +22,103 @@
     button { font-family: inherit; cursor: pointer; }
     input, textarea, select { font-family: inherit; }
 
-    /* ── Utilities ── */
-    .flex { display: flex; }
-    .flex-wrap { display: flex; flex-wrap: wrap; }
-    .grid { display: grid; }
-    .items-center { align-items: center; }
+    /* ── Tailwind-equivalent utilities used in the JSX ── */
+    /* flex / grid */
+    .flex          { display: flex; }
+    .flex-wrap     { display: flex; flex-wrap: wrap; }
+    .grid          { display: grid; }
+    .items-center  { align-items: center; }
     .justify-between { justify-content: space-between; }
-    .text-center { text-align: center; }
-    .text-right { text-align: right; }
+    .text-center   { text-align: center; }
+    .text-right    { text-align: right; }
+
+    /* gap */
     .gap-1 { gap: 4px; }
     .gap-2 { gap: 8px; }
     .gap-3 { gap: 12px; }
     .gap-4 { gap: 16px; }
-    .gap-6 { gap: 24px; }
-    .mb-1 { margin-bottom: 4px; }
-    .mb-2 { margin-bottom: 8px; }
-    .mb-3 { margin-bottom: 12px; }
-    .mb-4 { margin-bottom: 16px; }
-    .mb-5 { margin-bottom: 20px; }
-    .mb-6 { margin-bottom: 24px; }
-    .mt-1 { margin-top: 4px; }
-    .mt-2 { margin-top: 8px; }
-    .p-3 { padding: 12px; }
-    .p-5 { padding: 20px; }
-    .px-3 { padding-left: 12px; padding-right: 12px; }
-    .px-4 { padding-left: 16px; padding-right: 16px; }
-    .py-1 { padding-top: 4px; padding-bottom: 4px; }
-    .py-2 { padding-top: 8px; padding-bottom: 8px; }
-    .py-4 { padding-top: 16px; padding-bottom: 16px; }
+
+    /* margin / padding */
+    .mb-1  { margin-bottom: 4px; }
+    .mb-2  { margin-bottom: 8px; }
+    .mb-3  { margin-bottom: 12px; }
+    .mb-4  { margin-bottom: 16px; }
+    .mb-5  { margin-bottom: 20px; }
+    .mb-6  { margin-bottom: 24px; }
+    .mt-1  { margin-top: 4px; }
+    .mt-2  { margin-top: 8px; }
+    .p-3   { padding: 12px; }
+    .p-5   { padding: 20px; }
+    .px-3  { padding-left: 12px; padding-right: 12px; }
+    .px-4  { padding-left: 16px; padding-right: 16px; }
+    .py-1  { padding-top: 4px;  padding-bottom: 4px; }
+    .py-2  { padding-top: 8px;  padding-bottom: 8px; }
+    .py-4  { padding-top: 16px; padding-bottom: 16px; }
     .space-y-2 > * + * { margin-top: 8px; }
+
+    /* grid cols */
     .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
     .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
     .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
-    .rounded { border-radius: 4px; }
+    .gap-3 { gap: 12px; }
+    .gap-4 { gap: 16px; }
+    .gap-6 { gap: 24px; }
+
+    /* rounded */
+    .rounded    { border-radius: 4px; }
     .rounded-lg { border-radius: 8px; }
-    .border { border-width: 1px; border-style: solid; }
-    .border-zinc-700 { border-color: #3f3f46; }
-    .border-zinc-800 { border-color: #27272a; }
-    .bg-zinc-900 { background: #18181b; }
-    .bg-zinc-950 { background: #09090b; }
-    .text-xs { font-size: 11px; }
-    .text-sm { font-size: 13px; }
-    .text-xl { font-size: 20px; }
-    .text-2xl { font-size: 24px; }
-    .text-lg { font-size: 18px; }
-    .font-mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
-    .font-bold { font-weight: 700; }
-    .italic { font-style: italic; }
-    .uppercase { text-transform: uppercase; }
+
+    /* border */
+    .border           { border-width: 1px; border-style: solid; }
+    .border-zinc-700  { border-color: #3f3f46; }
+    .border-zinc-800  { border-color: #27272a; }
+
+    /* bg */
+    .bg-zinc-900  { background: #18181b; }
+    .bg-zinc-950  { background: #09090b; }
+
+    /* text sizes */
+    .text-xs   { font-size: 11px; }
+    .text-sm   { font-size: 13px; }
+    .text-xl   { font-size: 20px; }
+    .text-2xl  { font-size: 24px; }
+    .text-lg   { font-size: 18px; }
+
+    /* font */
+    .font-mono  { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    .font-bold  { font-weight: 700; }
+    .italic     { font-style: italic; }
+    .uppercase  { text-transform: uppercase; }
     .tracking-widest { letter-spacing: 0.2em; }
     .leading-relaxed { line-height: 1.8; }
     .resize-none { resize: none; }
-    .text-white { color: #ffffff; }
-    .text-zinc-100 { color: #f4f4f5; }
-    .text-zinc-300 { color: #d4d4d8; }
-    .text-zinc-400 { color: #a1a1aa; }
-    .text-zinc-500 { color: #71717a; }
-    .text-zinc-600 { color: #52525b; }
-    .text-zinc-700 { color: #3f3f46; }
+
+    /* colors */
+    .text-white       { color: #ffffff; }
+    .text-zinc-100    { color: #f4f4f5; }
+    .text-zinc-300    { color: #d4d4d8; }
+    .text-zinc-400    { color: #a1a1aa; }
+    .text-zinc-500    { color: #71717a; }
+    .text-zinc-600    { color: #52525b; }
+    .text-zinc-700    { color: #3f3f46; }
     .text-emerald-400 { color: #34d399; }
     .text-emerald-100 { color: #d1fae5; }
-    .text-red-400 { color: #f87171; }
-    .text-red-100 { color: #fee2e2; }
-    .text-blue-400 { color: #60a5fa; }
-    .text-blue-100 { color: #dbeafe; }
-    .text-yellow-400 { color: #fbbf24; }
-    .text-yellow-100 { color: #fef3c7; }
-    .text-purple-100 { color: #f3e8ff; }
+    .text-red-400     { color: #f87171; }
+    .text-red-100     { color: #fee2e2; }
+    .text-blue-400    { color: #60a5fa; }
+    .text-blue-100    { color: #dbeafe; }
+    .text-yellow-400  { color: #fbbf24; }
+    .text-yellow-100  { color: #fef3c7; }
+    .text-purple-100  { color: #f3e8ff; }
+
+    /* focus */
     .focus\:outline-none:focus { outline: none; }
     .focus\:border-zinc-400:focus { border-color: #a1a1aa; }
+
+    /* placeholder */
     input::placeholder, textarea::placeholder { color: #3f3f46; }
 
-    /* ── Chips ── */
+    /* chip base + active states */
     .chip-base {
       display: inline-block;
       padding: 4px 12px;
@@ -102,19 +130,20 @@
       cursor: pointer;
       transition: all 0.15s;
     }
+    /* active colours replicated from JSX Chip component */
     .chip-active-blue   { background: #1e1b4b !important; border-color: #6366f1 !important; color: #c7d2fe !important; }
     .chip-active-red    { background: #450a0a !important; border-color: #ef4444 !important; color: #fca5a5 !important; }
     .chip-active-green  { background: #064e3b !important; border-color: #10b981 !important; color: #6ee7b7 !important; }
     .chip-active-yellow { background: #422006 !important; border-color: #f59e0b !important; color: #fde68a !important; }
     .chip-active-purple { background: #3b0764 !important; border-color: #a855f7 !important; color: #e9d5ff !important; }
 
-    /* ── Grade buttons ── */
+    /* grade button active states */
     .grade-active-A { background: #064e3b !important; border-color: #34d399 !important; color: #d1fae5 !important; }
     .grade-active-B { background: #1e3a5f !important; border-color: #60a5fa !important; color: #dbeafe !important; }
     .grade-active-C { background: #422006 !important; border-color: #fbbf24 !important; color: #fef3c7 !important; }
     .grade-active-F { background: #450a0a !important; border-color: #f87171 !important; color: #fee2e2 !important; }
 
-    /* ── Fields ── */
+    /* input / textarea shared */
     .field-input {
       background: #18181b;
       border: 1px solid #3f3f46;
@@ -129,201 +158,298 @@
     .field-input.small { font-size: 11px; padding: 4px 8px; }
     textarea.field-input { resize: none; }
 
-    /* ── Color theme overrides ── */
-    :root {
-      --kk-red:    #ff2b2b;
-      --kk-blue:   #2563ff;
-      --kk-yellow: #ffd400;
-      --kk-green:  #22c55e;
-      --kk-white:  #ffffff;
-      --kk-black:  #050505;
-      --kk-paper:  #f4f4ef;
-    }
+/*─────────────────────────────────────────────
+  PRIMARY COLOR READABILITY OVERRIDE — v3
+  Light readable page + color print match
+─────────────────────────────────────────────*/
 
-    body, #root > div {
-      background:
-        linear-gradient(90deg, rgba(37,99,255,.16), transparent 18%, transparent 82%, rgba(255,212,0,.20)),
-        var(--kk-paper) !important;
-      color: #050505 !important;
-      line-height: 1.5;
-    }
+:root{
+  --kk-red:#ff2b2b;
+  --kk-blue:#2563ff;
+  --kk-yellow:#ffd400;
+  --kk-green:#22c55e;
+  --kk-white:#ffffff;
+  --kk-black:#050505;
+  --kk-paper:#f4f4ef;
+}
 
-    /* Header */
-    #root > div > div:first-child {
-      background: #050505 !important;
-      border-bottom: 6px solid var(--kk-yellow) !important;
-      position: sticky;
-      top: 0;
-      z-index: 20;
-    }
-    #root > div > div:first-child div div:first-child  { color: var(--kk-yellow) !important; font-weight: 900 !important; }
-    #root > div > div:first-child div div:nth-child(2) { color: #fff !important; font-size: 24px !important; font-weight: 900 !important; text-shadow: 2px 2px 0 var(--kk-blue); }
+/* PAGE */
+body,
+#root > div{
+  background:
+    linear-gradient(90deg, rgba(37,99,255,.16), transparent 18%, transparent 82%, rgba(255,212,0,.20)),
+    var(--kk-paper) !important;
+  color:#050505 !important;
+  line-height:1.5;
+}
 
-    /* Main container */
-    #root > div > div:nth-child(2) { max-width: 980px !important; }
+/* HEADER */
+#root > div > div:first-child{
+  background:#050505 !important;
+  border-bottom:6px solid var(--kk-yellow) !important;
+  position:sticky;
+  top:0;
+  z-index:20;
+}
 
-    /* Cards */
-    .bg-zinc-950, .bg-zinc-900,
-    #root > div > div:nth-child(2) > div[style*="background"] {
-      background: #ffffff !important;
-      color: #050505 !important;
-    }
-    .border-zinc-700, .border-zinc-800,
-    #root > div > div:nth-child(2) > div[style*="border"] {
-      border: 3px solid #050505 !important;
-      border-top: 8px solid var(--kk-blue) !important;
-      border-radius: 14px !important;
-      box-shadow: 6px 6px 0 #050505 !important;
-    }
+#root > div > div:first-child div div:first-child{
+  color:var(--kk-yellow) !important;
+  font-weight:900 !important;
+}
 
-    /* Labels */
-    .text-zinc-500, .text-zinc-400,
-    div[style*="color:#71717a"], div[style*="color: #71717a"] {
-      color: #050505 !important; font-weight: 900 !important; opacity: 1 !important;
-    }
-    .text-zinc-600, div[style*="color:#52525b"], div[style*="color: #52525b"] { color: #333 !important; opacity: 1 !important; }
-    .text-zinc-700 { color: #555 !important; }
+#root > div > div:first-child div div:nth-child(2){
+  color:#fff !important;
+  font-size:24px !important;
+  font-weight:900 !important;
+  text-shadow:2px 2px 0 var(--kk-blue);
+}
 
-    /* Inputs */
-    .field-input {
-      background: #fff !important;
-      color: #050505 !important;
-      border: 3px solid #050505 !important;
-      border-radius: 8px !important;
-      box-shadow: 4px 4px 0 #050505 !important;
-      font-size: 15px !important;
-      min-height: 44px;
-    }
-    textarea.field-input { min-height: 76px; }
-    .field-input::placeholder { color: #777 !important; }
+/* MAIN */
+#root > div > div:nth-child(2){
+  max-width:980px !important;
+}
 
-    /* Buttons */
-    .chip-base, button {
-      border: 3px solid #050505 !important;
-      border-radius: 8px !important;
-      font-weight: 900 !important;
-      box-shadow: 3px 3px 0 #050505 !important;
-    }
-    .chip-base {
-      background: #fff !important;
-      color: #050505 !important;
-      padding: 7px 12px !important;
-      font-size: 12px !important;
-    }
+/* CARDS */
+.bg-zinc-950,
+.bg-zinc-900,
+#root > div > div:nth-child(2) > div[style*="background"]{
+  background:#ffffff !important;
+  color:#050505 !important;
+}
 
-    /* Active chips */
-    .chip-active-blue,  .grade-active-B { background: var(--kk-blue)   !important; color: #fff     !important; }
-    .chip-active-green, .grade-active-A { background: var(--kk-green)  !important; color: #050505  !important; }
-    .chip-active-red,   .grade-active-F { background: var(--kk-red)    !important; color: #fff     !important; }
-    .chip-active-yellow,.grade-active-C { background: var(--kk-yellow) !important; color: #050505  !important; }
+.border-zinc-700,
+.border-zinc-800,
+#root > div > div:nth-child(2) > div[style*="border"]{
+  border:3px solid #050505 !important;
+  border-top:8px solid var(--kk-blue) !important;
+  border-radius:14px !important;
+  box-shadow:6px 6px 0 #050505 !important;
+}
 
-    /* Header buttons */
-    #root > div > div:first-child button { background: var(--kk-yellow) !important; color: #050505 !important; }
-    #print-btn { background: var(--kk-blue) !important; color: #fff !important; }
+/* LABELS */
+.text-zinc-500,
+.text-zinc-400,
+div[style*="color:#71717a"],
+div[style*="color: #71717a"]{
+  color:#050505 !important;
+  font-weight:900 !important;
+  opacity:1 !important;
+}
 
-    /* Mantra */
-    #root > div > div:nth-child(2) > div:first-child {
-      background: #fff !important;
-      color: #050505 !important;
-      border: 3px solid #050505 !important;
-      border-left: 14px solid var(--kk-red) !important;
-      border-radius: 14px !important;
-      padding: 18px 22px !important;
-      box-shadow: 7px 7px 0 var(--kk-blue) !important;
-    }
-    #root > div > div:nth-child(2) > div:first-child div {
-      color: #050505 !important;
-      font-size: 16px !important;
-      font-weight: 900 !important;
-    }
+.text-zinc-600,
+div[style*="color:#52525b"],
+div[style*="color: #52525b"]{
+  color:#333 !important;
+  opacity:1 !important;
+}
 
-    /* Text overrides */
-    .text-white  { color: #050505 !important; }
-    .text-xl     { font-size: 26px !important; font-weight: 900 !important; }
-    .text-2xl    { font-size: 30px !important; font-weight: 900 !important; }
-    .text-emerald-400 { color: #047a2f !important; }
-    .text-red-400     { color: #d00000 !important; }
-    .text-blue-400    { color: #004dff !important; }
-    .text-yellow-400  { color: #b88700 !important; }
+.text-zinc-700{
+  color:#555 !important;
+}
 
-    /* Add Trade button */
-    button[style*="dashed"] {
-      background: var(--kk-yellow) !important;
-      color: #050505 !important;
-      border: 3px dashed #050505 !important;
-      border-radius: 12px !important;
-      font-size: 14px !important;
-      font-weight: 900 !important;
-      box-shadow: 5px 5px 0 #050505 !important;
-    }
+/* INPUTS */
+.field-input{
+  background:#fff !important;
+  color:#050505 !important;
+  border:3px solid #050505 !important;
+  border-radius:8px !important;
+  box-shadow:4px 4px 0 #050505 !important;
+  font-size:15px !important;
+  min-height:44px;
+}
 
-    /* Remove button */
-    button[style*="background: none"][style*="border: none"] {
-      background: var(--kk-red) !important;
-      color: #fff !important;
-      border: 3px solid #050505 !important;
-      border-radius: 8px !important;
-      padding: 7px 10px !important;
-    }
+textarea.field-input{
+  min-height:76px;
+}
 
-    /* Footer */
-    #root > div > div:nth-child(2) > div:last-child {
-      color: #050505 !important;
-      font-size: 12px !important;
-      font-weight: 900;
-    }
+.field-input::placeholder{
+  color:#777 !important;
+}
 
-    /* Mobile */
-    @media (max-width: 760px) {
-      .grid-cols-4, .grid-cols-3, .grid-cols-2 { grid-template-columns: 1fr !important; }
-      #root > div > div:first-child { flex-direction: column !important; align-items: flex-start !important; }
-      #root > div > div:first-child > div:last-child { flex-wrap: wrap !important; }
-    }
+/* BUTTONS */
+.chip-base,
+button{
+  border:3px solid #050505 !important;
+  border-radius:8px !important;
+  font-weight:900 !important;
+  box-shadow:3px 3px 0 #050505 !important;
+}
 
-    /* Print */
-    @media print {
-      @page { margin: 0.45in; }
-      body, #root > div {
-        background: var(--kk-paper) !important;
-        color: #050505 !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-      #root > div > div:first-child {
-        position: static !important;
-        background: #050505 !important;
-        border-bottom: 6px solid var(--kk-yellow) !important;
-      }
-      #print-btn, #root > div > div:first-child button { display: none !important; }
-      .bg-zinc-950, .bg-zinc-900,
-      #root > div > div:nth-child(2) > div[style*="background"] {
-        background: #fff !important;
-        color: #050505 !important;
-      }
-      .border-zinc-700, .border-zinc-800,
-      #root > div > div:nth-child(2) > div[style*="border"] {
-        border: 2px solid #050505 !important;
-        border-top: 6px solid var(--kk-blue) !important;
-        box-shadow: 4px 4px 0 #050505 !important;
-        break-inside: avoid !important;
-        page-break-inside: avoid !important;
-      }
-      .field-input {
-        background: #fff !important;
-        color: #050505 !important;
-        border: 2px solid #050505 !important;
-        box-shadow: 2px 2px 0 #050505 !important;
-      }
-      .chip-base, button { box-shadow: 2px 2px 0 #050505 !important; }
-    }
-  </style>
+.chip-base{
+  background:#fff !important;
+  color:#050505 !important;
+  padding:7px 12px !important;
+  font-size:12px !important;
+}
+
+/* ACTIVE CHIPS */
+.chip-active-blue,
+.grade-active-B{
+  background:var(--kk-blue) !important;
+  color:#fff !important;
+}
+
+.chip-active-green,
+.grade-active-A{
+  background:var(--kk-green) !important;
+  color:#050505 !important;
+}
+
+.chip-active-red,
+.grade-active-F{
+  background:var(--kk-red) !important;
+  color:#fff !important;
+}
+
+.chip-active-yellow,
+.grade-active-C{
+  background:var(--kk-yellow) !important;
+  color:#050505 !important;
+}
+
+/* HEADER BUTTONS */
+#root > div > div:first-child button{
+  background:var(--kk-yellow) !important;
+  color:#050505 !important;
+}
+
+#print-btn{
+  background:var(--kk-blue) !important;
+  color:#fff !important;
+}
+
+/* MANTRA */
+#root > div > div:nth-child(2) > div:first-child{
+  background:#fff !important;
+  color:#050505 !important;
+  border:3px solid #050505 !important;
+  border-left:14px solid var(--kk-red) !important;
+  border-radius:14px !important;
+  padding:18px 22px !important;
+  box-shadow:7px 7px 0 var(--kk-blue) !important;
+}
+
+#root > div > div:nth-child(2) > div:first-child div{
+  color:#050505 !important;
+  font-size:16px !important;
+  font-weight:900 !important;
+}
+
+/* COLORS */
+.text-white{ color:#050505 !important; }
+.text-xl{ font-size:26px !important; font-weight:900 !important; }
+.text-2xl{ font-size:30px !important; font-weight:900 !important; }
+.text-emerald-400{ color:#047a2f !important; }
+.text-red-400{ color:#d00000 !important; }
+.text-blue-400{ color:#004dff !important; }
+.text-yellow-400{ color:#b88700 !important; }
+
+/* ADD TRADE */
+button[style*="dashed"]{
+  background:var(--kk-yellow) !important;
+  color:#050505 !important;
+  border:3px dashed #050505 !important;
+  border-radius:12px !important;
+  font-size:14px !important;
+  font-weight:900 !important;
+  box-shadow:5px 5px 0 #050505 !important;
+}
+
+/* REMOVE */
+button[style*="background: none"][style*="border: none"]{
+  background:var(--kk-red) !important;
+  color:#fff !important;
+  border:3px solid #050505 !important;
+  border-radius:8px !important;
+  padding:7px 10px !important;
+}
+
+/* FOOTER */
+#root > div > div:nth-child(2) > div:last-child{
+  color:#050505 !important;
+  font-size:12px !important;
+  font-weight:900;
+}
+
+/* MOBILE */
+@media(max-width:760px){
+  .grid-cols-4,
+  .grid-cols-3,
+  .grid-cols-2{
+    grid-template-columns:1fr !important;
+  }
+
+  #root > div > div:first-child{
+    flex-direction:column !important;
+    align-items:flex-start !important;
+  }
+
+  #root > div > div:first-child > div:last-child{
+    flex-wrap:wrap !important;
+  }
+}
+
+/* PRINT — keep color look */
+@media print{
+  @page{ margin:0.45in; }
+
+  body,
+  #root > div{
+    background:var(--kk-paper) !important;
+    color:#050505 !important;
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+
+  #root > div > div:first-child{
+    position:static !important;
+    background:#050505 !important;
+    border-bottom:6px solid var(--kk-yellow) !important;
+  }
+
+  #print-btn,
+  #root > div > div:first-child button{
+    display:none !important;
+  }
+
+  .bg-zinc-950,
+  .bg-zinc-900,
+  #root > div > div:nth-child(2) > div[style*="background"]{
+    background:#fff !important;
+    color:#050505 !important;
+  }
+
+  .border-zinc-700,
+  .border-zinc-800,
+  #root > div > div:nth-child(2) > div[style*="border"]{
+    border:2px solid #050505 !important;
+    border-top:6px solid var(--kk-blue) !important;
+    box-shadow:4px 4px 0 #050505 !important;
+    break-inside:avoid !important;
+    page-break-inside:avoid !important;
+  }
+
+  .field-input{
+    background:#fff !important;
+    color:#050505 !important;
+    border:2px solid #050505 !important;
+    box-shadow:2px 2px 0 #050505 !important;
+  }
+
+  .chip-base,
+  button{
+    box-shadow:2px 2px 0 #050505 !important;
+  }
+}  
+</style>
 </head>
 <body>
   <div id="root"></div>
+
   <script type="text/babel">
     const { useState } = React;
 
-    /* ── Constants ── */
+    /* ── Constants (identical to JSX) ── */
     const ENV_OPTIONS   = ["ROTATIONAL","TRENDING","CHOP","EXPANSION","UNKNOWN"];
     const GRADE_OPTIONS = ["A","B","C","F"];
     const SETUP_TAGS    = ["BREAKOUT","PULLBACK","REVERSAL","CONTINUATION","OPENING RANGE","FAILED AUCTION","ANTICIPATION","FOMO","CHASE","OTHER"];
@@ -421,11 +547,12 @@
     /* ── TradeCard ── */
     function TradeCard({ trade, index, onChange, onRemove }) {
       const update = (key, val) => onChange({ ...trade, [key]: val });
-      const resultNum   = parseFloat(trade.result);
+      const resultNum = parseFloat(trade.result);
       const resultColor = isNaN(resultNum) ? "text-zinc-400" : resultNum >= 0 ? "text-emerald-400" : "text-red-400";
 
       return (
         <div className="border border-zinc-700 rounded-lg p-5 mb-4 bg-zinc-950">
+
           {/* Header */}
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"16px" }}>
             <div className="flex items-center gap-3">
@@ -462,7 +589,7 @@
               <Input value={trade.entry} onChange={v => update("entry", v)} placeholder="21,450" />
             </Field>
             <Field label="Exit">
-              <Input value={trade.exit}  onChange={v => update("exit",  v)} placeholder="21,460" />
+              <Input value={trade.exit} onChange={v => update("exit", v)} placeholder="21,460" />
             </Field>
           </div>
 
@@ -552,17 +679,17 @@
 
     /* ── SummaryPanel ── */
     function SummaryPanel({ session }) {
-      const trades      = session.trades;
-      const withResult  = trades.filter(t => t.result !== "" && !isNaN(parseFloat(t.result)));
-      const totalPnL    = withResult.reduce((s, t) => s + parseFloat(t.result), 0);
-      const winners     = withResult.filter(t => parseFloat(t.result) >= 0);
-      const losers      = withResult.filter(t => parseFloat(t.result) < 0);
-      const winRate     = withResult.length > 0 ? Math.round((winners.length / withResult.length) * 100) : null;
+      const trades     = session.trades;
+      const withResult = trades.filter(t => t.result !== "" && !isNaN(parseFloat(t.result)));
+      const totalPnL   = withResult.reduce((s, t) => s + parseFloat(t.result), 0);
+      const winners    = withResult.filter(t => parseFloat(t.result) >= 0);
+      const losers     = withResult.filter(t => parseFloat(t.result) <  0);
+      const winRate    = withResult.length > 0 ? Math.round((winners.length / withResult.length) * 100) : null;
 
       const winMAE  = winners.filter(t => t.mae !== "").length > 0
         ? (winners.filter(t => t.mae !== "").reduce((s,t) => s + parseFloat(t.mae||0), 0) / winners.filter(t => t.mae !== "").length).toFixed(1) : null;
       const lossMAE = losers.filter(t => t.mae !== "").length > 0
-        ? (losers.filter(t => t.mae !== "").reduce((s,t) => s + parseFloat(t.mae||0), 0)  / losers.filter(t => t.mae !== "").length).toFixed(1)  : null;
+        ? (losers.filter(t => t.mae !== "").reduce((s,t) => s + parseFloat(t.mae||0), 0) / losers.filter(t => t.mae !== "").length).toFixed(1) : null;
 
       const iftYes = trades.filter(t => t.immediateFollowThrough === true).length;
       const iftNo  = trades.filter(t => t.immediateFollowThrough === false).length;
@@ -576,13 +703,12 @@
       losers.forEach(t => { if (t.lossTag) lossTags[t.lossTag] = (lossTags[t.lossTag]||0) + 1; });
 
       const fiveQ = [
-        { q: "Did I follow rules?",        key: "followedRules"     },
-        { q: "Did I protect both accounts?",key: "protectedAccounts" },
-        { q: "Did I record everything?",   key: "recorded"          },
-        { q: "Did I review?",              key: "reviewed"          },
-        { q: "Did I survive?",             key: "survived"          },
+        { q: "Did I follow rules?",          key: "followedRules"      },
+        { q: "Did I protect both accounts?", key: "protectedAccounts"  },
+        { q: "Did I record everything?",     key: "recorded"           },
+        { q: "Did I review?",                key: "reviewed"           },
+        { q: "Did I survive?",               key: "survived"           },
       ];
-
       const [checklist, setChecklist] = useState({
         followedRules: null, protectedAccounts: null,
         recorded: null, reviewed: null, survived: null,
@@ -597,10 +723,10 @@
           {/* P&L row */}
           <div className="grid grid-cols-4 gap-4 mb-4">
             {[
-              { label:"NET P&L",      value: (totalPnL >= 0 ? "+" : "") + totalPnL.toFixed(0), color: totalPnL >= 0 ? "text-emerald-400" : "text-red-400" },
-              { label:"WIN RATE",     value: winRate !== null ? `${winRate}%` : "—",            color: "text-zinc-100"   },
-              { label:"AVG MAE (W)",  value: winMAE  !== null ? winMAE  : "—",                 color: "text-emerald-400"},
-              { label:"AVG MAE (L)",  value: lossMAE !== null ? lossMAE : "—",                 color: "text-red-400"   },
+              { label:"NET P&L",    value: (totalPnL >= 0 ? "+" : "") + totalPnL.toFixed(0), color: totalPnL >= 0 ? "text-emerald-400" : "text-red-400" },
+              { label:"WIN RATE",   value: winRate !== null ? `${winRate}%` : "—", color:"text-zinc-100" },
+              { label:"AVG MAE (W)",value: winMAE  !== null ? winMAE  : "—", color:"text-emerald-400" },
+              { label:"AVG MAE (L)",value: lossMAE !== null ? lossMAE : "—", color:"text-red-400"     },
             ].map(({ label, value, color }) => (
               <div key={label} className="bg-zinc-900 rounded p-3 text-center">
                 <div className="text-xs text-zinc-500 font-mono mb-1">{label}</div>
@@ -665,8 +791,8 @@
     /* ── TradesAvoided ── */
     function TradesAvoided({ avoided, setAvoided }) {
       const addAvoided = () => setAvoided(prev => [...prev, { id: Date.now() + Math.random(), setup:"", passed:null, outcome:"" }]);
-      const update = (id, key, val) => setAvoided(prev => prev.map(a => a.id === id ? { ...a, [key]: val } : a));
-      const remove = (id) => setAvoided(prev => prev.filter(a => a.id !== id));
+      const update     = (id, key, val) => setAvoided(prev => prev.map(a => a.id === id ? { ...a, [key]: val } : a));
+      const remove     = (id)           => setAvoided(prev => prev.filter(a => a.id !== id));
 
       return (
         <div className="border border-zinc-700 rounded-lg p-5 mb-6 bg-zinc-950">
@@ -675,7 +801,13 @@
               <div className="text-xs font-mono text-zinc-500 uppercase tracking-widest">Trades Avoided</div>
               <div className="text-xs text-zinc-600 italic mt-1">Every correctly avoided garbage setup = +1 point. This is a skill.</div>
             </div>
-            <button onClick={addAvoided} className="chip-base" style={{ fontSize:"11px" }}>+ ADD</button>
+            <button
+              onClick={addAvoided}
+              className="chip-base"
+              style={{ fontSize:"11px" }}
+            >
+              + ADD
+            </button>
           </div>
 
           {avoided.length === 0 && (
@@ -711,14 +843,14 @@
 
     /* ── Main App ── */
     function KaizenTradeTemplate() {
-      const [session,  setSession]  = useState(emptySession());
-      const [avoided,  setAvoided]  = useState([]);
-      const [view,     setView]     = useState("session"); // "session" | "summary"
+      const [session, setSession] = useState(emptySession());
+      const [avoided, setAvoided] = useState([]);
+      const [view,    setView]    = useState("session"); // "session" | "summary"
 
       const updateSession = (key, val) => setSession(prev => ({ ...prev, [key]: val }));
-      const addTrade      = () => setSession(prev => ({ ...prev, trades: [...prev.trades, emptyTrade()] }));
-      const updateTrade   = (id, upd) => setSession(prev => ({ ...prev, trades: prev.trades.map(t => t.id === id ? upd : t) }));
-      const removeTrade   = (id) => setSession(prev => ({ ...prev, trades: prev.trades.filter(t => t.id !== id) }));
+      const addTrade      = ()         => setSession(prev => ({ ...prev, trades: [...prev.trades, emptyTrade()] }));
+      const updateTrade   = (id, upd)  => setSession(prev => ({ ...prev, trades: prev.trades.map(t => t.id === id ? upd : t) }));
+      const removeTrade   = (id)       => setSession(prev => ({ ...prev, trades: prev.trades.filter(t => t.id !== id) }));
 
       const resetSession = () => {
         if (window.confirm("Start a new session? Current data will be cleared.")) {
@@ -728,11 +860,11 @@
         }
       };
 
+      /* shared button style used in header / pre-session / metrics */
       const hdrBtn = {
         background:"none", border:"1px solid #3f3f46", color:"#a1a1aa",
         padding:"6px 14px", borderRadius:"4px", fontSize:"11px", cursor:"pointer",
       };
-
       const envBtn = (active) => ({
         padding:"6px 14px",
         border:`1px solid ${active ? "#6366f1" : "#3f3f46"}`,
@@ -741,7 +873,6 @@
         color: active ? "#a5b4fc" : "#71717a",
         fontSize:"11px", cursor:"pointer",
       });
-
       const yesNoBtn = (active, isYes) => ({
         padding:"6px 16px",
         border:`1px solid ${active ? (isYes ? "#10b981" : "#ef4444") : "#3f3f46"}`,
@@ -750,7 +881,6 @@
         color: active ? (isYes ? "#6ee7b7" : "#fca5a5") : "#71717a",
         fontSize:"11px", cursor:"pointer",
       });
-
       const envCorrectBtn = (val, active) => ({
         padding:"6px 16px",
         border:`1px solid ${active ? (val===true ? "#10b981" : val===false ? "#ef4444" : "#6366f1") : "#3f3f46"}`,
@@ -770,7 +900,12 @@
               <div style={{ color:"#e4e4e7", fontSize:"18px", fontWeight:"700", letterSpacing:"0.05em" }}>SESSION LOG</div>
             </div>
             <div style={{ display:"flex", gap:"8px" }}>
-              <button id="print-btn" onClick={() => window.print()} style={{ ...hdrBtn, borderColor:"#6366f1", color:"#a5b4fc" }}>
+              {/* ── NEW: Print / Save PDF ── */}
+              <button
+                id="print-btn"
+                onClick={() => window.print()}
+                style={{ ...hdrBtn, borderColor:"#6366f1", color:"#a5b4fc" }}
+              >
                 ⬇ PRINT / SAVE PDF
               </button>
               <button onClick={() => setView(view === "session" ? "summary" : "session")} style={hdrBtn}>
@@ -871,14 +1006,18 @@
                   <div style={{ color:"#71717a", fontSize:"10px", letterSpacing:"0.2em", marginBottom:"16px" }}>SESSION METRICS</div>
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:"12px", marginBottom:"16px" }}>
                     {[
-                      { key:"reentryCount",  label:"Re-entry Count",          hint:"Avg seconds between trades"         },
-                      { key:"walkAways",     label:"Conscious Walk-Aways",     hint:"Times passed on a setup"            },
-                      { key:"patienceScore", label:"Patience Score (1–5)",     hint:"1=clicked fast, 5=fully let market prove" },
+                      { key:"reentryCount",  label:"Re-entry Count",        hint:"Avg seconds between trades" },
+                      { key:"walkAways",     label:"Conscious Walk-Aways",   hint:"Times passed on a setup" },
+                      { key:"patienceScore", label:"Patience Score (1–5)",   hint:"1=clicked fast, 5=fully let market prove" },
                     ].map(({ key, label, hint }) => (
                       <div key={key}>
                         <div style={{ color:"#71717a", fontSize:"10px", marginBottom:"2px" }}>{label}</div>
                         <div style={{ color:"#52525b", fontSize:"9px", marginBottom:"6px", fontStyle:"italic" }}>{hint}</div>
-                        <input value={session[key]} onChange={e => updateSession(key, e.target.value)} className="field-input" />
+                        <input
+                          value={session[key]}
+                          onChange={e => updateSession(key, e.target.value)}
+                          className="field-input"
+                        />
                       </div>
                     ))}
                   </div>
