@@ -1,682 +1,510 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Kaizen Trade Autopsy — Session Template</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap');
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kaizen Trading Suite</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
+  <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
 
-  :root {
-    --ink:      #0a0a0a;
-    --ink2:     #2a2a2a;
-    --ink3:     #555;
-    --rule:     #c8c8c8;
-    --rule2:    #e0e0e0;
-    --bg:       #ffffff;
-    --accent:   #0a0a0a;
-  }
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap');
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #08080a;
+      --surface: #0f0f12;
+      --card: #141417;
+      --border: #27272a;
+      --border2: #3f3f46;
+      --text: #e4e4e7;
+      --muted: #71717a;
+      --faint: #3f3f46;
+      --green: #10b981;
+      --green-bg: #064e3b;
+      --red: #ef4444;
+      --red-bg: #450a0a;
+      --blue: #6366f1;
+      --blue-bg: #1e1b4b;
+      --yellow: #eab308;
+      --yellow-bg: #422006;
+    }
 
-  body {
-    font-family: 'JetBrains Mono', 'Courier New', monospace;
-    background: var(--bg);
-    color: var(--ink);
-    font-size: 9pt;
-    line-height: 1.5;
-  }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+    }
 
-  /* ── PAGE LAYOUT ── */
-  .page {
-    width: 8.5in;
-    min-height: 11in;
-    margin: 0 auto;
-    padding: 0.55in 0.6in;
-    page-break-after: always;
-  }
-  .page:last-child { page-break-after: avoid; }
+    /* Primary Navigation Bar Styles */
+    .nav-header {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      justify-content: space-between;
+      align-items: center;
+      height: 50px;
+    }
+    .nav-brand {
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      font-size: 14px;
+    }
+    .nav-tabs { display: flex; gap: 4px; height: 100%; align-items: flex-end; }
+    .nav-tab {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      padding: 10px 16px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .nav-tab:hover { color: var(--text); }
+    .nav-tab.active {
+      color: var(--text);
+      border-bottom-color: var(--blue);
+      background: rgba(99, 102, 241, 0.05);
+    }
 
-  @media print {
-    body { background: white; }
-    .page { margin: 0; padding: 0.55in 0.6in; }
-    .no-print { display: none !important; }
-    @page { size: letter; margin: 0; }
-  }
-
-  /* ── TYPOGRAPHY ── */
-  .eyebrow {
-    font-size: 6.5pt;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--ink3);
-  }
-  .heading {
-    font-size: 15pt;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-  .section-head {
-    font-size: 6.5pt;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--ink3);
-    border-bottom: 0.5pt solid var(--rule);
-    padding-bottom: 4pt;
-    margin-bottom: 10pt;
-    margin-top: 14pt;
-  }
-  .field-label {
-    font-size: 6pt;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--ink3);
-    margin-bottom: 2pt;
-  }
-  .hint {
-    font-size: 6pt;
-    color: #888;
-    font-style: italic;
-    margin-bottom: 3pt;
-  }
-
-  /* ── RULES / BOXES ── */
-  .rule-line {
-    border: none;
-    border-bottom: 0.5pt solid var(--rule);
-    width: 100%;
-    height: 14pt;
-    display: block;
-  }
-  .box {
-    border: 0.5pt solid var(--rule);
-    border-radius: 2pt;
-    padding: 5pt 7pt;
-    min-height: 18pt;
-  }
-  .check-box {
-    display: inline-block;
-    width: 9pt;
-    height: 9pt;
-    border: 1pt solid var(--ink2);
-    vertical-align: middle;
-    margin-right: 4pt;
-    border-radius: 1pt;
-    flex-shrink: 0;
-  }
-
-  /* ── GRID HELPERS ── */
-  .grid-2  { display: grid; grid-template-columns: 1fr 1fr;       gap: 12pt; }
-  .grid-3  { display: grid; grid-template-columns: 1fr 1fr 1fr;   gap: 10pt; }
-  .grid-4  { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8pt; }
-  .grid-5  { display: grid; grid-template-columns: repeat(5,1fr); gap: 6pt; }
-
-  /* ── HEADER ── */
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    border-bottom: 1.5pt solid var(--ink);
-    padding-bottom: 8pt;
-    margin-bottom: 14pt;
-  }
-  .mantra {
-    font-size: 6pt;
-    color: var(--ink3);
-    font-style: italic;
-    line-height: 1.8;
-    text-align: right;
-    max-width: 3.2in;
-  }
-
-  /* ── TRADE BLOCK ── */
-  .trade-block {
-    border: 0.5pt solid var(--rule);
-    border-radius: 3pt;
-    padding: 9pt 10pt;
-    margin-bottom: 8pt;
-    page-break-inside: avoid;
-  }
-  .trade-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    border-bottom: 0.5pt solid var(--rule2);
-    padding-bottom: 5pt;
-    margin-bottom: 8pt;
-  }
-  .trade-num {
-    font-size: 11pt;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-  }
-
-  /* ── CHECKBOX ROW ── */
-  .check-row {
-    display: flex;
-    align-items: center;
-    margin-bottom: 6pt;
-    font-size: 8pt;
-  }
-  .yn-pair {
-    display: flex;
-    gap: 10pt;
-    align-items: center;
-  }
-  .yn-label {
-    font-size: 7.5pt;
-    color: var(--ink2);
-    margin-right: 6pt;
-    white-space: nowrap;
-  }
-
-  /* ── ENV CHIPS ── */
-  .env-chips { display: flex; gap: 6pt; flex-wrap: wrap; margin-top: 4pt; }
-  .env-chip {
-    border: 0.5pt solid var(--ink2);
-    border-radius: 2pt;
-    padding: 2pt 7pt;
-    font-size: 7pt;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  /* ── TAG CHIPS ── */
-  .tag-row { display: flex; flex-wrap: wrap; gap: 4pt; margin-top: 3pt; }
-  .tag-chip {
-    border: 0.5pt solid var(--rule);
-    border-radius: 2pt;
-    padding: 1.5pt 5pt;
-    font-size: 6.5pt;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink3);
-  }
-
-  /* ── SUMMARY BOX ── */
-  .summary-grid {
-    display: grid;
-    grid-template-columns: repeat(4,1fr);
-    gap: 8pt;
-    margin-bottom: 10pt;
-  }
-  .summary-cell {
-    border: 0.5pt solid var(--rule);
-    border-radius: 2pt;
-    padding: 6pt 8pt;
-    text-align: center;
-  }
-  .summary-val {
-    font-size: 14pt;
-    font-weight: 700;
-  }
-
-  /* ── PRINT BUTTON ── */
-  .no-print {
-    display: flex;
-    justify-content: center;
-    padding: 16pt;
-    gap: 10pt;
-  }
-  .btn {
-    font-family: 'JetBrains Mono', monospace;
-    background: #0a0a0a;
-    color: white;
-    border: none;
-    padding: 8pt 20pt;
-    font-size: 9pt;
-    border-radius: 3pt;
-    cursor: pointer;
-    letter-spacing: 0.1em;
-  }
-  .btn-outline {
-    background: white;
-    color: #0a0a0a;
-    border: 1pt solid #0a0a0a;
-  }
-
-  .divider { border: none; border-top: 0.5pt solid var(--rule2); margin: 10pt 0; }
-  .small { font-size: 6.5pt; color: var(--ink3); }
-  .italic { font-style: italic; }
-</style>
+    /* Print Template System Base Overrides */
+    @media print {
+      .nav-header, .no-print { display: none !important; }
+      body, #root { background: white !important; color: #0a0a0a !important; padding: 0 !important; }
+      .print-page {
+        display: block !important;
+        width: 8.5in;
+        min-height: 11in;
+        margin: 0 auto;
+        padding: 0.55in 0.6in;
+        page-break-after: always;
+        background: white !important;
+        color: #0a0a0a !important;
+      }
+      .print-page:last-child { page-break-after: avoid; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- Print Controls -->
-<div class="no-print">
-  <button class="btn" onclick="window.print()">PRINT / SAVE AS PDF</button>
-  <button class="btn btn-outline" onclick="addTrade()">+ ADD TRADE BLOCK</button>
-  <button class="btn btn-outline" onclick="addPage()">+ ADD SESSION PAGE</button>
-</div>
+  <div id="root"></div>
 
-<!-- ═══════════════════════════════════════════════════════════ PAGE 1: SESSION -->
-<div class="page" id="session-page-1">
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    const { ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ReferenceLine, Cell } = Recharts;
 
-  <!-- Header -->
-  <div class="header">
-    <div>
-      <div class="eyebrow">Kaizen Trade Autopsy</div>
-      <div class="heading">Session Log</div>
-    </div>
-    <div class="mantra">
-      I protect the account. I stack clean days.<br>
-      I become impossible to kill.<br>
-      <strong>Has the market earned my participation?</strong>
-    </div>
-  </div>
+    const SESSIONS_KEY = "kaizen:sessions";
 
-  <!-- PRE-SESSION -->
-  <div class="section-head">Pre-Session</div>
-  <div class="grid-3" style="margin-bottom:10pt">
-    <div>
-      <div class="field-label">Date</div>
-      <div class="rule-line"></div>
-    </div>
-    <div>
-      <div class="field-label">Session #</div>
-      <div class="rule-line"></div>
-    </div>
-    <div>
-      <div class="field-label">First Trade Followed Setup?</div>
-      <div class="yn-pair" style="margin-top:4pt">
-        <span class="check-box"></span><span style="font-size:7.5pt; margin-right:12pt">YES</span>
-        <span class="check-box"></span><span style="font-size:7.5pt">NO</span>
-      </div>
-    </div>
-  </div>
+    // Standardized Storage Sync Broker
+    async function fetchSessions() {
+      try {
+        if (window.storage && typeof window.storage.get === 'function') {
+          const r = await window.storage.get(SESSIONS_KEY);
+          return r ? JSON.parse(r.value) : [];
+        }
+      } catch (e) { console.warn("Storage API fallback", e); }
+      const local = localStorage.getItem(SESSIONS_KEY);
+      return local ? JSON.parse(local) : [];
+    }
 
-  <div style="margin-bottom:10pt">
-    <div class="field-label">Market Environment — Classify BEFORE first trade</div>
-    <div class="hint">ROTATIONAL = levels respected, discretion works · TRENDING = clean direction · CHOP = whipsaws, consider sitting out · EXPANSION = violent, kills discretion · UNKNOWN = observe longer</div>
-    <div class="env-chips">
-      <div class="env-chip"><span class="check-box"></span> Rotational</div>
-      <div class="env-chip"><span class="check-box"></span> Trending</div>
-      <div class="env-chip"><span class="check-box"></span> Chop</div>
-      <div class="env-chip"><span class="check-box"></span> Expansion</div>
-      <div class="env-chip"><span class="check-box"></span> Unknown</div>
-    </div>
-  </div>
+    async function commitSessions(data) {
+      try {
+        if (window.storage && typeof window.storage.set === 'function') {
+          await window.storage.set(SESSIONS_KEY, { value: JSON.stringify(data) });
+          return;
+        }
+      } catch (e) { console.warn("Storage API fallback write", e); }
+      localStorage.setItem(SESSIONS_KEY, JSON.stringify(data));
+    }
 
-  <!-- TRADE BLOCKS -->
-  <div class="section-head">Trade Log</div>
-  <div id="trade-container-1">
+    // Global configuration metadata constants shared between components
+    const ENV_OPTIONS = ["ROTATIONAL", "TRENDING", "CHOP", "EXPANSION", "UNKNOWN"];
+    const GRADE_OPTIONS = ["A", "B", "C", "F"];
+    const SETUP_TAGS = ["BREAKOUT", "PULLBACK", "REVERSAL", "CONTINUATION", "OPENING RANGE", "FAILED AUCTION", "ANTICIPATION", "FOMO", "CHASE", "OTHER"];
+    const LOSS_TAGS = ["EARLY", "CHOP", "REVERSAL", "CHASE", "OVERSIZED", "FOMO", "LOW VOLUME", "COUNTERTREND", "OPENING RANGE NOISE", "EXPANSION"];
 
-    <!-- TRADE 1 -->
-    <div class="trade-block">
-      <div class="trade-header">
-        <span class="trade-num">TRADE #1</span>
-        <div class="yn-pair">
-          <span class="yn-label">Direction:</span>
-          <span class="check-box"></span><span style="font-size:7.5pt; margin-right:10pt">LONG</span>
-          <span class="check-box"></span><span style="font-size:7.5pt">SHORT</span>
-        </div>
-      </div>
+    const emptyTrade = () => ({
+      id: Date.now() + Math.random(),
+      direction: "", time: "", entry: "", exit: "", result: "", grade: "",
+      immediateFollowThrough: null, negotiable: null, mae: "", mfe: "",
+      why: "", PostalTag: "", setupTag: "", lossTag: "", doNothingOutcome: "", notes: ""
+    });
 
-      <div class="grid-5" style="margin-bottom:8pt">
-        <div><div class="field-label">Time</div><div class="rule-line"></div></div>
-        <div><div class="field-label">Entry</div><div class="rule-line"></div></div>
-        <div><div class="field-label">Exit</div><div class="rule-line"></div></div>
-        <div><div class="field-label">Result ($)</div><div class="rule-line"></div></div>
-        <div><div class="field-label">Contracts</div><div class="rule-line"></div></div>
-      </div>
+    const emptySession = () => ({
+      date: new Date().toISOString().slice(0, 10),
+      environment: "", environmentCorrect: null, firstTradeSetup: null,
+      cheatScore: "", patienceScore: "", walkAways: "", reentryCount: "", sessionNotes: "",
+      trades: [emptyTrade()], avoided: []
+    });
 
-      <div class="grid-2" style="margin-bottom:8pt">
+    function App() {
+      const [currentTab, setCurrentTab] = useState("dashboard");
+      const [sessions, setSessions] = useState([]);
+      
+      // Logger State Config
+      const [liveSession, setLiveSession] = useState(emptySession());
+
+      useEffect(() => {
+        loadAllData();
+      }, []);
+
+      const loadAllData = async () => {
+        const data = await fetchSessions();
+        setSessions(data);
+      };
+
+      const handleSaveSession = async (sessionToSave) => {
+        const enrichedSession = {
+          ...sessionToSave,
+          id: Date.now(),
+          survived: sessionToSave.environmentCorrect !== false
+        };
+        const updated = [...sessions, enrichedSession];
+        await commitSessions(updated);
+        setSessions(updated);
+        alert("Session committed safely to core framework ledger.");
+        setLiveSession(emptySession());
+        setCurrentTab("dashboard");
+      };
+
+      const handleClearStorage = async () => {
+        if(confirm("Are you sure you want to completely purge local database records? This action is irreversible.")) {
+          await commitSessions([]);
+          setSessions([]);
+        }
+      };
+
+      return (
         <div>
-          <div class="field-label">MAE (pts) — TIER 1 — How far against me before exit</div>
-          <div class="rule-line"></div>
-        </div>
-        <div>
-          <div class="field-label">MFE (pts) — How far in my favor before exit</div>
-          <div class="rule-line"></div>
-        </div>
-      </div>
+          <header className="nav-header">
+            <div className="nav-brand">KAIZEN TRADING SUITE</div>
+            <nav className="nav-tabs no-print">
+              <button className={`nav-tab ${currentTab === 'dashboard' ? 'active' : ''}`} onClick={() => setCurrentTab('dashboard')}>DASHBOARD</button>
+              <button className={`nav-tab ${currentTab === 'logger' ? 'active' : ''}`} onClick={() => setCurrentTab('logger')}>SESSION RECORDER</button>
+              <button className={`nav-tab ${currentTab === 'print' ? 'active' : ''}`} onClick={() => setCurrentTab('print')}>HTML JOURNAL TEMPLATE</button>
+            </nav>
+          </header>
 
-      <div class="grid-2" style="margin-bottom:8pt">
+          <main style={{ padding: currentTab === 'print' ? '0' : '24px' }}>
+            {currentTab === "dashboard" && <DashboardView sessions={sessions} onClear={handleClearStorage} />}
+            {currentTab === "logger" && <LoggerView session={liveSession} setSession={setLiveSession} onSave={handleSaveSession} />}
+            {currentTab === "print" && <PrintTemplateView sessions={sessions} />}
+          </main>
+        </div>
+      );
+    }
+
+    /* ==========================================
+       1. DASHBOARD APPLICATION COMPONENT
+       ========================================== */
+    function DashboardView({ sessions, onClear }) {
+      if (!sessions || sessions.length === 0) {
+        return (
+          <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--muted)" }}>
+            <p style={{ fontSize: "14px", marginBottom: "16px" }}>No trade ledger data recorded inside current storage profile keys.</p>
+          </div>
+        );
+      }
+
+      // Pre-calculate baseline dashboard tracking metrics
+      const totalSessions = sessions.length;
+      const allTrades = sessions.flatMap(s => s.trades || []).filter(t => t && t.result !== "" && !isNaN(parseFloat(t.result)));
+      const totalTrades = allTrades.length;
+      
+      const netProfit = allTrades.reduce((acc, curr) => acc + parseFloat(curr.result || 0), 0);
+      const winningTrades = allTrades.filter(t => parseFloat(t.result) >= 0);
+      const winRate = totalTrades > 0 ? (winningTrades.length / totalTrades) * 100 : 0;
+
+      const aTrades = allTrades.filter(t => t.grade === "A");
+      const aTradeWinRate = aTrades.length > 0 ? (aTrades.filter(t => parseFloat(t.result) >= 0).length / aTrades.length) * 100 : 0;
+
+      // Map Equity Curves
+      let runningPnl = 0;
+      const chartData = allTrades.map((t, idx) => {
+        runningPnl += parseFloat(t.result);
+        return { tradeIndex: idx + 1, PnL: runningPnl };
+      });
+
+      // Map Loss Tags Frequency distributions
+      const lossCounts = {};
+      allTrades.filter(t => parseFloat(t.result) < 0 && t.lossTag).forEach(t => {
+        lossCounts[t.lossTag] = (lossCounts[t.lossTag] || 0) + 1;
+      });
+      const distributionData = Object.keys(lossCounts).map(k => ({ name: k, count: lossCounts[k] }));
+
+      return (
         <div>
-          <div class="field-label">Immediate Follow Through?</div>
-          <div class="hint">Did price move my direction almost immediately?</div>
-          <div class="yn-pair">
-            <span class="check-box"></span><span style="font-size:7.5pt; margin-right:12pt">YES</span>
-            <span class="check-box"></span><span style="font-size:7.5pt">NO</span>
+          {/* Top Level Metric Strips */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px", marginBottom: "24px" }}>
+            <div style={{ background: "var(--surface)", padding: "16px", borderRadius: "8px", border: "1px solid var(--border)" }}>
+              <div style={{ color: "var(--muted)", fontSize: "10px", marginBottom: "4px" }}>NET RETURN</div>
+              <div style={{ fontSize: "20px", fontWeight: "700", color: netProfit >= 0 ? "var(--green)" : "var(--red)" }}>
+                {netProfit >= 0 ? "+" : ""}{netProfit.toFixed(2)}
+              </div>
+            </div>
+            <div style={{ background: "var(--surface)", padding: "16px", borderRadius: "8px", border: "1px solid var(--border)" }}>
+              <div style={{ color: "var(--muted)", fontSize: "10px", marginBottom: "4px" }}>WIN RATE RATE</div>
+              <div style={{ fontSize: "20px", fontWeight: "700" }}>{winRate.toFixed(1)}%</div>
+              <div style={{ fontSize: "10px", color: "var(--muted)" }}>{winningTrades.length}W - {totalTrades - winningTrades.length}L</div>
+            </div>
+            <div style={{ background: "var(--surface)", padding: "16px", borderRadius: "8px", border: "1px solid var(--border)" }}>
+              <div style={{ color: "var(--muted)", fontSize: "10px", marginBottom: "4px" }}>A-GRADE DISCIPLINE</div>
+              <div style={{ fontSize: "20px", fontWeight: "700", color: "var(--blue)" }}>{totalTrades > 0 ? ((aTrades.length / totalTrades) * 100).toFixed(0) : 0}%</div>
+              <div style={{ fontSize: "10px", color: "var(--muted)" }}>WR: {aTradeWinRate.toFixed(0)}%</div>
+            </div>
+            <div style={{ background: "var(--surface)", padding: "16px", borderRadius: "8px", border: "1px solid var(--border)" }}>
+              <div style={{ color: "var(--muted)", fontSize: "10px", marginBottom: "4px" }}>TOTAL FLIGHT SESSIONS</div>
+              <div style={{ fontSize: "20px", fontWeight: "700" }}>{totalSessions}</div>
+            </div>
+          </div>
+
+          {/* Interactive Chart Visualizers */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "24px" }}>
+            <div style={{ background: "var(--surface)", padding: "20px", borderRadius: "8px", border: "1px solid var(--border)" }}>
+              <div style={{ fontSize: "12px", fontWeight: "600", marginBottom: "16px" }}>CUMULATIVE PERFORMANCE DRIFT</div>
+              <div style={{ height: "240px" }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData}>
+                    <XAxis dataKey="tradeIndex" stroke="#4b5563" fontSize={10} />
+                    <YAxis stroke="#4b5563" fontSize={10} />
+                    <Tooltip contentStyle={{ background: "#1f2937", border: "none" }} />
+                    <Line type="monotone" dataKey="PnL" stroke="var(--blue)" strokeWidth={2} dot={false} />
+                    <ReferenceLine y={0} stroke="#4b5563" strokeDasharray="3 3" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div style={{ background: "var(--surface)", padding: "20px", borderRadius: "8px", border: "1px solid var(--border)" }}>
+              <div style={{ fontSize: "12px", fontWeight: "600", marginBottom: "16px" }}>LOSS TOXICITY SPECTRUM</div>
+              <div style={{ height: "240px" }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={distributionData}>
+                    <XAxis dataKey="name" stroke="#4b5563" fontSize={9} tickLine={false} />
+                    <YAxis stroke="#4b5563" fontSize={10} />
+                    <Tooltip contentStyle={{ background: "#1f2937", border: "none" }} />
+                    <Bar dataKey="count" fill="var(--red)">
+                      {distributionData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill="var(--red)" opacity={0.8} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+
+          {/* Core Historical Ledger Tables */}
+          <div style={{ background: "var(--surface)", padding: "20px", borderRadius: "8px", border: "1px solid var(--border)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "14px" }}>
+              <div style={{ fontSize: "12px", fontWeight: "600" }}>HISTORICAL LEDGER SESSIONS</div>
+              <button onClick={onClear} style={{ background: "transparent", border: "none", color: "var(--red)", fontSize: "11px", cursor: "pointer", textDecoration: "underline" }}>PURGE ALL RECORDS</button>
+            </div>
+            <div>
+              {sessions.map((s, sIdx) => {
+                const sTrades = s.trades || [];
+                const sPnl = sTrades.reduce((sum, t) => sum + parseFloat(t.result || 0), 0);
+                return (
+                  <div key={s.id || sIdx} style={{ background: "var(--card)", padding: "12px", borderRadius: "6px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid var(--border)" }}>
+                    <div>
+                      <span style={{ fontWeight: "700", marginRight: "12px" }}>{s.date}</span>
+                      <span style={{ color: "var(--muted)" }}>{s.environment || "UNKNOWN ENV"}</span>
+                    </div>
+                    <div style={{ display: "flex", gap: "20px" }}>
+                      <span>{sTrades.length} Trades</span>
+                      <span style={{ fontWeight: "600", color: sPnl >= 0 ? "var(--green)" : "var(--red)" }}>
+                        {sPnl >= 0 ? "+" : ""}{sPnl.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
+      );
+    }
+
+    /* ==========================================
+       2. RECORDER (LOGGER) COMPONENT
+       ========================================== */
+    function LoggerView({ session, setSession, onSave }) {
+      
+      const updateSession = (key, val) => {
+        setSession(prev => ({ ...prev, [key]: val }));
+      };
+
+      const updateTrade = (idx, key, val) => {
+        const updatedTrades = [...session.trades];
+        updatedTrades[idx][key] = val;
+        setSession(prev => ({ ...prev, trades: updatedTrades }));
+      };
+
+      const handleAddTrade = () => {
+        setSession(prev => ({ ...prev, trades: [...prev.trades, emptyTrade()] }));
+      };
+
+      return (
+        <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+          <div style={{ background: "var(--surface)", padding: "20px", borderRadius: "8px", border: "1px solid var(--border)", marginBottom: "20px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px" }}>
+              <h2 style={{ fontSize: "16px", fontWeight: "700" }}>LIVE METRICS CAPTURE FLIGHT RECORDER</h2>
+              <button onClick={() => onSave(session)} style={{ background: "var(--blue)", border: "none", color: "white", padding: "8px 16px", borderRadius: "4px", cursor: "pointer", fontWeight: "700" }}>
+                COMMIT SESSION TO DASHBOARD
+              </button>
+            </div>
+
+            {/* Session Metadata Controls */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px", marginBottom: "20px" }}>
+              <div>
+                <label style={{ display: "block", color: "var(--muted)", fontSize: "10px", marginBottom: "4px" }}>SESSION TRADING DATE</label>
+                <input type="date" value={session.date} onChange={e => updateSession("date", e.target.value)} style={{ width: "100%", background: "var(--card)", border: "1px solid var(--border)", color: "white", padding: "8px", borderRadius: "4px", fontFamily: "inherit" }} />
+              </div>
+              <div>
+                <label style={{ display: "block", color: "var(--muted)", fontSize: "10px", marginBottom: "4px" }}>MARKET ENVIRONMENT REGIME</label>
+                <select value={session.environment} onChange={e => updateSession("environment", e.target.value)} style={{ width: "100%", background: "var(--card)", border: "1px solid var(--border)", color: "white", padding: "8px", borderRadius: "4px", fontFamily: "inherit" }}>
+                  <option value="">Select Structure...</option>
+                  {ENV_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: "block", color: "var(--muted)", fontSize: "10px", marginBottom: "4px" }}>PATIENCE SCALE RATING (1-10)</label>
+                <input type="number" value={session.patienceScore} onChange={e => updateSession("patienceScore", e.target.value)} style={{ width: "100%", background: "var(--card)", border: "1px solid var(--border)", color: "white", padding: "8px", borderRadius: "4px", fontFamily: "inherit" }} />
+              </div>
+            </div>
+
+            <div style={{ marginBottom: "20px" }}>
+              <label style={{ display: "block", color: "var(--muted)", fontSize: "10px", marginBottom: "4px" }}>CRITICAL POST-SESSION LESSON TAKEAWS</label>
+              <textarea value={session.sessionNotes} onChange={e => updateSession("sessionNotes", e.target.value)} placeholder="State your core performance lesson or structural market change mechanics..." rows="2" style={{ width: "100%", background: "var(--card)", border: "1px solid var(--border)", color: "white", padding: "8px", borderRadius: "4px", fontFamily: "inherit", resize: "none" }} />
+            </div>
+          </div>
+
+          {/* Dynamic Executed Trades List Forms */}
+          <h3 style={{ fontSize: "13px", fontWeight: "600", marginBottom: "12px", letterSpacing: "0.05em" }}>EXECUTED TRADES REGISTRATION</h3>
+          {session.trades.map((trade, idx) => (
+            <div key={trade.id} style={{ background: "var(--surface)", padding: "20px", borderRadius: "8px", border: "1px solid var(--border)", marginBottom: "16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px", borderBottom: "1px solid var(--border)", paddingBottom: "8px" }}>
+                <span style={{ fontWeight: "700", color: "var(--blue)" }}>EXECUTION INSTANCE #{idx + 1}</span>
+              </div>
+              
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "12px" }}>
+                <div>
+                  <label style={{ display: "block", color: "var(--muted)", fontSize: "9px", marginBottom: "2px" }}>R-VALUE RESULT</label>
+                  <input type="number" step="0.1" value={trade.result} onChange={e => updateTrade(idx, "result", e.target.value)} placeholder="-1.0 or +2.5" style={{ width: "100%", background: "var(--card)", border: "1px solid var(--border)", color: "white", padding: "6px", borderRadius: "4px", fontFamily: "inherit" }} />
+                </div>
+                <div>
+                  <label style={{ display: "block", color: "var(--muted)", fontSize: "9px", marginBottom: "2px" }}>EXECUTION GRADE</label>
+                  <select value={trade.grade} onChange={e => updateTrade(idx, "grade", e.target.value)} style={{ width: "100%", background: "var(--card)", border: "1px solid var(--border)", color: "white", padding: "6px", borderRadius: "4px", fontFamily: "inherit" }}>
+                    <option value="">Grade...</option>
+                    {GRADE_OPTIONS.map(g => <option key={g} value={g}>{g}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: "block", color: "var(--muted)", fontSize: "9px", marginBottom: "2px" }}>STRATEGY SETUP TAG</label>
+                  <select value={trade.setupTag} onChange={e => updateTrade(idx, "setupTag", e.target.value)} style={{ width: "100%", background: "var(--card)", border: "1px solid var(--border)", color: "white", padding: "6px", borderRadius: "4px", fontFamily: "inherit" }}>
+                    <option value="">Setup...</option>
+                    {SETUP_TAGS.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: "block", color: "var(--muted)", fontSize: "9px", marginBottom: "2px" }}>LOSS TOXICITY ATTRIBUTION</label>
+                  <select value={trade.lossTag} onChange={e => updateTrade(idx, "lossTag", e.target.value)} style={{ width: "100%", background: "var(--card)", border: "1px solid var(--border)", color: "white", padding: "6px", borderRadius: "4px", fontFamily: "inherit" }}>
+                    <option value="">Error Tag...</option>
+                    {LOSS_TAGS.map(l => <option key={l} value={l}>{l}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ marginTop: "12px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div>
+                  <label style={{ display: "block", color: "var(--muted)", fontSize: "9px", marginBottom: "2px" }}>MAX ADVERSE EXCURSION (MAE)</label>
+                  <input type="number" step="0.01" value={trade.mae} onChange={e => updateTrade(idx, "mae", e.target.value)} style={{ width: "100%", background: "var(--card)", border: "1px solid var(--border)", color: "white", padding: "6px", borderRadius: "4px", fontFamily: "inherit" }} />
+                </div>
+                <div>
+                  <label style={{ display: "block", color: "var(--muted)", fontSize: "9px", marginBottom: "2px" }}>CORE EXECUTION NOTES / MANAGEMENT AUTUPSY</label>
+                  <input type="text" value={trade.notes} onChange={e => updateTrade(idx, "notes", e.target.value)} placeholder="Entry execution or technical management validation notes..." style={{ width: "100%", background: "var(--card)", border: "1px solid var(--border)", color: "white", padding: "6px", borderRadius: "4px", fontFamily: "inherit" }} />
+                </div>
+              </div>
+            </div>
+          ))}
+
+          <button onClick={handleAddTrade} style={{ width: "100%", background: "transparent", border: "1px dashed var(--border2)", color: "var(--muted)", padding: "12px", borderRadius: "8px", cursor: "pointer", fontWeight: "600", marginBottom: "40px" }}>
+            + APPEND NEW INSTANT ACTION RECORD ROW
+          </button>
+        </div>
+      );
+    }
+
+    /* ==========================================
+       3. ANALOG JOURNAL PRINT ENGINE TEMPLATE
+       ========================================== */
+    function PrintTemplateView({ sessions }) {
+      const activeSession = sessions[sessions.length - 1] || { date: "YYYY-MM-DD", environment: "UNSPECIFIED", trades: [{}, {}], sessionNotes: "" };
+
+      return (
         <div>
-          <div class="field-label">Market Negotiable?</div>
-          <div class="hint">Did I have time to exercise discretion, or moved too fast?</div>
-          <div class="yn-pair">
-            <span class="check-box"></span><span style="font-size:7.5pt; margin-right:12pt">YES</span>
-            <span class="check-box"></span><span style="font-size:7.5pt">NO</span>
+          <div className="no-print" style={{ padding: "16px", background: "var(--surface)", borderBottom: "1px solid var(--border)", marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ color: "var(--muted)" }}>Rendering print layout formatting engine configured for physical journals.</span>
+            <button onClick={() => window.print()} style={{ background: "var(--green)", color: "white", border: "none", padding: "8px 16px", borderRadius: "4px", fontWeight: "700", cursor: "pointer" }}>
+              EXECUTE OS SYSTEM PRINT (CTRL+P)
+            </button>
+          </div>
+
+          {/* Minimalist Ink-Conserving Document Wrapper Layout Container Block */}
+          <div className="print-page" style={{ background: "white", color: "#0a0a0a", padding: "40px", maxWidth: "8.5in", margin: "0 auto", border: "1px solid #e0e0e0" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "2px solid #0a0a0a", paddingBottom: "10px", marginBottom: "20px" }}>
+              <div>
+                <h1 style={{ fontSize: "16px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em" }}>KAIZEN TRADE AUTOPSY</h1>
+                <div style={{ fontSize: "11px", marginTop: "4px" }}>SESSION DATE: <span style={{ fontWeight: "700" }}>{activeSession.date}</span></div>
+              </div>
+              <div style={{ textAlignment: "right", fontSize: "11px" }}>
+                <div>MARKET ENVIRONMENT SCHEMA</div>
+                <div style={{ fontWeight: "700", textTransform: "uppercase" }}>{activeSession.environment || "ROTATIONAL"}</div>
+              </div>
+            </div>
+
+            {/* Print Block Execution Loop Section */}
+            <div>
+              <h3 style={{ fontSize: "12px", borderBottom: "1px solid #0a0a0a", paddingBottom: "4px", marginBottom: "12px", letterSpacing: "0.05em" }}>EXECUTED ACTIONS LOG</h3>
+              {(activeSession.trades || []).map((t, idx) => (
+                <div key={idx} style={{ padding: "10px 0", borderBottom: "1px dashed #c8c8c8", fontSize: "11px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "700" }}>
+                    <span>TRADE #{idx + 1} ({t.setupTag || "NOT TAGGED"})</span>
+                    <span>RESULT R: {t.result || "____"} | GRADE: {t.grade || "___"}</span>
+                  </div>
+                  <div style={{ color: "#555", marginTop: "4px", fontStyle: "italic" }}>
+                    Notes: {t.notes || "__________________________________________________________________________"}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginTop: "30px" }}>
+              <h3 style={{ fontSize: "12px", borderBottom: "1px solid #0a0a0a", paddingBottom: "4px", marginBottom: "8px" }}>SESSION CRITICAL AUTUPSY NOTE</h3>
+              <div style={{ minHeight: "80px", border: "1px solid #c8c8c8", padding: "10px", fontSize: "11px", fontStyle: "italic", lineHeight: "1.6" }}>
+                {activeSession.sessionNotes || "No manual retrospective notes committed to memory indices..."}
+              </div>
+            </div>
+
+            <footer style={{ marginTop: "40px", textAlign: "center", fontSize: "9px", color: "#777", borderTop: "1px solid #e0e0e0", paddingTop: "10px" }}>
+              The monster does not chase. The monster does not beg the market. The monster survives today so he can dominate later.
+            </footer>
           </div>
         </div>
-      </div>
+      );
+    }
 
-      <div style="margin-bottom:7pt">
-        <div class="field-label">Why Did I Take It? — One sentence only</div>
-        <div class="hint">e.g. "Failed auction at prior high" · "Breakout above opening range"</div>
-        <div class="rule-line"></div>
-      </div>
-
-      <div style="margin-bottom:7pt">
-        <div class="field-label">Setup Tag</div>
-        <div class="tag-row">
-          <div class="tag-chip"><span class="check-box"></span> BREAKOUT</div>
-          <div class="tag-chip"><span class="check-box"></span> PULLBACK</div>
-          <div class="tag-chip"><span class="check-box"></span> REVERSAL</div>
-          <div class="tag-chip"><span class="check-box"></span> CONTINUATION</div>
-          <div class="tag-chip"><span class="check-box"></span> OPENING RANGE</div>
-          <div class="tag-chip"><span class="check-box"></span> FAILED AUCTION</div>
-          <div class="tag-chip"><span class="check-box"></span> ANTICIPATION</div>
-          <div class="tag-chip"><span class="check-box"></span> FOMO</div>
-          <div class="tag-chip"><span class="check-box"></span> CHASE</div>
-          <div class="tag-chip"><span class="check-box"></span> OTHER</div>
-        </div>
-      </div>
-
-      <div style="margin-bottom:7pt">
-        <div class="field-label">Loss Category (if red)</div>
-        <div class="tag-row">
-          <div class="tag-chip"><span class="check-box"></span> EARLY</div>
-          <div class="tag-chip"><span class="check-box"></span> CHOP</div>
-          <div class="tag-chip"><span class="check-box"></span> REVERSAL</div>
-          <div class="tag-chip"><span class="check-box"></span> CHASE</div>
-          <div class="tag-chip"><span class="check-box"></span> OVERSIZED</div>
-          <div class="tag-chip"><span class="check-box"></span> FOMO</div>
-          <div class="tag-chip"><span class="check-box"></span> LOW VOLUME</div>
-          <div class="tag-chip"><span class="check-box"></span> COUNTERTREND</div>
-          <div class="tag-chip"><span class="check-box"></span> OR NOISE</div>
-          <div class="tag-chip"><span class="check-box"></span> EXPANSION</div>
-        </div>
-      </div>
-
-      <div class="grid-2" style="margin-bottom:7pt">
-        <div>
-          <div class="field-label">Did Market Do What I Expected?</div>
-          <div class="yn-pair" style="margin-top:3pt">
-            <span class="check-box"></span><span style="font-size:7.5pt; margin-right:12pt">YES</span>
-            <span class="check-box"></span><span style="font-size:7.5pt">NO</span>
-          </div>
-        </div>
-        <div>
-          <div class="field-label">Would Take Again?</div>
-          <div class="yn-pair" style="margin-top:3pt">
-            <span class="check-box"></span><span style="font-size:7.5pt; margin-right:10pt">YES</span>
-            <span class="check-box"></span><span style="font-size:7.5pt; margin-right:10pt">MAYBE</span>
-            <span class="check-box"></span><span style="font-size:7.5pt">NO</span>
-          </div>
-        </div>
-      </div>
-
-      <div style="margin-bottom:7pt">
-        <div class="field-label">Trade Grade — Grade the TRADE, not the result. A losing trade can be an A.</div>
-        <div class="yn-pair" style="margin-top:3pt">
-          <span class="check-box"></span><span style="font-size:7.5pt; margin-right:4pt">A — Take again tomorrow</span>
-          <span style="margin-right:8pt"></span>
-          <span class="check-box"></span><span style="font-size:7.5pt; margin-right:4pt">B — Good, minor flaw</span>
-          <span style="margin-right:8pt"></span>
-          <span class="check-box"></span><span style="font-size:7.5pt; margin-right:4pt">C — Questionable</span>
-          <span style="margin-right:8pt"></span>
-          <span class="check-box"></span><span style="font-size:7.5pt">F — Never should happen</span>
-        </div>
-      </div>
-
-      <div style="margin-bottom:6pt">
-        <div class="field-label">What Would've Happened If I Did Nothing?</div>
-        <div class="hint">Compare vs. the monster move: no trade. e.g. "Better entry 4 min later" · "Saved $80" · "Missed winner"</div>
-        <div class="rule-line"></div>
-      </div>
-
-      <div>
-        <div class="field-label">One-Line Lesson</div>
-        <div class="rule-line"></div>
-      </div>
-    </div><!-- end trade-block -->
-
-  </div><!-- end trade-container -->
-
-</div><!-- end page 1 -->
-
-
-<!-- ═══════════════════════════════════════════════════════ PAGE 2: METRICS + CLOSE -->
-<div class="page" id="session-page-2">
-
-  <div class="header">
-    <div>
-      <div class="eyebrow">Kaizen Trade Autopsy</div>
-      <div class="heading">Session Close</div>
-    </div>
-    <div class="mantra">
-      The account staying open is the win condition.<br>Profit is the bonus.
-    </div>
-  </div>
-
-  <!-- TRADES AVOIDED -->
-  <div class="section-head">Trades Avoided — Every correctly avoided garbage setup = +1</div>
-  <div class="hint" style="margin-bottom:6pt">This is a skill. Track it like one.</div>
-
-  <table style="width:100%; border-collapse:collapse; font-size:8pt; margin-bottom:10pt">
-    <thead>
-      <tr style="border-bottom:0.5pt solid var(--rule)">
-        <th style="text-align:left; padding:4pt 6pt; font-size:6pt; letter-spacing:0.12em; color:var(--ink3); font-weight:400">#</th>
-        <th style="text-align:left; padding:4pt 6pt; font-size:6pt; letter-spacing:0.12em; color:var(--ink3); font-weight:400">SETUP SEEN</th>
-        <th style="text-align:left; padding:4pt 6pt; font-size:6pt; letter-spacing:0.12em; color:var(--ink3); font-weight:400">PASSED?</th>
-        <th style="text-align:left; padding:4pt 6pt; font-size:6pt; letter-spacing:0.12em; color:var(--ink3); font-weight:400">OUTCOME IF TRADED</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr style="border-bottom:0.5pt solid var(--rule2)">
-        <td style="padding:6pt 6pt">1</td>
-        <td style="padding:6pt 6pt"><div style="border-bottom:0.5pt solid var(--rule2); min-width:160pt">&nbsp;</div></td>
-        <td style="padding:6pt 6pt"><span class="check-box"></span>Y <span style="margin-left:8pt"></span><span class="check-box"></span>N</td>
-        <td style="padding:6pt 6pt"><div style="border-bottom:0.5pt solid var(--rule2); min-width:140pt">&nbsp;</div></td>
-      </tr>
-      <tr style="border-bottom:0.5pt solid var(--rule2)">
-        <td style="padding:6pt 6pt">2</td>
-        <td style="padding:6pt 6pt"><div style="border-bottom:0.5pt solid var(--rule2); min-width:160pt">&nbsp;</div></td>
-        <td style="padding:6pt 6pt"><span class="check-box"></span>Y <span style="margin-left:8pt"></span><span class="check-box"></span>N</td>
-        <td style="padding:6pt 6pt"><div style="border-bottom:0.5pt solid var(--rule2); min-width:140pt">&nbsp;</div></td>
-      </tr>
-      <tr style="border-bottom:0.5pt solid var(--rule2)">
-        <td style="padding:6pt 6pt">3</td>
-        <td style="padding:6pt 6pt"><div style="border-bottom:0.5pt solid var(--rule2); min-width:160pt">&nbsp;</div></td>
-        <td style="padding:6pt 6pt"><span class="check-box"></span>Y <span style="margin-left:8pt"></span><span class="check-box"></span>N</td>
-        <td style="padding:6pt 6pt"><div style="border-bottom:0.5pt solid var(--rule2); min-width:140pt">&nbsp;</div></td>
-      </tr>
-      <tr>
-        <td style="padding:6pt 6pt">4</td>
-        <td style="padding:6pt 6pt"><div style="border-bottom:0.5pt solid var(--rule2); min-width:160pt">&nbsp;</div></td>
-        <td style="padding:6pt 6pt"><span class="check-box"></span>Y <span style="margin-left:8pt"></span><span class="check-box"></span>N</td>
-        <td style="padding:6pt 6pt"><div style="border-bottom:0.5pt solid var(--rule2); min-width:140pt">&nbsp;</div></td>
-      </tr>
-    </tbody>
-  </table>
-
-  <div style="text-align:right; font-size:8pt; margin-bottom:14pt">
-    <strong>Total correctly avoided: _______</strong>
-  </div>
-
-  <!-- SESSION METRICS -->
-  <div class="section-head">Session Metrics</div>
-  <div class="grid-3" style="margin-bottom:10pt">
-    <div>
-      <div class="field-label">Re-entry Count</div>
-      <div class="hint">Times re-entered after a loss</div>
-      <div class="rule-line"></div>
-    </div>
-    <div>
-      <div class="field-label">Conscious Walk-Aways</div>
-      <div class="hint">Times you saw a setup and passed</div>
-      <div class="rule-line"></div>
-    </div>
-    <div>
-      <div class="field-label">Patience Score (1–5)</div>
-      <div class="hint">1=clicked fast · 5=market fully proved itself</div>
-      <div class="rule-line"></div>
-    </div>
-  </div>
-
-  <div style="margin-bottom:10pt">
-    <div class="field-label">Was Environment Call Correct?</div>
-    <div class="yn-pair" style="margin-top:4pt">
-      <span class="check-box"></span><span style="font-size:7.5pt; margin-right:12pt">YES</span>
-      <span class="check-box"></span><span style="font-size:7.5pt; margin-right:12pt">NO</span>
-      <span class="check-box"></span><span style="font-size:7.5pt">UNKNOWN</span>
-    </div>
-  </div>
-
-  <div style="margin-bottom:12pt">
-    <div class="field-label">Session Notes / Key Takeaway</div>
-    <div class="rule-line" style="margin-bottom:2pt"></div>
-    <div class="rule-line" style="margin-bottom:2pt"></div>
-    <div class="rule-line"></div>
-  </div>
-
-  <!-- SESSION SUMMARY -->
-  <div class="section-head">Session Summary</div>
-  <div class="summary-grid" style="margin-bottom:14pt">
-    <div class="summary-cell">
-      <div class="field-label" style="text-align:center">NET P&L ($)</div>
-      <div class="summary-val">&nbsp;</div>
-    </div>
-    <div class="summary-cell">
-      <div class="field-label" style="text-align:center">TOTAL TRADES</div>
-      <div class="summary-val">&nbsp;</div>
-    </div>
-    <div class="summary-cell">
-      <div class="field-label" style="text-align:center">WINNERS</div>
-      <div class="summary-val">&nbsp;</div>
-    </div>
-    <div class="summary-cell">
-      <div class="field-label" style="text-align:center">LOSERS</div>
-      <div class="summary-val">&nbsp;</div>
-    </div>
-    <div class="summary-cell">
-      <div class="field-label" style="text-align:center">AVG MAE WIN (pts)</div>
-      <div class="summary-val">&nbsp;</div>
-    </div>
-    <div class="summary-cell">
-      <div class="field-label" style="text-align:center">AVG MAE LOSS (pts)</div>
-      <div class="summary-val">&nbsp;</div>
-    </div>
-    <div class="summary-cell">
-      <div class="field-label" style="text-align:center">IFT YES / NO</div>
-      <div class="summary-val">&nbsp;</div>
-    </div>
-    <div class="summary-cell">
-      <div class="field-label" style="text-align:center">AVOIDED SETUPS</div>
-      <div class="summary-val">&nbsp;</div>
-    </div>
-  </div>
-
-  <!-- GRADE TALLY -->
-  <div class="grid-4" style="margin-bottom:14pt">
-    <div class="summary-cell">
-      <div class="field-label" style="text-align:center">A GRADES</div>
-      <div class="summary-val">&nbsp;</div>
-    </div>
-    <div class="summary-cell">
-      <div class="field-label" style="text-align:center">B GRADES</div>
-      <div class="summary-val">&nbsp;</div>
-    </div>
-    <div class="summary-cell">
-      <div class="field-label" style="text-align:center">C GRADES</div>
-      <div class="summary-val">&nbsp;</div>
-    </div>
-    <div class="summary-cell">
-      <div class="field-label" style="text-align:center">F GRADES</div>
-      <div class="summary-val">&nbsp;</div>
-    </div>
-  </div>
-
-  <!-- POST-SESSION CHECKLIST -->
-  <div class="section-head">Post-Session Checklist</div>
-  <div style="display:grid; grid-template-columns:1fr 1fr; gap:8pt; margin-bottom:14pt">
-    <div class="check-row"><span class="check-box"></span> Did I follow rules?</div>
-    <div class="check-row"><span class="check-box"></span> Did I protect both accounts?</div>
-    <div class="check-row"><span class="check-box"></span> Did I record everything?</div>
-    <div class="check-row"><span class="check-box"></span> Did I review?</div>
-    <div class="check-row"><span class="check-box"></span> Did I survive?</div>
-    <div class="check-row"><span class="check-box"></span> Locked second account after first failed?</div>
-  </div>
-
-  <!-- GRAND SLAMS TALLY -->
-  <div class="section-head">Grand Slams — Running Totals</div>
-  <div class="grid-2" style="margin-bottom:16pt">
-    <div>
-      <div class="check-row" style="justify-content:space-between; border-bottom:0.5pt solid var(--rule2); padding-bottom:4pt; margin-bottom:4pt">
-        <span>Days Account Alive</span><span>_______</span>
-      </div>
-      <div class="check-row" style="justify-content:space-between; border-bottom:0.5pt solid var(--rule2); padding-bottom:4pt; margin-bottom:4pt">
-        <span>Consecutive Rule-Following Sessions</span><span>_______</span>
-      </div>
-      <div class="check-row" style="justify-content:space-between; border-bottom:0.5pt solid var(--rule2); padding-bottom:4pt; margin-bottom:4pt">
-        <span>Consecutive Days No Revenge Trading</span><span>_______</span>
-      </div>
-      <div class="check-row" style="justify-content:space-between; border-bottom:0.5pt solid var(--rule2); padding-bottom:4pt; margin-bottom:4pt">
-        <span>Trades Reviewed (lifetime)</span><span>_______</span>
-      </div>
-      <div class="check-row" style="justify-content:space-between">
-        <span>Sessions Reviewed (lifetime)</span><span>_______</span>
-      </div>
-    </div>
-    <div>
-      <div class="check-row" style="justify-content:space-between; border-bottom:0.5pt solid var(--rule2); padding-bottom:4pt; margin-bottom:4pt">
-        <span>Chop Sessions Avoided</span><span>_______</span>
-      </div>
-      <div class="check-row" style="justify-content:space-between; border-bottom:0.5pt solid var(--rule2); padding-bottom:4pt; margin-bottom:4pt">
-        <span>Correct Environment Calls</span><span>_______</span>
-      </div>
-      <div class="check-row" style="justify-content:space-between; border-bottom:0.5pt solid var(--rule2); padding-bottom:4pt; margin-bottom:4pt">
-        <span>Longest Funded Account Lifespan</span><span>_______</span>
-      </div>
-      <div class="check-row" style="justify-content:space-between; border-bottom:0.5pt solid var(--rule2); padding-bottom:4pt; margin-bottom:4pt">
-        <span>A-Grade Streak (current)</span><span>_______</span>
-      </div>
-      <div class="check-row" style="justify-content:space-between">
-        <span>F-Grade Free Streak (current)</span><span>_______</span>
-      </div>
-    </div>
-  </div>
-
-  <hr class="divider">
-  <div style="text-align:center; color:#bbb; font-size:7pt; font-style:italic; margin-top:10pt">
-    The monster does not chase. The monster does not beg the market. The monster survives today so he can dominate later.
-  </div>
-
-</div><!-- end page 2 -->
-
-<script>
-  // Clone a trade block and renumber it
-  let tradeCount = 1;
-
-  function addTrade() {
-    tradeCount++;
-    const container = document.getElementById('trade-container-1') || document.querySelector('[id^="trade-container"]');
-    const existing = container.querySelector('.trade-block');
-    const clone = existing.cloneNode(true);
-
-    // Update trade number
-    clone.querySelector('.trade-num').textContent = 'TRADE #' + tradeCount;
-
-    // Clear all rule-lines (inputs)
-    clone.querySelectorAll('.rule-line').forEach(el => el.style.content = '');
-
-    container.appendChild(clone);
-  }
-
-  function addPage() {
-    // Clone page 1 structure and append
-    const page1 = document.getElementById('session-page-1');
-    const clone = page1.cloneNode(true);
-    clone.id = 'session-page-' + Date.now();
-
-    // Reset trade count for new page
-    const tradeNums = clone.querySelectorAll('.trade-num');
-    tradeNums.forEach((el, i) => el.textContent = 'TRADE #' + (i+1));
-
-    document.body.insertBefore(clone, document.querySelector('.no-print'));
-    clone.scrollIntoView({ behavior:'smooth' });
-  }
-</script>
-
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(<App />);
+  </script>
 </body>
 </html>
