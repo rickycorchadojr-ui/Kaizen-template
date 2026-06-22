@@ -3,35 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kaizen Trade Autopsy — Session Log & Metrics</title>
+  <title>Kaizen Trade Autopsy — Session Log</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap');
-
-    /* --- Semantically Saturated Theme Constants --- */
-    :root {
-      --bg: #08080a;
-      --surface: #101012;
-      --card: #141417;
-      --border: #27272a;
-      --text: #e4e4e7;
-      --mute: #717171;
-      
-      --green-main: #10b981;
-      --green-bg: #064e3b;
-      --green-text: #6ee7b7;
-
-      --red-main: #ef4444;
-      --red-bg: #450a0a;
-      --red-text: #fca5a5;
-
-      --yellow-main: #eab308;
-      --yellow-bg: #422006;
-      --yellow-text: #fde047;
-
-      --purple-main: #a855f7;
-      --purple-bg: #1e1b4b;
-      --purple-text: #a5b4fc;
-    }
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
 
     * {
       box-sizing: border-box;
@@ -40,287 +14,408 @@
     }
 
     body {
-      background-color: var(--bg);
-      color: var(--text);
-      font-family: 'JetBrains Mono', monospace;
-      padding: 24px 16px;
+      background-color: #0a0a0a;
+      color: #e4e4e7;
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
       min-height: 100vh;
+      padding-bottom: 60px;
     }
 
-    .container {
-      max-width: 860px;
-      margin: 0 auto;
-    }
-
-    /* --- UI Panels & Elements --- */
-    .header-panel {
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 16px;
-      margin-bottom: 24px;
+    /* --- Navbar & Header Components --- */
+    .header-container {
+      border-bottom: 1px solid #27272a;
+      padding: 16px 24px;
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      align-items: flex-end;
+      background-color: #0a0a0a;
     }
 
-    .eyebrow {
-      color: var(--mute);
-      font-size: 9px;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      margin-bottom: 4px;
+    .header-title-sec .eyebrow {
+      color: #71717a;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      margin-bottom: 2px;
     }
 
-    h1 {
-      font-size: 20px;
+    .header-title-sec h1 {
+      color: #e4e4e7;
+      font-size: 18px;
       font-weight: 700;
       letter-spacing: 0.05em;
     }
 
-    .mantra-panel {
-      border-left: 2px solid var(--border);
-      padding-left: 16px;
-      margin-bottom: 24px;
-    }
-
-    .mantra-panel p {
-      color: var(--mute);
-      font-size: 11px;
-      font-style: italic;
-      line-height: 1.6;
-    }
-
-    .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 16px;
-      margin-bottom: 24px;
-    }
-
-    .field-label {
-      display: block;
-      font-size: 10px;
-      color: var(--mute);
-      margin-bottom: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    input, textarea {
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 6px 10px;
-      border-radius: 4px;
-      width: 100%;
-      font-family: inherit;
-      font-size: 11px;
-      outline: none;
-    }
-
-    /* --- Button Configurations & Chips --- */
-    .btn-group {
+    .header-actions {
       display: flex;
       gap: 8px;
     }
 
-    .btn-choice {
-      flex: 1;
-      padding: 6px;
+    .btn-outline {
+      background: none;
+      border: 1px solid #3f3f46;
+      color: #a1a1aa;
+      padding: 6px 14px;
       border-radius: 4px;
-      border: 1px solid var(--border);
-      background: var(--card);
-      color: var(--mute);
-      font-family: inherit;
       font-size: 11px;
       cursor: pointer;
-      font-weight: 600;
-      transition: all 0.2s ease;
-    }
-
-    .chip-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .chip {
-      padding: 6px 12px;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-      background: var(--card);
-      color: var(--mute);
-      font-size: 10px;
       font-family: inherit;
-      cursor: pointer;
-      font-weight: 600;
       transition: all 0.2s ease;
     }
 
-    /* --- Tactical Log --- */
-    .trade-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 16px;
+    .btn-outline:hover {
+      border-color: #52525b;
+      color: #e4e4e7;
+    }
+
+    .main-wrapper {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+
+    /* --- Mantra --- */
+    .mantra-block {
+      border-left: 2px solid #3f3f46;
+      padding-left: 16px;
+      margin-bottom: 28px;
+    }
+
+    .mantra-block p {
+      color: #52525b;
+      font-size: 11px;
+      font-style: italic;
+      line-height: 1.8;
+    }
+
+    /* --- Global Layout Containers --- */
+    .section-title {
+      color: #71717a;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .panel-card {
+      border: 1px solid #3f3f46;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      background: #09090b;
+    }
+
+    .field-block {
       margin-bottom: 16px;
     }
 
-    .trade-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
+    .field-label {
+      color: #71717a;
+      font-size: 10px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
-    .grid-4 {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-bottom: 12px;
+    .field-hint {
+      color: #52525b;
+      font-size: 9px;
+      margin-bottom: 6px;
+      font-style: italic;
     }
 
     .grid-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 12px;
-      margin-bottom: 12px;
     }
 
-    .loss-detection-zone {
-      margin-bottom: 12px;
-      padding: 10px;
-      border: 1px solid var(--red-main);
-      background: #1a0f11;
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    /* --- Form Elements --- */
+    input[type="text"], input[type="date"], input[type="number"], textarea {
+      background: #18181b;
+      border: 1px solid #3f3f46;
+      color: #e4e4e7;
       border-radius: 4px;
-      display: none; /* Controlled dynamically */
+      padding: 8px 12px;
+      font-family: inherit;
+      font-size: 13px;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.15s ease;
     }
 
-    .append-btn {
-      width: 100%;
+    input:focus, textarea:focus {
+      border-color: #71717a;
+    }
+
+    textarea {
+      resize: none;
+    }
+
+    /* --- Functional Interactive Chips & Choices --- */
+    .chip-flex {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip-btn {
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      font-family: inherit;
+      border: 1px solid #3f3f46;
+      background: #18181b;
+      color: #71717a;
+      transition: all 0.15s ease;
+    }
+
+    /* Target chip thematic styles directly mapping color properties from jsx template */
+    .chip-btn.active-blue { border-color: #3b82f6; background: #1e3a8a; color: #dbeafe; }
+    .chip-btn.active-red { border-color: #ef4444; background: #450a0a; color: #fca5a5; }
+    .chip-btn.active-green { border-color: #10b981; background: #064e3b; color: #6ee7b7; }
+    .chip-btn.active-yellow { border-color: #eab308; background: #422006; color: #fde047; }
+    .chip-btn.active-purple { border-color: #6366f1; background: #1e1b4b; color: #a5b4fc; }
+
+    /* --- Dynamic Component Specific Layouts --- */
+    .trade-card-root {
+      border: 1px solid #3f3f46;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 16px;
+      background: #09090b;
+    }
+
+    .trade-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .trade-card-identity {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .trade-card-identity .lbl { color: #52525b; font-size: 14px; font-weight: bold; }
+    .trade-card-identity .num { color: #ffffff; font-size: 20px; font-weight: bold; }
+    .trade-card-identity .pnl { font-size: 18px; font-weight: bold; }
+    
+    .pnl-pos { color: #34d399; }
+    .pnl-neg { color: #f87171; }
+    .pnl-neutral { color: #a1a1aa; }
+
+    .btn-remove {
       background: none;
-      border: 1px dashed var(--border);
-      color: var(--mute);
-      padding: 12px;
-      border-radius: 6px;
+      border: none;
+      color: #3f3f46;
       font-family: inherit;
       font-size: 11px;
       cursor: pointer;
-      margin-bottom: 24px;
+      transition: color 0.15s ease;
+    }
+    .btn-remove:hover { color: #a1a1aa; }
+
+    .btn-append-dashed {
+      width: 100%;
+      background: none;
+      border: 1px dashed #3f3f46;
+      color: #52525b;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      cursor: pointer;
+      font-family: inherit;
+      margin-bottom: 20px;
+      transition: all 0.2s ease;
+    }
+    .btn-append-dashed:hover {
+      border-color: #52525b;
+      color: #a1a1aa;
     }
 
-    .append-btn:hover {
-      border-color: var(--mute);
-      color: var(--text);
+    /* --- Summary Matrix Row Graphics --- */
+    .metric-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 16px;
     }
 
-    .scoreboard-grandslam {
-      background: #060608;
-      border: 1px solid var(--purple-main);
+    .metric-summary-box {
+      background: #141417;
       border-radius: 6px;
-      padding: 16px;
+      padding: 12px;
+      text-align: center;
+      border: 1px solid #232326;
     }
 
-    /* --- Interactive Classes Matrix --- */
-    .active-yes { border-color: var(--green-main) !important; background: var(--green-bg) !important; color: var(--green-text) !important; }
-    .active-no { border-color: var(--red-main) !important; background: var(--red-bg) !important; color: var(--red-text) !important; }
-    .active-env { border-color: var(--purple-main) !important; background: var(--purple-bg) !important; color: var(--purple-text) !important; }
-    .active-setup { border-color: var(--purple-main) !important; background: var(--purple-bg) !important; color: var(--purple-text) !important; }
-    .active-loss { border-color: var(--red-main) !important; background: var(--red-bg) !important; color: var(--red-text) !important; }
-    
-    .grade-A.active { border-color: var(--green-main) !important; background: var(--green-bg) !important; color: var(--green-text) !important; }
-    .grade-B.active { border-color: var(--purple-main) !important; background: var(--purple-bg) !important; color: var(--purple-text) !important; }
-    .grade-C.active { border-color: var(--yellow-main) !important; background: var(--yellow-bg) !important; color: var(--yellow-text) !important; }
-    .grade-F.active { border-color: var(--red-main) !important; background: var(--red-bg) !important; color: var(--red-text) !important; }
+    .metric-summary-box .title {
+      font-size: 10px;
+      color: #71717a;
+      margin-bottom: 4px;
+    }
+
+    .metric-summary-box .value {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .checklist-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #1c1c1f;
+    }
+    .checklist-row:last-child { border-bottom: none; }
+
+    .footer-reminder {
+      margin-top: 24px;
+      color: #3f3f46;
+      font-size: 10px;
+      text-align: center;
+      font-style: italic;
+    }
+
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
 
-  <div class="container">
+  <div class="header-container">
+    <div class="header-title-sec">
+      <div class="eyebrow">KAIZEN TRADE AUTOPSY</div>
+      <h1>SESSION LOG</h1>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-outline" id="toggle-view-btn" onclick="toggleViewMode()">VIEW SUMMARY</button>
+      <button type="button" class="btn-outline" onclick="triggerResetSession()">NEW SESSION</button>
+    </div>
+  </div>
+
+  <div class="main-wrapper">
     
-    <div class="header-panel">
-      <div>
-        <div class="eyebrow">Kaizen Trade Autopsy</div>
-        <h1>SESSION LOG &amp; METRICS</h1>
-      </div>
-      <div style="color: var(--green-text); font-size: 11px; font-weight: 600;">
-        ⚡ SURVIVAL IS THE WIN CONDITION
-      </div>
+    <div class="mantra-block">
+      <p>
+        I protect the account. I stack clean days. I become impossible to kill.<br>
+        Has the market earned my participation?
+      </p>
     </div>
 
-    <div class="mantra-panel">
-      <p>"I protect the account. I stack clean days. I become impossible to kill. Has the market earned my participation?"</p>
-    </div>
-
-    <div class="panel">
-      <div class="eyebrow" style="margin-bottom: 12px;">Pre-Session Classification</div>
-      <div class="grid-2">
-        <div>
-          <label class="field-label">Session Date</label>
-          <input type="date" id="session-date">
+    <div id="workspace-view-root">
+      
+      <div class="panel-card">
+        <div class="section-title" style="margin-bottom: 16px;">Pre-Session</div>
+        
+        <div class="grid-2" style="margin-bottom: 16px;">
+          <div class="field-block">
+            <div class="field-label">Date</div>
+            <input type="date" id="session-date-input" onchange="syncSessionRootData('date', this.value)">
+          </div>
+          <div class="field-block">
+            <div class="field-label">First Trade Followed Setup?</div>
+            <div class="chip-flex" style="margin-top: 8px;">
+              <button type="button" class="chip-btn" id="fs-yes" onclick="setSessionSetupFlag(true)">YES</button>
+              <button type="button" class="chip-btn" id="fs-no" onclick="setSessionSetupFlag(false)">NO</button>
+            </div>
+          </div>
         </div>
-        <div>
-          <label class="field-label">First Trade Followed Setup?</label>
-          <div class="btn-group">
-            <button type="button" class="btn-choice" id="first-setup-yes" onclick="toggleFirstSetup(true)">YES</button>
-            <button type="button" class="btn-choice" id="first-setup-no" onclick="toggleFirstSetup(false)">NO</button>
+
+        <div class="field-block" style="margin-bottom: 0;">
+          <div class="field-label">Market Environment — Classify before first trade</div>
+          <div class="chip-flex" id="env-options-root"></div>
+          <div class="field-hint" style="margin-top: 6px;">
+            ROTATIONAL = levels respected, discretion works · CHOP = whipsaws, avoid · EXPANSION = violent, fast, kills discretion
           </div>
         </div>
       </div>
 
-      <div style="margin-top: 14px;">
-        <label class="field-label">Market Environment (Classify Before Engaging)</label>
-        <div class="chip-container" id="env-container"></div>
-        <div style="color: #52525b; font-size: 9px; margin-top: 6px; font-style: italic;">
-          ROTATIONAL = Levels respected · CHOP = Whipsaws, sit out · EXPANSION = Violent, kills discretion
+      <div class="section-title">Trade Log</div>
+      <div id="trades-cards-container"></div>
+
+      <button type="button" class="btn-append-dashed" onclick="appendNewTradeObject()">
+        + ADD TRADE
+      </button>
+
+      <div class="panel-card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+          <div>
+            <div class="section-title" style="margin-bottom: 2px;">Trades Avoided</div>
+            <div class="field-hint" style="margin-bottom: 0;">Every correctly avoided garbage setup = +1 point. This is a skill.</div>
+          </div>
+          <button type="button" class="btn-outline" onclick="appendAvoidedObject()">+ ADD</button>
+        </div>
+        <div id="avoided-list-mount"></div>
+        <div id="avoided-empty-notice" class="field-hint" style="text-align: center; padding: 16px 0;">No avoided setups logged yet.</div>
+        <div id="avoided-score-tally" class="hidden" style="margin-top: 12px; text-align: right; font-size: 13px;">
+          <span id="avoided-score-value" style="color: #10b981; font-weight: bold;">0</span>
+          <span style="color: #71717a; font-size: 11px;"> setups correctly avoided</span>
         </div>
       </div>
+
+      <div class="panel-card">
+        <div class="section-title" style="margin-bottom: 16px;">Session Metrics</div>
+        <div class="grid-3" style="margin-bottom: 16px;">
+          <div>
+            <div class="field-label">Re-entry Count</div>
+            <div class="field-hint">Avg seconds between trades</div>
+            <input type="text" id="metric-reentry" placeholder="e.g. 45" oninput="syncSessionRootData('reentryCount', this.value)">
+          </div>
+          <div>
+            <div class="field-label">Conscious Walk-Aways</div>
+            <div class="field-hint">Times passed on a setup</div>
+            <input type="text" id="metric-walkaways" placeholder="e.g. 3" oninput="syncSessionRootData('walkAways', this.value)">
+          </div>
+          <div>
+            <div class="field-label">Patience Score (1–5)</div>
+            <div class="field-hint">1=clicked fast, 5=fully proven</div>
+            <input type="text" id="metric-patience" placeholder="5" oninput="syncSessionRootData('patienceScore', this.value)">
+          </div>
+        </div>
+
+        <div class="field-block">
+          <div class="field-label">Was Environment Call Correct?</div>
+          <div class="chip-flex" style="margin-top: 6px;">
+            <button type="button" class="chip-btn" id="env-corr-yes" onclick="setEnvironmentCorrectness(true)">YES</button>
+            <button type="button" class="chip-btn" id="env-corr-no" onclick="setEnvironmentCorrectness(false)">NO</button>
+            <button type="button" class="chip-btn" id="env-corr-unk" onclick="setEnvironmentCorrectness('unknown')">UNKNOWN</button>
+          </div>
+        </div>
+
+        <div class="field-block" style="margin-bottom: 0;">
+          <div class="field-label">Session Notes / Lesson</div>
+          <textarea id="session-notes-area" rows="3" placeholder="What did the session teach you? One key takeaway." oninput="syncSessionRootData('sessionNotes', this.value)"></textarea>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <div class="section-title" style="margin-bottom: 12px;">Post-Session — Daily Check</div>
+        <div id="inline-checklist-mount"></div>
+      </div>
+
     </div>
 
-    <div class="eyebrow" style="margin-bottom: 8px;">Tactical Trade Log</div>
-    <div id="trade-log-root"></div>
-
-    <button type="button" class="append-btn" onclick="addTradeCard()">
-      + APPEND NEXT TRADE CONQUEST
-    </button>
-
-    <div class="panel">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-          <div style="font-size: 10px; color: var(--green-text); font-weight: bold;">CHOPS / GARBAGE SETUPS AVOIDED</div>
-          <div style="font-size: 9px; color: var(--mute); font-style: italic;">Every deliberate pass on an unearned market scenario adds +1 skill point.</div>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <button type="button" onclick="changeAvoidedCount(-1)" style="background: var(--card); border: 1px solid var(--border); color: var(--text); width: 24px; height: 24px; border-radius: 4px; cursor: pointer;">-</button>
-          <span id="avoided-count" style="font-size: 16px; font-weight: bold; min-width: 24px; text-align: center; color: var(--green-main)">0</span>
-          <button type="button" onclick="changeAvoidedCount(1)" style="background: var(--card); border: 1px solid var(--border); color: var(--text); width: 24px; height: 24px; border-radius: 4px; cursor: pointer;">+</button>
-        </div>
-      </div>
+    <div id="summary-view-root" class="hidden">
+      <div id="standalone-summary-mount"></div>
     </div>
 
-    <div class="scoreboard-grandslam">
-      <div class="eyebrow" style="color: var(--purple-text); margin-bottom: 12px; font-weight: bold;">🏆 PERMANENT RECORDS — THE 14 GRAND SLAMS BOARD</div>
-      <div class="grid-2">
-        <div>
-          <label class="field-label">DAYS ACCOUNT ALIVE</label>
-          <input type="number" value="0">
-        </div>
-        <div>
-          <label class="field-label">CONSECUTIVE RULE-FOLLOWING SESSIONS</label>
-          <input type="number" value="0" style="color: var(--purple-text); font-weight: bold;">
-        </div>
-        <div>
-          <label class="field-label">STREAK: NO REVENGE TRADING (DAYS)</label>
-          <input type="number" value="0" style="color: var(--green-text);">
-        </div>
-        <div>
-          <label class="field-label">MAX LOSS CONTAINED WITHOUT RESET ($)</label>
-          <input type="number" value="0" style="color: var(--yellow-text);">
-        </div>
-      </div>
-      <div style="color: var(--mute); font-size: 9px; margin-top: 10px; font-style: italic; text-align: center;">
-        "Professionals accumulate reps. Dead accounts cannot compound."
-      </div>
+    <div class="footer-reminder">
+      The account staying open is the win condition. Profit is the bonus.
     </div>
 
   </div>
@@ -330,217 +425,430 @@
     const GRADE_OPTIONS = ["A", "B", "C", "F"];
     const SETUP_TAGS = ["BREAKOUT", "PULLBACK", "REVERSAL", "CONTINUATION", "OPENING RANGE", "FAILED AUCTION", "ANTICIPATION", "FOMO", "CHASE", "OTHER"];
     const LOSS_TAGS = ["EARLY", "CHOP", "REVERSAL", "CHASE", "OVERSIZED", "FOMO", "LOW VOLUME", "COUNTERTREND", "OPENING RANGE NOISE", "EXPANSION"];
-
-    let tradeCounter = 0;
-    let avoidedCount = 0;
-
-    // Set default date picker
-    document.getElementById('session-date').value = new Date().toISOString().slice(0, 10);
-
-    // Render Market Environment Buttons
-    const envContainer = document.getElementById('env-container');
-    ENV_OPTIONS.forEach(env => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'chip';
-      btn.innerText = env;
-      btn.onclick = () => {
-        Array.from(envContainer.children).forEach(c => c.classList.remove('active-env'));
-        btn.classList.add('active-env');
-      };
-      envContainer.appendChild(btn);
+    
+    // Explicit Data Factories matching JSX empty initializers
+    const createEmptyTradeObject = () => ({
+      id: Date.now() + Math.random(),
+      direction: "",
+      time: "",
+      entry: "",
+      exit: "",
+      result: "",
+      grade: "",
+      immediateFollowThrough: null,
+      negotiable: null,
+      mae: "",
+      mfe: "",
+      why: "",
+      wouldTakeAgain: null,
+      marketDid: null,
+      lossTag: "",
+      setupTag: "",
+      doNothingOutcome: "",
+      notes: ""
     });
 
-    function toggleFirstSetup(isFollowed) {
-      const yesBtn = document.getElementById('first-setup-yes');
-      const noBtn = document.getElementById('first-setup-no');
-      if(isFollowed) {
-        yesBtn.classList.add('active-yes');
-        noBtn.classList.remove('active-no');
-      } else {
-        noBtn.classList.add('active-no');
-        yesBtn.classList.remove('active-yes');
-      }
+    const createEmptySessionStructure = () => ({
+      date: new Date().toISOString().slice(0, 10),
+      environment: "",
+      environmentCorrect: null,
+      firstTradeSetup: null,
+      cheatScore: "",
+      patienceScore: "",
+      walkAways: "",
+      reentryCount: "",
+      sessionNotes: "",
+      trades: []
+    });
+
+    // Central Data Stores
+    let currentSession = createEmptySessionStructure();
+    let currentAvoidedList = [];
+    let currentViewMode = "session"; // "session" | "summary"
+    
+    let currentChecklistState = {
+      followedRules: null,
+      protectedAccounts: null,
+      recorded: null,
+      reviewed: null,
+      survived: null
+    };
+
+    const CHECKLIST_METADATA = [
+      { q: "Did I follow rules?", key: "followedRules" },
+      { q: "Did I protect both accounts?", key: "protectedAccounts" },
+      { q: "Did I record everything?", key: "recorded" },
+      { q: "Did I review?", key: "reviewed" },
+      { q: "Did I survive?", key: "survived" }
+    ];
+
+    // Core Lifecycle Bootstrap
+    window.addEventListener('DOMContentLoaded', () => {
+      // Seeds initialization sequence with a default blank card exactly like layout behavior
+      currentSession.trades.push(createEmptyTradeObject());
+      document.getElementById('session-date-input').value = currentSession.date;
+      
+      buildStaticEnvironmentChips();
+      renderInteractiveWorkspace();
+    });
+
+    function buildStaticEnvironmentChips() {
+      const container = document.getElementById('env-options-root');
+      container.innerHTML = '';
+      ENV_OPTIONS.forEach(env => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'chip-btn';
+        btn.id = `env-opt-${env}`;
+        btn.innerText = env;
+        btn.onclick = () => selectEnvironmentCall(env);
+        container.appendChild(btn);
+      });
     }
 
-    function changeAvoidedCount(val) {
-      avoidedCount = Math.max(0, avoidedCount + val);
-      document.getElementById('avoided-count').innerText = avoidedCount;
-    }
-
-    function addTradeCard() {
-      tradeCounter++;
-      const id = tradeCounter;
-      const root = document.getElementById('trade-log-root');
-
-      const card = document.createElement('div');
-      card.className = 'trade-card';
-      card.id = `trade-card-${id}`;
-
-      card.innerHTML = `
-        <div class="trade-header">
-          <span style="font-size: 12px; font-weight: 700;">TRADE #${id}</span>
-          <input type="text" placeholder="Result ($)" id="result-${id}" style="width: 100px; text-align: right; background: var(--surface); border: 1px solid var(--border); font-weight: bold; color: var(--green-main);">
-        </div>
-
-        <div class="grid-4">
-          <div>
-            <span class="field-label">TIME</span>
-            <input type="text" placeholder="09:45">
-          </div>
-          <div>
-            <span class="field-label">DIR</span>
-            <div class="btn-group">
-              <button type="button" class="btn-choice" id="dir-long-${id}" onclick="setDirection(${id}, 'LONG')">LONG</button>
-              <button type="button" class="btn-choice" id="dir-short-${id}" onclick="setDirection(${id}, 'SHORT')">SHORT</button>
-            </div>
-          </div>
-          <div>
-            <span class="field-label">MAE (PTS)</span>
-            <input type="text" placeholder="Adverse" style="color: var(--red-text);">
-          </div>
-          <div>
-            <span class="field-label">MFE (PTS)</span>
-            <input type="text" placeholder="Favor" style="color: var(--green-text);">
-          </div>
-        </div>
-
-        <div class="grid-2">
-          <div>
-            <span class="field-label">IMMEDIATE FOLLOW THROUGH?</span>
-            <div class="btn-group">
-              <button type="button" class="btn-choice" id="ift-yes-${id}" onclick="setFollowThrough(${id}, true)">YES</button>
-              <button type="button" class="btn-choice" id="ift-no-${id}" onclick="setFollowThrough(${id}, false)">NO</button>
-            </div>
-          </div>
-          <div>
-            <span class="field-label">MARKET NEGOTIABLE? (HAD TIME?)</span>
-            <div class="btn-group">
-              <button type="button" class="btn-choice" id="neg-yes-${id}" onclick="setNegotiable(${id}, true)">YES</button>
-              <button type="button" class="btn-choice" id="neg-no-${id}" onclick="setNegotiable(${id}, false)">NO (TOO FAST)</button>
-            </div>
-          </div>
-        </div>
-
-        <div style="margin-bottom: 12px;">
-          <span class="field-label">WHY DID I TAKE IT? (One sentence maximum)</span>
-          <input type="text" placeholder="e.g., 'Failed auction at prior high open range'">
-        </div>
-
-        <div style="margin-bottom: 12px;">
-          <span class="field-label">SETUP SEEN</span>
-          <div class="chip-container" id="setup-tags-${id}"></div>
-        </div>
-
-        <div class="loss-detection-zone" id="loss-zone-${id}">
-          <span class="field-label" style="color: var(--red-text); font-weight: bold; margin-bottom: 4px;">LOSS CATEGORY DETECTED</span>
-          <div class="chip-container" id="loss-tags-${id}"></div>
-        </div>
-
-        <div>
-          <span class="field-label">TRADE GRADE (Grade the execution, never the outcome)</span>
-          <div class="btn-group" id="grade-group-${id}"></div>
-        </div>
-      `;
-
-      root.appendChild(card);
-
-      // Populate Setup Tags Chips
-      const sContainer = document.getElementById(`setup-tags-${id}`);
-      SETUP_TAGS.forEach(tag => {
-        const tBtn = document.createElement('button');
-        tBtn.type = 'button';
-        tBtn.className = 'chip';
-        tBtn.innerText = tag;
-        tBtn.onclick = () => {
-          Array.from(sContainer.children).forEach(c => c.classList.remove('active-setup'));
-          tBtn.classList.add('active-setup');
-        };
-        sContainer.appendChild(tBtn);
-      });
-
-      // Populate Loss Tags Chips
-      const lContainer = document.getElementById(`loss-tags-${id}`);
-      LOSS_TAGS.forEach(tag => {
-        const lBtn = document.createElement('button');
-        lBtn.type = 'button';
-        lBtn.className = 'chip';
-        lBtn.innerText = tag;
-        lBtn.onclick = () => {
-          Array.from(lContainer.children).forEach(c => c.classList.remove('active-loss'));
-          lBtn.classList.add('active-loss');
-        };
-        lContainer.appendChild(lBtn);
-      });
-
-      // Populate Grading Buttons
-      const gGroup = document.getElementById(`grade-group-${id}`);
-      GRADE_OPTIONS.forEach(g => {
-        const gBtn = document.createElement('button');
-        gBtn.type = 'button';
-        gBtn.className = `btn-choice grade-${g}`;
-        gBtn.innerText = g;
-        gBtn.onclick = () => {
-          Array.from(gGroup.children).forEach(c => c.classList.remove('active'));
-          gBtn.classList.add('active');
-        };
-        gGroup.appendChild(gBtn);
-      });
-
-      // Handle Dynamic Loss Detection based on input value
-      const resInput = document.getElementById(`result-${id}`);
-      resInput.oninput = function() {
-        const val = parseFloat(resInput.value);
-        const lossZone = document.getElementById(`loss-zone-${id}`);
-        if (!isNaN(val) && val < 0) {
-          resInput.style.color = "var(--red-main)";
-          lossZone.style.display = "block";
+    function selectEnvironmentCall(env) {
+      currentSession.environment = (currentSession.environment === env) ? "" : env;
+      ENV_OPTIONS.forEach(item => {
+        const target = document.getElementById(`env-opt-${item}`);
+        if(item === currentSession.environment) {
+          target.className = 'chip-btn active-purple';
         } else {
-          resInput.style.color = "var(--green-main)";
-          lossZone.style.display = "none";
+          target.className = 'chip-btn';
         }
-      };
+      });
     }
 
-    // Dynamic State Click Intermediaries
-    function setDirection(id, dir) {
-      const longB = document.getElementById(`dir-long-${id}`);
-      const shortB = document.getElementById(`dir-short-${id}`);
-      if(dir === 'LONG') {
-        longB.classList.add('active-yes');
-        shortB.classList.remove('active-no');
-      } else {
-        shortB.classList.add('active-no');
-        longB.classList.remove('active-yes');
+    function setSessionSetupFlag(flag) {
+      currentSession.firstTradeSetup = (currentSession.firstTradeSetup === flag) ? null : flag;
+      const yesBtn = document.getElementById('fs-yes');
+      const noBtn = document.getElementById('fs-no');
+      
+      yesBtn.className = (currentSession.firstTradeSetup === true) ? 'chip-btn active-green' : 'chip-btn';
+      noBtn.className = (currentSession.firstTradeSetup === false) ? 'chip-btn active-red' : 'chip-btn';
+    }
+
+    function setEnvironmentCorrectness(val) {
+      currentSession.environmentCorrect = (currentSession.environmentCorrect === val) ? null : val;
+      const yesBtn = document.getElementById('env-corr-yes');
+      const noBtn = document.getElementById('env-corr-no');
+      const unkBtn = document.getElementById('env-corr-unk');
+
+      yesBtn.className = (currentSession.environmentCorrect === true) ? 'chip-btn active-green' : 'chip-btn';
+      noBtn.className = (currentSession.environmentCorrect === false) ? 'chip-btn active-red' : 'chip-btn';
+      unkBtn.className = (currentSession.environmentCorrect === 'unknown') ? 'chip-btn active-purple' : 'chip-btn';
+    }
+
+    function syncSessionRootData(key, value) {
+      currentSession[key] = value;
+    }
+
+    /* --- Workspace Trade Logging Render Functions --- */
+    function renderInteractiveWorkspace() {
+      renderTradeCards();
+      renderAvoidedSubform();
+      renderChecklistComponent('inline-checklist-mount');
+    }
+
+    function appendNewTradeObject() {
+      currentSession.trades.push(createEmptyTradeObject());
+      renderTradeCards();
+    }
+
+    function removeTradeObject(index) {
+      currentSession.trades.splice(index, 1);
+      renderTradeCards();
+    }
+
+    function updateTradeField(index, key, val) {
+      currentSession.trades[index][key] = val;
+      
+      // Real-time reactive style syncs for calculations that display locally inside headers
+      if(key === 'result') {
+        const headingPnL = document.getElementById(`card-pnl-display-${index}`);
+        if(headingPnL) {
+          const num = parseFloat(val);
+          if(val === "" || isNaN(num)) {
+            headingPnL.innerText = "";
+            headingPnL.className = "pnl";
+          } else {
+            headingPnL.innerText = (num >= 0 ? "+" : "") + val;
+            headingPnL.className = "pnl " + (num >= 0 ? "pnl-pos" : "pnl-neg");
+          }
+        }
+        // Force evaluation of conditional loss breakdown panel visibility matrix
+        const lossFieldFrame = document.getElementById(`conditional-loss-frame-${index}`);
+        if(lossFieldFrame) {
+          const parsed = parseFloat(val);
+          if(!isNaN(parsed) && parsed < 0) {
+            lossFieldFrame.classList.remove('hidden');
+          } else {
+            lossFieldFrame.classList.add('hidden');
+          }
+        }
       }
     }
 
-    function setFollowThrough(id, outcome) {
-      const yesB = document.getElementById(`ift-yes-${id}`);
-      const noB = document.getElementById(`ift-no-${id}`);
-      if(outcome) {
-        yesB.classList.add('active-yes');
-        noB.classList.remove('active-no');
-      } else {
-        noB.classList.add('active-no');
-        yesB.classList.remove('active-yes');
-      }
+    function renderTradeCards() {
+      const container = document.getElementById('trades-cards-container');
+      container.innerHTML = '';
+
+      currentSession.trades.forEach((trade, i) => {
+        const numValue = parseFloat(trade.result);
+        const pnlText = trade.result !== "" && !isNaN(numValue) ? ((numValue >= 0 ? "+" : "") + trade.result) : "";
+        const pnlClass = isNaN(numValue) ? "pnl-neutral" : (numValue >= 0 ? "pnl-pos" : "pnl-neg");
+        const showLossZone = !isNaN(numValue) && numValue < 0;
+
+        const card = document.createElement('div');
+        card.className = 'trade-card-root';
+        
+        // Dynamically structured input bindings map 1-to-1 to custom Field component wrappers from JSX
+        card.innerHTML = `
+          <div class="trade-card-header">
+            <div class="trade-card-identity">
+              <span class="lbl">TRADE</span>
+              <span class="num">#${i + 1}</span>
+              <span class="pnl ${pnlClass}" id="card-pnl-display-${i}">${pnlText}</span>
+            </div>
+            <button type="button" class="btn-remove" onclick="removeTradeObject(${i})">REMOVE</button>
+          </div>
+
+          <div class="grid-4" style="margin-bottom: 14px;">
+            <div class="field-block">
+              <div class="field-label">Time</div>
+              <input type="text" placeholder="8:32" value="${trade.time}" oninput="updateTradeField(${i}, 'time', this.value)">
+            </div>
+            <div class="field-block">
+              <div class="field-label">Direction</div>
+              <div class="chip-flex" style="margin-top: 4px;">
+                <button type="button" class="chip-btn ${trade.direction === 'LONG' ? 'active-green' : ''}" id="dir-long-${i}" onclick="toggleTradeDirection(${i}, 'LONG')">LONG</button>
+                <button type="button" class="chip-btn ${trade.direction === 'SHORT' ? 'active-red' : ''}" id="dir-short-${i}" onclick="toggleTradeDirection(${i}, 'SHORT')">SHORT</button>
+              </div>
+            </div>
+            <div class="field-block">
+              <div class="field-label">Entry</div>
+              <input type="text" placeholder="21,450" value="${trade.entry}" oninput="updateTradeField(${i}, 'entry', this.value)">
+            </div>
+            <div class="field-block">
+              <div class="field-label">Exit</div>
+              <input type="text" placeholder="21,460" value="${trade.exit}" oninput="updateTradeField(${i}, 'exit', this.value)">
+            </div>
+          </div>
+
+          <div class="grid-3" style="margin-bottom: 14px;">
+            <div class="field-block">
+              <div class="field-label">Result ($)</div>
+              <div class="field-hint">Actual P&L in dollars</div>
+              <input type="text" placeholder="+50" value="${trade.result}" oninput="updateTradeField(${i}, 'result', this.value)">
+            </div>
+            <div class="field-block">
+              <div class="field-label">MAE (pts)</div>
+              <div class="field-hint">How far against you — TIER 1</div>
+              <input type="text" placeholder="8" value="${trade.mae}" oninput="updateTradeField(${i}, 'mae', this.value)">
+            </div>
+            <div class="field-block">
+              <div class="field-label">MFE (pts)</div>
+              <div class="field-hint">How far in favor before exit</div>
+              <input type="text" placeholder="12" value="${trade.mfe}" oninput="updateTradeField(${i}, 'mfe', this.value)">
+            </div>
+          </div>
+
+          <div class="grid-2" style="margin-bottom: 14px;">
+            <div class="field-block">
+              <div class="field-label">Immediate Follow Through?</div>
+              <div class="field-hint">Did price move your way almost immediately?</div>
+              <div class="chip-flex">
+                <button type="button" class="chip-btn ${trade.immediateFollowThrough === true ? 'active-green' : ''}" id="ift-y-${i}" onclick="setTradeFollowThrough(${i}, true)">YES</button>
+                <button type="button" class="chip-btn ${trade.immediateFollowThrough === false ? 'active-red' : ''}" id="ift-n-${i}" onclick="setTradeFollowThrough(${i}, false)">NO</button>
+              </div>
+            </div>
+            <div class="field-block">
+              <div class="field-label">Market Negotiable?</div>
+              <div class="field-hint">Did you have time to manage discretion?</div>
+              <div class="chip-flex">
+                <button type="button" class="chip-btn ${trade.negotiable === true ? 'active-green' : ''}" id="neg-y-${i}" onclick="setTradeNegotiable(${i}, true)">YES</button>
+                <button type="button" class="chip-btn ${trade.negotiable === false ? 'active-red' : ''}" id="neg-n-${i}" onclick="setTradeNegotiable(${i}, false)">NO</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-block">
+            <div class="field-label">Why Did I Take It?</div>
+            <div class="field-hint">One sentence only. e.g. 'Failed auction at prior high'</div>
+            <textarea rows="1" placeholder="One sentence." oninput="updateTradeField(${i}, 'why', this.value)">${trade.why}</textarea>
+          </div>
+
+          <div class="field-block">
+            <div class="field-label">Setup Tag</div>
+            <div class="chip-flex" id="setup-tags-container-${i}"></div>
+          </div>
+
+          <div class="field-block ${showLossZone ? '' : 'hidden'}" id="conditional-loss-frame-${i}">
+            <div class="field-label">Loss Category</div>
+            <div class="field-hint">Tag every losing trade</div>
+            <div class="chip-flex" id="loss-tags-container-${i}"></div>
+          </div>
+
+          <div class="grid-2" style="margin-bottom: 14px;">
+            <div class="field-block">
+              <div class="field-label">Did Market Do What I Expected?</div>
+              <div class="chip-flex">
+                <button type="button" class="chip-btn ${trade.marketDid === true ? 'active-green' : ''}" id="md-y-${i}" onclick="setTradeMarketDid(${i}, true)">YES</button>
+                <button type="button" class="chip-btn ${trade.marketDid === false ? 'active-red' : ''}" id="md-n-${i}" onclick="setTradeMarketDid(${i}, false)">NO</button>
+              </div>
+            </div>
+            <div class="field-block">
+              <div class="field-label">Would Take Again?</div>
+              <div class="chip-flex">
+                <button type="button" class="chip-btn ${trade.wouldTakeAgain === 'yes' ? 'active-green' : ''}" id="wta-y-${i}" onclick="setTradeWouldTake(${i}, 'yes')">YES</button>
+                <button type="button" class="chip-btn ${trade.wouldTakeAgain === 'maybe' ? 'active-yellow' : ''}" id="wta-m-${i}" onclick="setTradeWouldTake(${i}, 'maybe')">MAYBE</button>
+                <button type="button" class="chip-btn ${trade.wouldTakeAgain === 'no' ? 'active-red' : ''}" id="wta-n-${i}" onclick="setTradeWouldTake(${i}, 'no')">NO</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-block">
+            <div class="field-label">Trade Grade</div>
+            <div class="field-hint">Grade the TRADE, not the result. A losing trade can be an A.</div>
+            <div class="chip-flex" id="grade-container-${i}"></div>
+          </div>
+
+          <div class="field-block">
+            <div class="field-label">What Would've Happened If I Did Nothing?</div>
+            <div class="field-hint">Forces comparison vs. the monster move: no trade.</div>
+            <textarea rows="1" placeholder="e.g. 'Better entry appeared 4 min later'" oninput="updateTradeField(${i}, 'doNothingOutcome', this.value)">${trade.doNothingOutcome}</textarea>
+          </div>
+
+          <div class="field-block" style="margin-bottom:0;">
+            <div class="field-label">Notes / Lesson</div>
+            <textarea rows="1" placeholder="One sentence lesson." oninput="updateTradeField(${i}, 'notes', this.value)">${trade.notes}</textarea>
+          </div>
+        `;
+
+        container.appendChild(card);
+
+        // Sub-render loop sequences appending chips natively inside individual instances
+        renderSetupChipsForCard(i, trade);
+        renderLossChipsForCard(i, trade);
+        renderGradeButtonsForCard(i, trade);
+      });
     }
 
-    function setNegotiable(id, outcome) {
-      const yesB = document.getElementById(`neg-yes-${id}`);
-      const noB = document.getElementById(`neg-no-${id}`);
-      if(outcome) {
-        yesB.classList.add('active-env');
-        noB.classList.remove('active-no');
-      } else {
-        noB.classList.add('active-no');
-        yesB.classList.remove('active-env');
-      }
+    function toggleTradeDirection(idx, dir) {
+      const active = currentSession.trades[idx].direction === dir;
+      currentSession.trades[idx].direction = active ? "" : dir;
+      
+      const lBtn = document.getElementById(`dir-long-${idx}`);
+      const sBtn = document.getElementById(`dir-short-${idx}`);
+      
+      lBtn.className = (currentSession.trades[idx].direction === 'LONG') ? 'chip-btn active-green' : 'chip-btn';
+      sBtn.className = (currentSession.trades[idx].direction === 'SHORT') ? 'chip-btn active-red' : 'chip-btn';
     }
 
-    // Initialize with first clear trade block item
-    addTradeCard();
-  </script>
-</body>
-</html>
+    function setTradeFollowThrough(idx, state) {
+      const active = currentSession.trades[idx].immediateFollowThrough === state;
+      currentSession.trades[idx].immediateFollowThrough = active ? null : state;
+      
+      const yBtn = document.getElementById(`ift-y-${idx}`);
+      const nBtn = document.getElementById(`ift-n-${idx}`);
+      
+      yBtn.className = (currentSession.trades[idx].immediateFollowThrough === true) ? 'chip-btn active-green' : 'chip-btn';
+      nBtn.className = (currentSession.trades[idx].immediateFollowThrough === false) ? 'chip-btn active-red' : 'chip-btn';
+    }
+
+    function setTradeNegotiable(idx, state) {
+      const active = currentSession.trades[idx].negotiable === state;
+      currentSession.trades[idx].negotiable = active ? null : state;
+      
+      const yBtn = document.getElementById(`neg-y-${idx}`);
+      const nBtn = document.getElementById(`neg-n-${idx}`);
+      
+      yBtn.className = (currentSession.trades[idx].negotiable === true) ? 'chip-btn active-green' : 'chip-btn';
+      nBtn.className = (currentSession.trades[idx].negotiable === false) ? 'chip-btn active-red' : 'chip-btn';
+    }
+
+    function setTradeMarketDid(idx, state) {
+      const active = currentSession.trades[idx].marketDid === state;
+      currentSession.trades[idx].marketDid = active ? null : state;
+      
+      const yBtn = document.getElementById(`md-y-${idx}`);
+      const nBtn = document.getElementById(`md-n-${idx}`);
+      
+      yBtn.className = (currentSession.trades[idx].marketDid === true) ? 'chip-btn active-green' : 'chip-btn';
+      nBtn.className = (currentSession.trades[idx].marketDid === false) ? 'chip-btn active-red' : 'chip-btn';
+    }
+
+    function setTradeWouldTake(idx, choice) {
+      const active = currentSession.trades[idx].wouldTakeAgain === choice;
+      currentSession.trades[idx].wouldTakeAgain = active ? null : choice;
+      
+      const yBtn = document.getElementById(`wta-y-${idx}`);
+      const mBtn = document.getElementById(`wta-m-${idx}`);
+      const nBtn = document.getElementById(`wta-n-${idx}`);
+      
+      yBtn.className = (currentSession.trades[idx].wouldTakeAgain === 'yes') ? 'chip-btn active-green' : 'chip-btn';
+      mBtn.className = (currentSession.trades[idx].wouldTakeAgain === 'maybe') ? 'chip-btn active-yellow' : 'chip-btn';
+      nBtn.className = (currentSession.trades[idx].wouldTakeAgain === 'no') ? 'chip-btn active-red' : 'chip-btn';
+    }
+
+    function renderSetupChipsForCard(cardIdx, tradeObj) {
+      const root = document.getElementById(`setup-tags-container-${cardIdx}`);
+      SETUP_TAGS.forEach(tag => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `chip-btn ${tradeObj.setupTag === tag ? 'active-blue' : ''}`;
+        btn.innerText = tag;
+        btn.onclick = () => {
+          tradeObj.setupTag = (tradeObj.setupTag === tag) ? "" : tag;
+          Array.from(root.children).forEach((child, sIdx) => {
+            child.className = `chip-btn ${tradeObj.setupTag === SETUP_TAGS[sIdx] ? 'active-blue' : ''}`;
+          });
+        };
+        root.appendChild(btn);
+      });
+    }
+
+    function renderLossChipsForCard(cardIdx, tradeObj) {
+      const root = document.getElementById(`loss-tags-container-${cardIdx}`);
+      LOSS_TAGS.forEach(tag => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `chip-btn ${tradeObj.lossTag === tag ? 'active-red' : ''}`;
+        btn.innerText = tag;
+        btn.onclick = () => {
+          tradeObj.lossTag = (tradeObj.lossTag === tag) ? "" : tag;
+          Array.from(root.children).forEach((child, lIdx) => {
+            child.className = `chip-btn ${tradeObj.lossTag === LOSS_TAGS[lIdx] ? 'active-red' : ''}`;
+          });
+        };
+        root.appendChild(btn);
+      });
+    }
+
+    function renderGradeButtonsForCard(cardIdx, tradeObj) {
+      const root = document.getElementById(`grade-container-${cardIdx}`);
+      GRADE_OPTIONS.forEach(g => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        
+        let colorMapClass = '';
+        if(tradeObj.grade === g) {
+          if(g === 'A') colorMapClass = 'active-green';
+          if(g === 'B') colorMapClass = 'active-blue';
+          if(g === 'C') colorMapClass = 'active-yellow';
+          if(g === 'F') colorMapClass = 'active-red';
+        }
+        
+        btn.className = `chip-btn ${colorMapClass}`;
+        btn.innerText = g;
+        
+        const desc = { A: "Take again tomorrow", B: "Good, minor flaw", C: "Questionable", F: "Never should happen" };
+        btn.title = desc[g];
+        
+        btn.onclick = () => {
+          tradeObj.grade = (tradeObj.grade === g) ? "" : g;
+          Array.from(root.children).forEach((child, gIdx) => {
+            let innerG = GRADE_OPTIONS[gIdx];
+            let activeClass = '';
+            if(tradeObj.grade === innerG) {
+              if(innerG === 'A') activeClass = 'active-green';
+              if(innerG === 'B
