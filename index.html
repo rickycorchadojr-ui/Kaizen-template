@@ -824,46 +824,6 @@ withRes.forEach(t => {
   const mfeWinData=Object.entries(mfeWinFreq).map(([val,count])=>({val,count}));
   const mfeLossData=Object.entries(mfeLossFreq).map(([val,count])=>({val,count}));
 
-<div className="dash-card" style={{padding:16,marginBottom:16}}>
-  <SectionHead mt={0}>Exit Outcome Table</SectionHead>
-
-  <div className="tbl-wrap">
-    <table style={{…mono,width:"100%",borderCollapse:"collapse",fontSize:11}}>
-      <thead>
-        <tr style={{borderBottom:`1px solid ${C.border2}`}}>
-          <th style={{padding:"8px",textAlign:"left",color:C.muted}}>Outcome</th>
-          <th style={{padding:"8px",textAlign:"right",color:C.muted}}>Winning</th>
-          <th style={{padding:"8px",textAlign:"right",color:C.muted}}>Losing</th>
-          <th style={{padding:"8px",textAlign:"right",color:C.muted}}>Total</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        {EXIT_OUTCOME_OPTIONS.map(o=>(
-          <tr key={o.key} style={{borderBottom:`1px solid ${C.border}`}}>
-
-            <td style={{padding:"8px",fontWeight:700,color:C.text}}>
-              {o.label}
-            </td>
-
-            <td style={{padding:"8px",textAlign:"right",color:C.green}}>
-              {exitOutcomeCounts[o.key].win}
-            </td>
-
-            <td style={{padding:"8px",textAlign:"right",color:C.red}}>
-              {exitOutcomeCounts[o.key].loss}
-            </td>
-
-            <td style={{padding:"8px",textAlign:"right",fontWeight:900,color:C.text}}>
-              {exitOutcomeCounts[o.key].total}
-            </td>
-
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-</div>
 
   /* Charts */
   const pnlCurve=withRes.map((t,i)=>({i:i+1,pnl:withRes.slice(0,i+1).reduce((s,x)=>s+parseFloat(x.result),0),date:t.sessionDate}));
@@ -947,6 +907,33 @@ withRes.forEach(t => {
             <Stat label="AVG WIN / LOSS" value={`+${avgWin}`} sub={`avg loss ${avgLoss}`} color={C.green}/>
             <Stat label="TRADES REVIEWED" value={allTrades.length} sub={`${totalAvoided} avoided`} color={C.blue}/>
           </div>
+<div className="dash-card" style={{padding:16,marginBottom:16}}>
+  <SectionHead mt={0}>Exit Outcome Table</SectionHead>
+
+  <div className="tbl-wrap">
+    <table style={{...mono,width:"100%",borderCollapse:"collapse",fontSize:11}}>
+      <thead>
+        <tr style={{borderBottom:`1px solid ${C.border2}`}}>
+          <th style={{padding:"8px",textAlign:"left",color:C.muted}}>Outcome</th>
+          <th style={{padding:"8px",textAlign:"right",color:C.muted}}>Winning</th>
+          <th style={{padding:"8px",textAlign:"right",color:C.muted}}>Losing</th>
+          <th style={{padding:"8px",textAlign:"right",color:C.muted}}>Total</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {EXIT_OUTCOME_OPTIONS.map(o=>(
+          <tr key={o.key} style={{borderBottom:`1px solid ${C.border}`}}>
+            <td style={{padding:"8px",fontWeight:700,color:C.text}}>{o.label}</td>
+            <td style={{padding:"8px",textAlign:"right",color:C.green}}>{exitOutcomeCounts[o.key].win}</td>
+            <td style={{padding:"8px",textAlign:"right",color:C.red}}>{exitOutcomeCounts[o.key].loss}</td>
+            <td style={{padding:"8px",textAlign:"right",fontWeight:900,color:C.text}}>{exitOutcomeCounts[o.key].total}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:16}}>
             <Stat label="AVG MAE WINNERS" value={winMAE_avg} color={C.green} sub="avg adverse excursion (pts)"/>
             <Stat label="AVG MAE LOSERS"  value={lossMAE_avg} color={C.red}  sub="avg adverse excursion (pts)"/>
@@ -1367,3 +1354,4 @@ root.render(<KaizenTradeTemplate/>);
 </script>
 </body>
 </html>
+
